@@ -316,19 +316,7 @@ const S2={n:2,label:'Risk–return picture',eyebrow:'Step 2 · Put both numbers 
    const LBL=[[10,16,'start'],[10,20,'start'],[-10,-22,'end'],[-12,-22,'end'],[-8,-28,'end']];
    HIST2.forEach(([n,sd,r],i)=>{const col=[k.m,k.f,k.f,k.a,k.d][i],[dx,dy,an]=LBL[i],x=X(sd),y=Y(r);
     if(i===1)s.append(el('circle',{cx:x,cy:y,r:5,fill:k.surf,stroke:col,'stroke-width':2.5}));else s.append(el('circle',{cx:x,cy:y,r:5.5,fill:col,stroke:k.surf,'stroke-width':1.5}));
-    if(i!==1&&i!==2){T(s,x+dx,y+dy,n,{anchor:an,bold:1,size:12,fill:col});T(s,x+dx,y+dy+15,`${r}%, σ ${sd}%`,{anchor:an,mono:1,size:11,fill:k.m})}});
-   // zoom on the two bonds
-   const zx0=X(7.6),zy0=Y(6.7),zx1=X(9.9),zy1=Y(5.3);s.append(el('rect',{x:zx0,y:zy0,width:zx1-zx0,height:zy1-zy0,fill:'none',stroke:k.f,'stroke-width':1.2,rx:4}));
-   const ix=X(21),iy=Y(11.8),iw=X(34.6)-X(21),ih=Y(0.6)-Y(11.8);
-   Ln(s,zx1,zy0,ix,iy,k.f,1);Ln(s,zx1,zy1,ix,iy+ih,k.f,1);
-   Rc(s,ix,iy,iw,ih,k.surf,{stroke:k.f,sw:1.5,rx:8});T(s,ix+10,iy+18,'Zoom: the two bonds',{anchor:'start',bold:1,size:12,fill:k.f});
-   const IX=v=>ix+44+(v-8)/(10-8)*(iw-70),IY=v=>iy+ih-34-(v-5.5)/(6.5-5.5)*(ih-76);
-   [8,9,10].forEach(v=>{Ln(s,IX(v),iy+ih-22,IX(v),iy+ih-18,k.m,1);T(s,IX(v),iy+ih-6,'σ '+v+'%',{size:10})});
-   [5.5,6,6.5].forEach(v=>{T(s,ix+34,IY(v)+4,v.toFixed(1)+'%',{anchor:'end',size:10});Ln(s,ix+38,IY(v),ix+iw-12,IY(v),k.fa,1)});
-   s.append(el('circle',{cx:IX(8.5),cy:IY(6.2),r:7,fill:k.f,stroke:k.surf,'stroke-width':1.5}));
-   s.append(el('circle',{cx:IX(9.2),cy:IY(5.8),r:6.5,fill:k.surf,stroke:k.f,'stroke-width':2.5}));
-   T(s,IX(8.5)+12,IY(6.2)-4,'Corporate bonds',{anchor:'start',bold:1,size:12,fill:k.f});T(s,IX(8.5)+12,IY(6.2)+11,'6.2%, σ 8.5%',{anchor:'start',mono:1,size:11,fill:k.m});
-   T(s,IX(9.2)-14,IY(5.8)+2,'Government bonds',{anchor:'end',bold:1,size:12,fill:k.f});T(s,IX(9.2)-14,IY(5.8)+17,'5.8%, σ 9.2%',{anchor:'end',mono:1,size:11,fill:k.m});
+    T(s,x+dx,y+dy,n,{anchor:an,bold:1,size:12,fill:col});T(s,x+dx,y+dy+15,`${r}%, σ ${sd}%`,{anchor:an,mono:1,size:11,fill:k.m})});
    return {legend:[[k.m,'Bills'],[k.f,'Bonds'],[k.a,'Large stocks'],[k.d,'Small stocks']],
     work:`<div class="k">Mean return · standard deviation</div>${HIST2.map(([n,sd,r])=>`<div>${n}: ${r}% · ${sd}%</div>`).join('')}`}}},
  {id:'prem',name:'The risk premium',short:'The reward for bearing risk',
