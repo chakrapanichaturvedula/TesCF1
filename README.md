@@ -13,6 +13,6 @@ Open `index.html` for the list of topics. Every page is a single self-contained 
 | 3. Capital Budgeting | Capital Budgeting | `capital-budgeting.html` | final |
 | 3. Capital Budgeting | Project Cash Flows | `project-cash-flows.html` | final |
 | 4. Risk and Return | Risk and Return | `risk-and-return.html` | in review |
-| 5. Cost of Capital | Cost of Capital | `cost-of-capital.html` | first draft, not yet reviewed |
+| 5. Cost of Capital | Cost of Capital | `cost-of-capital.html` | rebuilt, in review |
 
 To view it as a website: Settings → Pages → Source: "Deploy from a branch" → Branch: `main`, folder `/ (root)`.
