@@ -4,112 +4,98 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Big Picture</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg:#f5f6fa;--surface:#ffffff;--surface2:#f0f2f8;--border:rgba(15,23,42,0.09);
-  --text:#0f172a;--muted:#475569;--faint:#94a3b8;
-  --blue:#2563eb;--teal:#0e8c65;--amber:#c97b10;--purple:#5b52c8;--gray:#888780;
-  --blue-bg:rgba(37,99,235,0.07);--teal-bg:rgba(14,140,101,0.08);
-  --amber-bg:rgba(201,123,16,0.09);--purple-bg:rgba(91,82,200,0.08);
-  --gray-bg:rgba(15,23,42,0.06);
+  --bg:#F4F4F1;--surface:#ffffff;--surface2:#F4F4F1;--border:#DADDD8;--line:#DADDD8;
+  --text:#16223A;--muted:#5B6578;--faint:#8A93A3;--accent:#6B3FA0;--accent-soft:#EEE6F7;
+  --blue:#0F6E8C;--teal:#2F6B3F;--amber:#B4530F;--purple:#6B3FA0;--gray:#888780;
+  --blue-bg:rgba(15,110,140,0.07);--teal-bg:rgba(47,107,63,0.08);
+  --amber-bg:rgba(180,83,15,0.09);--purple-bg:rgba(107,63,160,0.08);
+  --gray-bg:rgba(22,34,58,0.06);
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;}
-
-/* NAV */
-nav{position:sticky;top:0;z-index:100;background:rgba(245,246,250,0.96);backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--border);padding:0 24px;height:56px;
-  display:flex;align-items:center;gap:16px;}
-.nav-logo{font-size:1rem;font-weight:800;letter-spacing:-0.02em;}
-.nav-logo span{color:var(--blue);}
-.nav-badge{font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:var(--teal);
-  letter-spacing:0.15em;background:rgba(14,140,101,0.09);border:1px solid rgba(14,140,101,0.22);
-  padding:3px 8px;border-radius:4px;}
-.nav-spacer{flex:1;}
-.nav-back{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);
-  text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:6px;
-  transition:all 0.2s;}
-.nav-back:hover{color:var(--text);border-color:rgba(15,23,42,0.2);}
+html,body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;}
 
 /* PAGE */
 .page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;}
 
 /* HERO */
 .hero{margin-bottom:48px;}
-.hero-eyebrow{font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--teal);
-  letter-spacing:0.2em;margin-bottom:12px;}
-.hero h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:800;letter-spacing:-0.04em;line-height:1.1;margin-bottom:16px;}
-.hero h1 em{font-style:italic;color:var(--blue);}
-.hero-sub{font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--muted);
-  line-height:1.7;max-width:600px;}
+.hero-eyebrow{font-weight:600;font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;font-size:0.75rem;color:var(--accent);
+  letter-spacing:0.14em;margin-bottom:10px;text-transform:uppercase;}
+.hero h1{font-family:'Source Serif 4',Georgia,serif;font-size:clamp(2.1rem,5.5vw,3.4rem);font-weight:700;letter-spacing:-0.01em;line-height:1.1;margin-bottom:16px;}
+.hero h1 em{font-style:italic;color:var(--accent);}
+.hero-sub{font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;font-size:1.1rem;color:var(--muted);
+  line-height:1.6;max-width:640px;}
 
 /* LEGEND */
 .legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:36px;}
-.legend-item{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;
-  font-size:0.6rem;color:var(--muted);letter-spacing:0.05em;}
+.legend-item{display:flex;align-items:center;gap:8px;font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;
+  font-size:0.82rem;color:var(--muted);}
 .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .legend-dash{width:20px;height:1px;flex-shrink:0;}
 
 /* MAP CONTAINER */
-.map-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+.map-wrap{background:var(--surface);border:1px solid var(--line);border-radius:14px;
   padding:32px;margin-bottom:48px;overflow-x:auto;}
 .map-svg{width:100%;min-width:700px;}
 
 /* EXPLANATION CARDS */
-.section-title{font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--teal);
-  letter-spacing:0.2em;margin-bottom:20px;}
+.section-title{font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;font-size:0.78rem;color:var(--accent);font-weight:600;text-transform:uppercase;
+  letter-spacing:0.14em;margin-bottom:20px;}
 .junctions{display:grid;gap:16px;margin-bottom:48px;}
 .junction{background:var(--surface);border:1px solid var(--border);border-radius:12px;
   padding:24px;display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start;
   transition:border-color 0.2s;}
-.junction:hover{border-color:rgba(15,23,42,0.15);}
-.junction-num{font-family:'JetBrains Mono',monospace;font-size:2rem;font-weight:300;
-  color:var(--faint);line-height:1;}
-.junction-title{font-size:0.95rem;font-weight:700;margin-bottom:8px;}
-.junction-body{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--muted);
-  line-height:1.8;}
-.junction-body strong{color:var(--text);font-weight:500;}
+.junction:hover{border-color:rgba(22,34,58,0.15);}
+.junction-num{font-family:'IBM Plex Mono',Consolas,monospace;font-size:2rem;font-weight:400;
+  color:var(--accent);line-height:1;}
+.junction-title{font-family:'Source Serif 4',Georgia,serif;font-size:1.25rem;font-weight:700;margin-bottom:8px;}
+.junction-body{font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;font-size:0.98rem;color:var(--muted);
+  line-height:1.6;}
+.junction-body strong{color:var(--text);font-weight:600;}
 .junction-formula{display:inline-block;margin-top:10px;background:var(--surface2);
   border:1px solid var(--border);border-radius:6px;padding:6px 12px;
-  font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--blue);}
+  font-family:'IBM Plex Mono',Consolas,monospace;font-size:0.85rem;color:var(--accent);}
 
 /* MODULE MAP TABLE */
 .module-map{display:grid;gap:8px;margin-bottom:48px;}
-.mod-row{display:grid;grid-template-columns:120px 1fr;gap:1px;border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+.mod-row{display:grid;grid-template-columns:150px 1fr;gap:1px;border-radius:10px;overflow:hidden;border:1px solid var(--border);}
 .mod-label{background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;justify-content:center;gap:4px;}
-.mod-num{font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:var(--muted);letter-spacing:0.1em;}
-.mod-name{font-size:0.8rem;font-weight:700;}
+.mod-num{font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;font-size:0.72rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;}
+.mod-name{font-family:'Source Serif 4',Georgia,serif;font-size:1.05rem;font-weight:700;}
 .mod-content{background:var(--surface2);padding:14px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
-.mod-tag{font-family:'JetBrains Mono',monospace;font-size:0.6rem;padding:4px 10px;border-radius:20px;}
+.mod-tag{font-family:'IBM Plex Mono',Consolas,monospace;font-size:0.78rem;padding:4px 10px;border-radius:20px;}
 .mod-arrow{color:var(--faint);font-size:0.7rem;margin:0 2px;}
 
 /* BACK TO TOP */
-.back-btn{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;
-  font-size:0.65rem;color:var(--muted);cursor:pointer;background:none;border:none;
+.back-btn{display:inline-flex;align-items:center;gap:8px;font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;
+  font-size:0.9rem;color:var(--accent);font-weight:600;cursor:pointer;background:none;border:none;
   padding:0;transition:color 0.2s;}
 .back-btn:hover{color:var(--text);}
 
 /* TOOLTIP */
-.tooltip{position:fixed;background:var(--surface2);border:1px solid rgba(37,99,235,0.3);
-  border-radius:8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:0.65rem;
-  color:var(--text);max-width:240px;line-height:1.6;pointer-events:none;opacity:0;
+.tooltip{position:fixed;background:var(--surface2);border:1px solid rgba(15,110,140,0.3);
+  border-radius:8px;padding:10px 14px;font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;font-size:0.88rem;
+  color:var(--text);max-width:260px;line-height:1.5;pointer-events:none;opacity:0;
   transition:opacity 0.15s;z-index:999;}
 .tooltip.show{opacity:1;}
 
 /* ACTIVE NODE HIGHLIGHT */
 .map-node{cursor:pointer;transition:opacity 0.2s;}
 .map-node:hover rect{filter:brightness(1.2);}
+
+.homebar{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1100px;margin:0 auto;padding:14px 24px 0;font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;font-size:14px}
+.homebar a{color:var(--accent);text-decoration:none;font-weight:600}
+.homebar a:hover{text-decoration:underline}
+.homebar .here{border:1.5px solid var(--accent);border-radius:999px;padding:5px 14px;background:var(--accent);color:#fff;font-weight:600}
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="nav-logo"><span>FIA</span> 203</div>
-  <div class="nav-badge">BIG PICTURE</div>
-  <div class="nav-spacer"></div>
-  <a href="index.html" class="nav-back">← Course home</a>
-</nav>
+<nav class="homebar" aria-label="Site"><a href="index.html">← All FIA 203 topics</a><span class="here">The Big Picture</span></nav>
 
 <div class="page">
 
@@ -144,50 +130,50 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,246,250,0.96);backdrop
        ROW 0 — BALANCE SHEET CONTAINER
   ═══════════════════════════════════════════════════ -->
   <rect x="20" y="16" width="720" height="132" rx="12" fill="none"
-        stroke="rgba(15,23,42,0.18)" stroke-width="1" stroke-dasharray="6 4"/>
-  <text x="36" y="36" font-family="'JetBrains Mono',monospace" font-size="11"
-        fill="#64748b" letter-spacing="0.1em">THE BALANCE SHEET — FOUNDATION OF ALL THREE DECISIONS</text>
+        stroke="rgba(22,34,58,0.18)" stroke-width="1" stroke-dasharray="6 4"/>
+  <text x="36" y="36" font-family="'IBM Plex Mono',Consolas,monospace" font-size="11"
+        fill="#5B6578" letter-spacing="0.1em">THE BALANCE SHEET — FOUNDATION OF ALL THREE DECISIONS</text>
 
   <!-- Assets -->
   <g class="map-node" onclick="showTip(event,'Assets = everything the firm owns. Capital budgeting decides WHAT goes here — which projects, which factories, which acquisitions.')">
     <rect x="36" y="46" width="200" height="88" rx="8"
-          fill="rgba(15,23,42,0.05)" stroke="rgba(15,23,42,0.14)" stroke-width="0.5"/>
-    <text x="136" y="80" text-anchor="middle" font-family="'Syne',sans-serif"
-          font-size="14" font-weight="700" fill="#0f172a">Assets</text>
-    <text x="136" y="98" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#475569">Fixed assets + working capital</text>
-    <text x="136" y="116" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#475569">What the firm invests in</text>
+          fill="rgba(22,34,58,0.05)" stroke="rgba(22,34,58,0.14)" stroke-width="0.5"/>
+    <text x="136" y="80" text-anchor="middle" font-family="'IBM Plex Sans','Segoe UI',Arial,sans-serif"
+          font-size="14" font-weight="700" fill="#16223A">Assets</text>
+    <text x="136" y="98" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#5B6578">Fixed assets + working capital</text>
+    <text x="136" y="116" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#5B6578">What the firm invests in</text>
   </g>
 
-  <text x="252" y="95" text-anchor="middle" font-family="'Syne',sans-serif"
+  <text x="252" y="95" text-anchor="middle" font-family="'IBM Plex Sans','Segoe UI',Arial,sans-serif"
         font-size="20" font-weight="700" fill="rgba(136,135,128,0.4)">=</text>
 
   <!-- Debt -->
   <g class="map-node" onclick="showTip(event,'Debt (bonds, loans) has a cost = YTM × (1 − Tax). The bondholder\'s return is the firm\'s cost. You already learned this in Bond Valuation (M2).')">
     <rect x="268" y="46" width="208" height="88" rx="8"
-          fill="rgba(15,23,42,0.05)" stroke="rgba(15,23,42,0.14)" stroke-width="0.5"/>
-    <text x="372" y="72" text-anchor="middle" font-family="'Syne',sans-serif"
-          font-size="14" font-weight="700" fill="#0f172a">Debt</text>
-    <text x="372" y="91" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#475569">Bonds, bank loans</text>
-    <text x="372" y="109" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#c97b10">Cost = Rd × (1 − Tax)</text>
+          fill="rgba(22,34,58,0.05)" stroke="rgba(22,34,58,0.14)" stroke-width="0.5"/>
+    <text x="372" y="72" text-anchor="middle" font-family="'IBM Plex Sans','Segoe UI',Arial,sans-serif"
+          font-size="14" font-weight="700" fill="#16223A">Debt</text>
+    <text x="372" y="91" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#5B6578">Bonds, bank loans</text>
+    <text x="372" y="109" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#B4530F">Cost = Rd × (1 − Tax)</text>
   </g>
 
-  <text x="492" y="95" text-anchor="middle" font-family="'Syne',sans-serif"
+  <text x="492" y="95" text-anchor="middle" font-family="'IBM Plex Sans','Segoe UI',Arial,sans-serif"
         font-size="20" font-weight="700" fill="rgba(136,135,128,0.4)">+</text>
 
   <!-- Equity -->
   <g class="map-node" onclick="showTip(event,'Equity (shares) has a cost too — shareholders expect a return. CAPM computes this: Re = Rf + β(Rm − Rf). You learn CAPM in M4 Risk & Return.')">
     <rect x="508" y="46" width="216" height="88" rx="8"
-          fill="rgba(15,23,42,0.05)" stroke="rgba(15,23,42,0.14)" stroke-width="0.5"/>
-    <text x="616" y="72" text-anchor="middle" font-family="'Syne',sans-serif"
-          font-size="14" font-weight="700" fill="#0f172a">Equity</text>
-    <text x="616" y="91" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#475569">Shares issued</text>
-    <text x="616" y="109" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#c97b10">Cost = Re (via CAPM)</text>
+          fill="rgba(22,34,58,0.05)" stroke="rgba(22,34,58,0.14)" stroke-width="0.5"/>
+    <text x="616" y="72" text-anchor="middle" font-family="'IBM Plex Sans','Segoe UI',Arial,sans-serif"
+          font-size="14" font-weight="700" fill="#16223A">Equity</text>
+    <text x="616" y="91" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#5B6578">Shares issued</text>
+    <text x="616" y="109" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#B4530F">Cost = Re (via CAPM)</text>
   </g>
 
   <!-- ══════════════════════════════════════════════════
@@ -198,34 +184,34 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,246,250,0.96);backdrop
   <!-- Bond valuation -->
   <g class="map-node" onclick="showTip(event,'Bond Valuation (M2): price a bond by discounting coupons + face value at YTM. The YTM is exactly Rd — the firm\'s cost of borrowing. Same number, two perspectives.')">
     <rect x="36" y="196" width="228" height="58" rx="8"
-          fill="rgba(91,82,200,0.08)" stroke="rgba(91,82,200,0.3)" stroke-width="0.5"/>
-    <text x="150" y="218" text-anchor="middle" font-family="'Syne',sans-serif"
-          font-size="13" font-weight="700" fill="#7F77DD">Bond valuation</text>
-    <text x="150" y="237" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#5b52c8">YTM = cost of debt Rd</text>
+          fill="rgba(107,63,160,0.08)" stroke="rgba(107,63,160,0.3)" stroke-width="0.5"/>
+    <text x="150" y="218" text-anchor="middle" font-family="'IBM Plex Sans','Segoe UI',Arial,sans-serif"
+          font-size="13" font-weight="700" fill="#8A63C2">Bond valuation</text>
+    <text x="150" y="237" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#6B3FA0">YTM = cost of debt Rd</text>
   </g>
-  <text x="150" y="188" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-        font-size="10" fill="#0e8c65" letter-spacing="0.08em">M2</text>
+  <text x="150" y="188" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+        font-size="10" fill="#2F6B3F" letter-spacing="0.08em">M2</text>
 
   <!-- Risk & Return / CAPM — same row, right column -->
   <g class="map-node" onclick="showTip(event,'Risk & Return / CAPM (M4): Re = Rf + β(Rm − Rf). Beta measures how much a stock moves with the market. This formula gives you Re — the required return on equity, which becomes an input to WACC.')">
     <rect x="496" y="196" width="228" height="58" rx="8"
-          fill="rgba(14,140,101,0.08)" stroke="rgba(14,140,101,0.35)" stroke-width="0.5"/>
-    <text x="610" y="218" text-anchor="middle" font-family="'Syne',sans-serif"
-          font-size="13" font-weight="700" fill="#1D9E75">Risk &amp; return · CAPM</text>
-    <text x="610" y="237" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#0e8c65">Re = Rf + β(Rm − Rf)</text>
+          fill="rgba(47,107,63,0.08)" stroke="rgba(47,107,63,0.35)" stroke-width="0.5"/>
+    <text x="610" y="218" text-anchor="middle" font-family="'IBM Plex Sans','Segoe UI',Arial,sans-serif"
+          font-size="13" font-weight="700" fill="#3E8A55">Risk &amp; return · CAPM</text>
+    <text x="610" y="237" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#2F6B3F">Re = Rf + β(Rm − Rf)</text>
   </g>
-  <text x="610" y="188" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-        font-size="10" fill="#0e8c65" letter-spacing="0.08em">M4</text>
+  <text x="610" y="188" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+        font-size="10" fill="#2F6B3F" letter-spacing="0.08em">M4</text>
 
   <!-- Arrows from balance sheet row down to Row 1 -->
   <!-- Debt → Bond val -->
   <path d="M372 134 L372 170 L150 170 L150 194"
-        fill="none" stroke="rgba(15,23,42,0.18)" stroke-width="0.5" marker-end="url(#arr)"/>
+        fill="none" stroke="rgba(22,34,58,0.18)" stroke-width="0.5" marker-end="url(#arr)"/>
   <!-- Equity → CAPM -->
   <path d="M616 134 L616 194"
-        fill="none" stroke="rgba(15,23,42,0.18)" stroke-width="0.5" marker-end="url(#arr)"/>
+        fill="none" stroke="rgba(22,34,58,0.18)" stroke-width="0.5" marker-end="url(#arr)"/>
 
   <!-- ══════════════════════════════════════════════════
        ROW 2 — STOCK VALUATION (right, below CAPM)
@@ -234,14 +220,14 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,246,250,0.96);backdrop
 
   <g class="map-node" onclick="showTip(event,'Stock Valuation (M2): P = D₁/(Re − g). The Re here is the same Re that CAPM gives you — the shareholder\'s required return. Valuation and cost of capital are mirror images of each other.')">
     <rect x="496" y="290" width="228" height="58" rx="8"
-          fill="rgba(91,82,200,0.08)" stroke="rgba(91,82,200,0.3)" stroke-width="0.5"/>
-    <text x="610" y="312" text-anchor="middle" font-family="'Syne',sans-serif"
-          font-size="13" font-weight="700" fill="#7F77DD">Stock valuation</text>
-    <text x="610" y="331" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#5b52c8">P = D₁ / (Re − g)</text>
+          fill="rgba(107,63,160,0.08)" stroke="rgba(107,63,160,0.3)" stroke-width="0.5"/>
+    <text x="610" y="312" text-anchor="middle" font-family="'IBM Plex Sans','Segoe UI',Arial,sans-serif"
+          font-size="13" font-weight="700" fill="#8A63C2">Stock valuation</text>
+    <text x="610" y="331" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#6B3FA0">P = D₁ / (Re − g)</text>
   </g>
-  <text x="610" y="282" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-        font-size="10" fill="#0e8c65" letter-spacing="0.08em">M2</text>
+  <text x="610" y="282" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+        font-size="10" fill="#2F6B3F" letter-spacing="0.08em">M2</text>
 
   <!-- CAPM → Stock valuation arrow -->
   <line x1="610" y1="254" x2="610" y2="288"
@@ -253,25 +239,25 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,246,250,0.96);backdrop
 
   <g class="map-node" onclick="showTip(event,'WACC = (E/V)×Re + (D/V)×Rd×(1−Tc). It is the weighted average cost of all capital raised. Think of it as the minimum return a project must earn to justify funding — the hurdle rate.')">
     <rect x="220" y="410" width="320" height="66" rx="10"
-          fill="rgba(201,123,16,0.09)" stroke="rgba(201,123,16,0.45)" stroke-width="1"/>
-    <text x="380" y="435" text-anchor="middle" font-family="'Syne',sans-serif"
-          font-size="15" font-weight="800" fill="#c97b10">WACC — the hurdle rate</text>
-    <text x="380" y="457" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#a06208">WACC = (E/V)Re + (D/V)Rd(1−Tc)</text>
+          fill="rgba(180,83,15,0.09)" stroke="rgba(180,83,15,0.45)" stroke-width="1"/>
+    <text x="380" y="435" text-anchor="middle" font-family="'IBM Plex Sans','Segoe UI',Arial,sans-serif"
+          font-size="15" font-weight="800" fill="#B4530F">WACC — the hurdle rate</text>
+    <text x="380" y="457" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#8F420C">WACC = (E/V)Re + (D/V)Rd(1−Tc)</text>
   </g>
-  <text x="380" y="402" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-        font-size="10" fill="#0e8c65" letter-spacing="0.08em">M5</text>
+  <text x="380" y="402" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+        font-size="10" fill="#2F6B3F" letter-spacing="0.08em">M5</text>
 
   <!-- Bond val → WACC (Rd path) -->
   <path d="M150 254 L150 442 L218 442"
         fill="none" stroke="rgba(239,159,39,0.45)" stroke-width="0.8" marker-end="url(#arr)"/>
-  <text x="86" y="356" text-anchor="middle" font-family="'JetBrains Mono',monospace"
+  <text x="86" y="356" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
         font-size="10" fill="rgba(239,159,39,0.7)">Rd</text>
 
   <!-- Stock val + CAPM → WACC (Re path) — comes from stock val node -->
   <path d="M610 348 L610 442 L542 442"
         fill="none" stroke="rgba(239,159,39,0.45)" stroke-width="0.8" marker-end="url(#arr)"/>
-  <text x="668" y="398" text-anchor="middle" font-family="'JetBrains Mono',monospace"
+  <text x="668" y="398" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
         font-size="10" fill="rgba(239,159,39,0.7)">Re</text>
 
   <!-- ══════════════════════════════════════════════════
@@ -281,31 +267,31 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,246,250,0.96);backdrop
   <!-- Capital budgeting -->
   <g class="map-node" onclick="showTip(event,'Capital Budgeting (M3): Use WACC to discount project cash flows. NPV = PV(CFs) − Investment. If NPV > 0, the project earns more than its cost of capital — accept it.')">
     <rect x="36" y="538" width="280" height="58" rx="8"
-          fill="rgba(37,99,235,0.07)" stroke="rgba(37,99,235,0.35)" stroke-width="0.5"/>
-    <text x="176" y="560" text-anchor="middle" font-family="'Syne',sans-serif"
-          font-size="13" font-weight="700" fill="#2563eb">Capital budgeting</text>
-    <text x="176" y="579" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#2563eb">Discount project CFs at WACC</text>
+          fill="rgba(15,110,140,0.07)" stroke="rgba(15,110,140,0.35)" stroke-width="0.5"/>
+    <text x="176" y="560" text-anchor="middle" font-family="'IBM Plex Sans','Segoe UI',Arial,sans-serif"
+          font-size="13" font-weight="700" fill="#0F6E8C">Capital budgeting</text>
+    <text x="176" y="579" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#0F6E8C">Discount project CFs at WACC</text>
   </g>
-  <text x="176" y="530" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-        font-size="10" fill="#0e8c65" letter-spacing="0.08em">M3</text>
+  <text x="176" y="530" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+        font-size="10" fill="#2F6B3F" letter-spacing="0.08em">M3</text>
 
   <!-- Firm valuation -->
   <g class="map-node" onclick="showTip(event,'Firm Valuation: Discount the firm\'s future free cash flows at WACC to get enterprise value. This is exactly what analysts do when valuing Reliance or Infosys.')">
     <rect x="444" y="538" width="280" height="58" rx="8"
-          fill="rgba(37,99,235,0.07)" stroke="rgba(37,99,235,0.35)" stroke-width="0.5"/>
-    <text x="584" y="560" text-anchor="middle" font-family="'Syne',sans-serif"
-          font-size="13" font-weight="700" fill="#2563eb">Firm &amp; asset valuation</text>
-    <text x="584" y="579" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#2563eb">PV of future free cash flows</text>
+          fill="rgba(15,110,140,0.07)" stroke="rgba(15,110,140,0.35)" stroke-width="0.5"/>
+    <text x="584" y="560" text-anchor="middle" font-family="'IBM Plex Sans','Segoe UI',Arial,sans-serif"
+          font-size="13" font-weight="700" fill="#0F6E8C">Firm &amp; asset valuation</text>
+    <text x="584" y="579" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#0F6E8C">PV of future free cash flows</text>
   </g>
 
   <!-- WACC → Capital budgeting -->
   <path d="M300 476 L176 476 L176 536"
-        fill="none" stroke="rgba(201,123,16,0.45)" stroke-width="1" marker-end="url(#arr)"/>
+        fill="none" stroke="rgba(180,83,15,0.45)" stroke-width="1" marker-end="url(#arr)"/>
   <!-- WACC → Firm valuation -->
   <path d="M460 476 L584 476 L584 536"
-        fill="none" stroke="rgba(201,123,16,0.45)" stroke-width="1" marker-end="url(#arr)"/>
+        fill="none" stroke="rgba(180,83,15,0.45)" stroke-width="1" marker-end="url(#arr)"/>
 
   <!-- ══════════════════════════════════════════════════
        ROW 5 — NPV/IRR + PROJECT CFs | CF-II BOX
@@ -313,20 +299,20 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,246,250,0.96);backdrop
 
   <g class="map-node" onclick="showTip(event,'NPV = PV(cash inflows) − initial investment. Accept if NPV > 0. IRR is the discount rate that sets NPV = 0 — compare it to WACC to decide.')">
     <rect x="36" y="622" width="280" height="50" rx="8"
-          fill="rgba(37,99,235,0.07)" stroke="rgba(37,99,235,0.2)" stroke-width="0.5"/>
-    <text x="176" y="641" text-anchor="middle" font-family="'Syne',sans-serif"
-          font-size="12" font-weight="700" fill="#2563eb">NPV · IRR · Payback</text>
-    <text x="176" y="660" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#2563eb">Accept if NPV &gt; 0 or IRR &gt; WACC</text>
+          fill="rgba(15,110,140,0.07)" stroke="rgba(15,110,140,0.2)" stroke-width="0.5"/>
+    <text x="176" y="641" text-anchor="middle" font-family="'IBM Plex Sans','Segoe UI',Arial,sans-serif"
+          font-size="12" font-weight="700" fill="#0F6E8C">NPV · IRR · Payback</text>
+    <text x="176" y="660" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#0F6E8C">Accept if NPV &gt; 0 or IRR &gt; WACC</text>
   </g>
 
   <g class="map-node" onclick="showTip(event,'Project cash flows must be incremental and after-tax. Sunk costs excluded. Opportunity costs included. NWC changes matter. OCF = EBIT + Depreciation − Taxes.')">
     <rect x="36" y="690" width="280" height="50" rx="8"
-          fill="rgba(37,99,235,0.07)" stroke="rgba(37,99,235,0.2)" stroke-width="0.5"/>
-    <text x="176" y="709" text-anchor="middle" font-family="'Syne',sans-serif"
-          font-size="12" font-weight="700" fill="#2563eb">Project cash flows</text>
-    <text x="176" y="728" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#2563eb">OCF = EBIT + Dep − Tax</text>
+          fill="rgba(15,110,140,0.07)" stroke="rgba(15,110,140,0.2)" stroke-width="0.5"/>
+    <text x="176" y="709" text-anchor="middle" font-family="'IBM Plex Sans','Segoe UI',Arial,sans-serif"
+          font-size="12" font-weight="700" fill="#0F6E8C">Project cash flows</text>
+    <text x="176" y="728" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#0F6E8C">OCF = EBIT + Dep − Tax</text>
   </g>
 
   <line x1="176" y1="596" x2="176" y2="620"
@@ -336,19 +322,19 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,246,250,0.96);backdrop
 
   <!-- CF-II dashed box -->
   <rect x="444" y="622" width="280" height="118" rx="8"
-        fill="none" stroke="rgba(15,23,42,0.12)" stroke-width="0.5" stroke-dasharray="5 4"/>
-  <text x="584" y="646" text-anchor="middle" font-family="'JetBrains Mono',monospace"
+        fill="none" stroke="rgba(22,34,58,0.12)" stroke-width="0.5" stroke-dasharray="5 4"/>
+  <text x="584" y="646" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
         font-size="10" fill="rgba(136,135,128,0.5)" letter-spacing="0.1em">CF-II CONTINUES HERE</text>
-  <text x="584" y="668" text-anchor="middle" font-family="'JetBrains Mono',monospace"
+  <text x="584" y="668" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
         font-size="11" fill="rgba(136,135,128,0.5)">Capital structure · MM theorem</text>
-  <text x="584" y="688" text-anchor="middle" font-family="'JetBrains Mono',monospace"
+  <text x="584" y="688" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
         font-size="11" fill="rgba(136,135,128,0.5)">Sources of finance</text>
-  <text x="584" y="708" text-anchor="middle" font-family="'JetBrains Mono',monospace"
+  <text x="584" y="708" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
         font-size="11" fill="rgba(136,135,128,0.5)">Dividend policy</text>
-  <text x="584" y="728" text-anchor="middle" font-family="'JetBrains Mono',monospace"
+  <text x="584" y="728" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
         font-size="11" fill="rgba(136,135,128,0.5)">Working capital management</text>
   <line x1="584" y1="596" x2="584" y2="620"
-        fill="none" stroke="rgba(15,23,42,0.14)" stroke-width="0.5"
+        fill="none" stroke="rgba(22,34,58,0.14)" stroke-width="0.5"
         stroke-dasharray="3 3" marker-end="url(#arr)"/>
 
   <!-- ══════════════════════════════════════════════════
@@ -356,43 +342,43 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,246,250,0.96);backdrop
   ═══════════════════════════════════════════════════ -->
 
   <rect x="20" y="768" width="720" height="64" rx="10"
-        fill="none" stroke="rgba(14,140,101,0.3)" stroke-width="0.5" stroke-dasharray="5 4"/>
-  <text x="380" y="786" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-        font-size="10" fill="#0e8c65" letter-spacing="0.15em">FOUNDATION — EVERY ROW ABOVE USES THIS</text>
+        fill="none" stroke="rgba(47,107,63,0.3)" stroke-width="0.5" stroke-dasharray="5 4"/>
+  <text x="380" y="786" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+        font-size="10" fill="#2F6B3F" letter-spacing="0.15em">FOUNDATION — EVERY ROW ABOVE USES THIS</text>
 
   <g class="map-node" onclick="showTip(event,'TVM (M1): Money today is worth more than the same amount tomorrow. PV = FV/(1+r)ⁿ. Every valuation and capital budgeting formula is an application of this single idea.')">
     <rect x="36" y="792" width="310" height="30" rx="6"
-          fill="rgba(29,158,117,0.08)" stroke="rgba(14,140,101,0.22)" stroke-width="0.5"/>
-    <text x="191" y="811" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#0e8c65">Time value of money · PV = FV/(1+r)ⁿ</text>
+          fill="rgba(29,158,117,0.08)" stroke="rgba(47,107,63,0.22)" stroke-width="0.5"/>
+    <text x="191" y="811" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#2F6B3F">Time value of money · PV = FV/(1+r)ⁿ</text>
   </g>
-  <text x="191" y="784" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-        font-size="10" fill="#0e8c65" letter-spacing="0.08em">M1</text>
+  <text x="191" y="784" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+        font-size="10" fill="#2F6B3F" letter-spacing="0.08em">M1</text>
 
   <g class="map-node" onclick="showTip(event,'Goal of FM (M1): Maximise shareholder wealth — the PV of all future cash flows to equity holders. Every decision (invest, finance, manage WC) is judged by whether it increases this value.')">
     <rect x="414" y="792" width="310" height="30" rx="6"
-          fill="rgba(29,158,117,0.08)" stroke="rgba(14,140,101,0.22)" stroke-width="0.5"/>
-    <text x="569" y="811" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-          font-size="11" fill="#0e8c65">Goal of FM · maximise shareholder wealth</text>
+          fill="rgba(29,158,117,0.08)" stroke="rgba(47,107,63,0.22)" stroke-width="0.5"/>
+    <text x="569" y="811" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+          font-size="11" fill="#2F6B3F">Goal of FM · maximise shareholder wealth</text>
   </g>
-  <text x="569" y="784" text-anchor="middle" font-family="'JetBrains Mono',monospace"
-        font-size="10" fill="#0e8c65" letter-spacing="0.08em">M1</text>
+  <text x="569" y="784" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
+        font-size="10" fill="#2F6B3F" letter-spacing="0.08em">M1</text>
 
   <!-- TVM up-arrows (dashed) -->
   <line x1="191" y1="768" x2="176" y2="742"
-        fill="none" stroke="rgba(14,140,101,0.3)" stroke-width="0.5"
+        fill="none" stroke="rgba(47,107,63,0.3)" stroke-width="0.5"
         stroke-dasharray="3 3" marker-end="url(#arr)"/>
   <line x1="500" y1="768" x2="584" y2="742"
-        fill="none" stroke="rgba(14,140,101,0.3)" stroke-width="0.5"
+        fill="none" stroke="rgba(47,107,63,0.3)" stroke-width="0.5"
         stroke-dasharray="3 3" marker-end="url(#arr)"/>
 
   <!-- ══════════════════════════════════════════════════
        FEEDBACK LOOP: accepted projects → balance sheet assets
   ═══════════════════════════════════════════════════ -->
   <path d="M36 662 L16 662 L16 88 L34 88"
-        fill="none" stroke="rgba(15,23,42,0.12)" stroke-width="0.5"
+        fill="none" stroke="rgba(22,34,58,0.12)" stroke-width="0.5"
         stroke-dasharray="4 3" marker-end="url(#arr)"/>
-  <text x="7" y="440" text-anchor="middle" font-family="'JetBrains Mono',monospace"
+  <text x="7" y="440" text-anchor="middle" font-family="'IBM Plex Mono',Consolas,monospace"
         font-size="9" fill="rgba(136,135,128,0.35)"
         transform="rotate(-90 7 440)">accepted projects → fixed assets on balance sheet</text>
 
@@ -467,11 +453,11 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,246,250,0.96);backdrop
         <div class="mod-name">Foundation</div>
       </div>
       <div class="mod-content">
-        <span class="mod-tag" style="background:rgba(14,140,101,0.09);color:#1D9E75;border:1px solid rgba(14,140,101,0.22)">Goal of FM</span>
+        <span class="mod-tag" style="background:rgba(47,107,63,0.09);color:#3E8A55;border:1px solid rgba(47,107,63,0.22)">Goal of FM</span>
         <span class="mod-arrow">·</span>
-        <span class="mod-tag" style="background:rgba(14,140,101,0.09);color:#1D9E75;border:1px solid rgba(14,140,101,0.22)">3 decisions</span>
+        <span class="mod-tag" style="background:rgba(47,107,63,0.09);color:#3E8A55;border:1px solid rgba(47,107,63,0.22)">3 decisions</span>
         <span class="mod-arrow">·</span>
-        <span class="mod-tag" style="background:rgba(14,140,101,0.09);color:#1D9E75;border:1px solid rgba(14,140,101,0.22)">TVM · PV · FV · Annuity · Perpetuity</span>
+        <span class="mod-tag" style="background:rgba(47,107,63,0.09);color:#3E8A55;border:1px solid rgba(47,107,63,0.22)">TVM · PV · FV · Annuity · Perpetuity</span>
       </div>
     </div>
     <div class="mod-row">
@@ -480,9 +466,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,246,250,0.96);backdrop
         <div class="mod-name">Valuation</div>
       </div>
       <div class="mod-content">
-        <span class="mod-tag" style="background:rgba(91,82,200,0.08);color:#7F77DD;border:1px solid rgba(127,119,221,0.3)">Bond valuation → Rd</span>
+        <span class="mod-tag" style="background:rgba(107,63,160,0.08);color:#8A63C2;border:1px solid rgba(127,119,221,0.3)">Bond valuation → Rd</span>
         <span class="mod-arrow">·</span>
-        <span class="mod-tag" style="background:rgba(91,82,200,0.08);color:#7F77DD;border:1px solid rgba(127,119,221,0.3)">Stock valuation · DDM</span>
+        <span class="mod-tag" style="background:rgba(107,63,160,0.08);color:#8A63C2;border:1px solid rgba(127,119,221,0.3)">Stock valuation · DDM</span>
       </div>
     </div>
     <div class="mod-row">
@@ -491,9 +477,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,246,250,0.96);backdrop
         <div class="mod-name">Investment</div>
       </div>
       <div class="mod-content">
-        <span class="mod-tag" style="background:rgba(37,99,235,0.07);color:#2563eb;border:1px solid rgba(37,99,235,0.3)">NPV · IRR · Payback</span>
+        <span class="mod-tag" style="background:rgba(15,110,140,0.07);color:#0F6E8C;border:1px solid rgba(15,110,140,0.3)">NPV · IRR · Payback</span>
         <span class="mod-arrow">·</span>
-        <span class="mod-tag" style="background:rgba(37,99,235,0.07);color:#2563eb;border:1px solid rgba(37,99,235,0.3)">Project cash flows · OCF</span>
+        <span class="mod-tag" style="background:rgba(15,110,140,0.07);color:#0F6E8C;border:1px solid rgba(15,110,140,0.3)">Project cash flows · OCF</span>
       </div>
     </div>
     <div class="mod-row">
@@ -502,9 +488,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,246,250,0.96);backdrop
         <div class="mod-name">Risk</div>
       </div>
       <div class="mod-content">
-        <span class="mod-tag" style="background:rgba(14,140,101,0.08);color:#1D9E75;border:1px solid rgba(14,140,101,0.22)">Expected return · σ · β</span>
+        <span class="mod-tag" style="background:rgba(47,107,63,0.08);color:#3E8A55;border:1px solid rgba(47,107,63,0.22)">Expected return · σ · β</span>
         <span class="mod-arrow">·</span>
-        <span class="mod-tag" style="background:rgba(14,140,101,0.08);color:#1D9E75;border:1px solid rgba(14,140,101,0.22)">CAPM → Re</span>
+        <span class="mod-tag" style="background:rgba(47,107,63,0.08);color:#3E8A55;border:1px solid rgba(47,107,63,0.22)">CAPM → Re</span>
       </div>
     </div>
     <div class="mod-row">
@@ -513,9 +499,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,246,250,0.96);backdrop
         <div class="mod-name">Cost of capital</div>
       </div>
       <div class="mod-content">
-        <span class="mod-tag" style="background:rgba(201,123,16,0.08);color:#c97b10;border:1px solid rgba(239,159,39,0.3)">Re · Rd · after-tax cost</span>
+        <span class="mod-tag" style="background:rgba(180,83,15,0.08);color:#B4530F;border:1px solid rgba(239,159,39,0.3)">Re · Rd · after-tax cost</span>
         <span class="mod-arrow">·</span>
-        <span class="mod-tag" style="background:rgba(201,123,16,0.08);color:#c97b10;border:1px solid rgba(239,159,39,0.3)">WACC as hurdle rate</span>
+        <span class="mod-tag" style="background:rgba(180,83,15,0.08);color:#B4530F;border:1px solid rgba(239,159,39,0.3)">WACC as hurdle rate</span>
       </div>
     </div>
     <div class="mod-row" style="opacity:0.5;">
@@ -524,11 +510,11 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,246,250,0.96);backdrop
         <div class="mod-name" style="font-size:0.75rem">Next course</div>
       </div>
       <div class="mod-content">
-        <span class="mod-tag" style="background:rgba(15,23,42,0.05);color:#888780;border:1px solid rgba(15,23,42,0.12)">Capital structure · MM</span>
+        <span class="mod-tag" style="background:rgba(22,34,58,0.05);color:#888780;border:1px solid rgba(22,34,58,0.12)">Capital structure · MM</span>
         <span class="mod-arrow">·</span>
-        <span class="mod-tag" style="background:rgba(15,23,42,0.05);color:#888780;border:1px solid rgba(15,23,42,0.12)">Sources of finance</span>
+        <span class="mod-tag" style="background:rgba(22,34,58,0.05);color:#888780;border:1px solid rgba(22,34,58,0.12)">Sources of finance</span>
         <span class="mod-arrow">·</span>
-        <span class="mod-tag" style="background:rgba(15,23,42,0.05);color:#888780;border:1px solid rgba(15,23,42,0.12)">Dividend policy · WC mgmt</span>
+        <span class="mod-tag" style="background:rgba(22,34,58,0.05);color:#888780;border:1px solid rgba(22,34,58,0.12)">Dividend policy · WC mgmt</span>
       </div>
     </div>
   </div>
