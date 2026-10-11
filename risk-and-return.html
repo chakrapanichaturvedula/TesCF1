@@ -313,9 +313,10 @@ const S2={n:2,label:'Risk–return picture',eyebrow:'Step 2 · Put both numbers 
   contrast:'The dots line up: the riskier the asset, the higher its mean return. Investors demand to be paid for bearing risk. Treasury bills, almost risk free, earned the least; small company stocks, the most volatile, earned the most.',ctl:[],
   draw(s){const k=K(),{X,Y}=axes(s,k,{xmin:0,xmax:35,ymin:0,ymax:20,xt:5,yt:5,xl:'Risk: standard deviation',yl:'Return: mean',x0:80,x1:640,y0:280,y1:30});
    const pts=HIST2.map(([n,sd,r])=>[X(sd),Y(r)]);poly(s,[pts[0],pts[3],pts[4]],k.l,1.5);
-   const LBL=[[X(3.1)+14,Y(1.6),'start'],[X(9.2)+14,Y(4.4),'start'],[X(8.5)-14,Y(8.6),'end'],[X(20.2)-14,Y(15.6),'end'],[X(32.9)-14,Y(19.6),'end']];
-   HIST2.forEach(([n,sd,r],i)=>{const col=[k.m,k.f,k.f,k.a,k.d][i],[lx,ly,an]=LBL[i];
-    dot(s,X(sd),Y(r),col,7);T(s,lx,ly,n,{anchor:an,bold:1,size:12,fill:col});T(s,lx,ly+15,`${r}%, σ ${sd}%`,{anchor:an,mono:1,size:11,fill:k.m})});
+   const LBL=[[10,16,'start'],[10,20,'start'],[-10,-22,'end'],[-12,-22,'end'],[-8,-28,'end']];
+   HIST2.forEach(([n,sd,r],i)=>{const col=[k.m,k.f,k.f,k.a,k.d][i],[dx,dy,an]=LBL[i],x=X(sd),y=Y(r);
+    if(i===1)s.append(el('circle',{cx:x,cy:y,r:5,fill:k.surf,stroke:col,'stroke-width':2.5}));else s.append(el('circle',{cx:x,cy:y,r:5.5,fill:col,stroke:k.surf,'stroke-width':1.5}));
+    T(s,x+dx,y+dy,n,{anchor:an,bold:1,size:12,fill:col});T(s,x+dx,y+dy+15,`${r}%, σ ${sd}%`,{anchor:an,mono:1,size:11,fill:k.m})});
    return {legend:[[k.m,'Bills'],[k.f,'Bonds'],[k.a,'Large stocks'],[k.d,'Small stocks']],
     work:`<div class="k">Mean return · standard deviation</div>${HIST2.map(([n,sd,r])=>`<div>${n}: ${r}% · ${sd}%</div>`).join('')}`}}},
  {id:'prem',name:'The risk premium',short:'The reward for bearing risk',
