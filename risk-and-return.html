@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Risk and Return</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: three-step stepper; cash-flow tables replace the chart where the table is the picture; in each step a concept index on the left and a stage on the right, as in the bond walkthrough. Term index on the left; on the right one stage per term, each with its own picture on a shared cash-flow timeline, a worked number and, where it helps, one control. */
+:root{
+  --bg:#F4F4F1; --surface:#FFFFFF; --ink:#16223A; --muted:#5B6578; --line:#DADDD8; --faint:#E7E8E3;
+  --accent:#6B3FA0; --accent-soft:#EEE6F7; --face:#0F6E8C; --face-soft:#DCEEF3;
+  --prem:#2348B8; --disc:#B4530F; --par:#2F6B3F;
+  --display:'Source Serif 4', Georgia, serif; --body:'IBM Plex Sans','Segoe UI',Arial,sans-serif; --mono:'IBM Plex Mono',Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12131A; --surface:#1C1E29; --ink:#ECEDF2; --muted:#A1A6B8; --line:#2F3242; --faint:#262938;
+  --accent:#B794E6; --accent-soft:#2E2340; --face:#5BB8D4; --face-soft:#16384A;
+  --prem:#8FA8F5; --disc:#F0A266; --par:#86C998; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12131A; --surface:#1C1E29; --ink:#ECEDF2; --muted:#A1A6B8; --line:#2F3242; --faint:#262938;
+  --accent:#B794E6; --accent-soft:#2E2340; --face:#5BB8D4; --face-soft:#16384A;
+  --prem:#8FA8F5; --disc:#F0A266; --par:#86C998; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;padding-inline:20px;padding-block:28px 40px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 4px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.05;margin:0}
+.sub{color:var(--muted);margin:6px 0 0;max-width:64ch}
+header{display:flex;flex-direction:column;gap:14px}
+.spec{display:flex;flex-wrap:wrap;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.spec>div{display:flex;flex-direction:column;justify-content:center;gap:2px;padding:12px 18px;border-left:1px solid var(--line);flex:1 1 120px}
+.spec>div:first-child{border-left:none}
+.spec span{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.spec b{font-family:var(--mono);font-weight:500;font-size:18px}
+.spec .spec-h{font-family:var(--display);font-weight:700;font-size:20px;background:var(--accent-soft);color:var(--accent);flex:0 0 auto}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px;align-items:start}
+.index{display:flex;flex-direction:column;gap:6px}
+.term{font:inherit;text-align:left;border:1px solid transparent;background:transparent;color:var(--ink);border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;flex-direction:column}
+.term b{font-weight:600}
+.term span{font-size:14px;color:var(--muted)}
+.term:hover{background:var(--surface)}
+.term[aria-selected="true"]{background:var(--surface);border-color:var(--accent)}
+.term[aria-selected="true"] b{color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.stage h2{font-family:var(--display);font-size:28px;margin:0}
+.stage .def{margin:0;max-width:66ch;color:var(--muted);font-size:17px}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:var(--body);font-size:13px;fill:var(--muted)}
+svg text.mono{font-family:var(--mono)}
+.readout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center}
+.work{background:var(--bg);border-radius:12px;padding:16px 18px;font-family:var(--mono);font-size:16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.work div{overflow-x:auto;white-space:nowrap}
+.work .k{font-family:var(--body);font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.work .big{font-size:28px}
+.c{color:var(--accent)} .f{color:var(--face)}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.ctl label{display:flex;justify-content:space-between;font-weight:500}
+.ctl output{font-family:var(--mono);color:var(--accent)}
+.ctl input{width:100%;accent-color:var(--accent)}
+.ctl small{color:var(--muted);font-size:14px}
+.slice{display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid var(--line);font-family:var(--mono);font-size:13px}
+.slice div{display:flex;align-items:center;padding-inline:8px;white-space:nowrap;overflow:hidden}
+.slice .a{background:var(--accent);color:var(--surface)} .slice .b{background:var(--face-soft);color:var(--face);flex:1}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:3px;background:var(--bg);gap:2px}
+.seg button{flex:1 1 140px;font:500 14px var(--body);border:none;background:transparent;color:var(--ink);padding:8px 10px;border-radius:9px;cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--accent);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.grid100{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;width:min(100%,220px);padding:6px;background:var(--face-soft);border:1px solid var(--face);border-radius:8px;margin-block:4px}
+.grid100 i{display:block;aspect-ratio:1;border-radius:2px;box-shadow:inset 0 0 0 1px var(--face)}
+.contrast{font-size:15px;color:var(--muted);border-left:3px solid var(--accent);padding-left:12px;margin:0;max-width:70ch}
+.nav{display:flex;justify-content:space-between;gap:10px}
+.btn{font:600 15px var(--body);padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.btn[disabled]{opacity:.35;cursor:default}
+@media (max-width:820px){.layout{grid-template-columns:1fr}.index{flex-direction:row;overflow-x:auto}.term{min-width:150px}.readout{grid-template-columns:1fr}}
+.steph{font-family:var(--display);font-weight:700;font-size:clamp(26px,3.6vw,36px);line-height:1.1;margin:0}
+.shell{padding-bottom:6px}
+.shell h1{font-size:clamp(30px,4.4vw,46px)}
+.stepper{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stepper button{font:inherit;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;gap:2px}
+.stepper small{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.stepper span{font-weight:600}
+.stepper button[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.stepper button[aria-selected="true"] small{color:var(--accent)}
+.step{padding-top:8px}
+.trio{display:flex;flex-wrap:wrap;gap:14px;font-size:14px;color:var(--muted)}
+.trio i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.work .fm{font-family:var(--mono);font-size:14px;color:var(--muted)}
+.work div{white-space:normal}
+.work .nt{font-family:var(--body);font-size:14px;color:var(--muted)}
+.readout{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr)}
+.ctl .ctl{gap:6px}
+@media (max-width:820px){.readout{grid-template-columns:1fr}}
+@media (max-width:640px){.stepper{grid-template-columns:1fr}}
+.fx{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-style:italic;font-size:19px;color:var(--ink);line-height:1.15;flex-wrap:nowrap}
+.fx .up{font-style:normal}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle}
+.fr>span:first-child{border-bottom:1.5px solid currentColor;padding:0 4px 2px}
+.fr>span:last-child{padding:2px 4px 0}
+.fx .fr{font-size:.92em}
+.brk{position:relative;display:inline-flex;align-items:center;padding:4px 8px;border-left:2px solid currentColor;border-right:2px solid currentColor}
+.brk::before,.brk::after{content:'';position:absolute;top:0;bottom:0;width:6px;border-top:2px solid currentColor;border-bottom:2px solid currentColor}
+.brk::before{left:0}.brk::after{right:0}
+.par{display:inline-flex;align-items:center}
+.par::before{content:'(';font-size:1.5em;font-style:normal;font-weight:300}.par::after{content:')';font-size:1.5em;font-style:normal;font-weight:300}
+.fx sup{font-size:.62em}
+.work .fwrap{overflow-x:auto;padding:6px 2px;white-space:nowrap}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:3px;background:var(--bg);gap:2px}
+.seg button{flex:1 1 140px;font:500 14px var(--body);border:none;background:transparent;color:var(--ink);padding:8px 10px;border-radius:9px;cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--accent);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.d{color:var(--disc)}
+/* v2: map step, summary cards */
+[hidden]{display:none!important}
+.stepper{grid-template-columns:repeat(5,1fr)}
+.layout.solo{grid-template-columns:1fr}
+.readout.noctl{grid-template-columns:1fr}
+.node{cursor:pointer}.node:hover rect:first-child{filter:brightness(.97)}.node:focus{outline:none}.node:focus-visible rect:first-child{stroke-width:3}
+.work .q{font-size:16px;color:var(--ink)}
+.work .rule{font-family:var(--body);font-size:20px;font-weight:600;line-height:1.3}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:6px 0 4px}
+.mcard{border:1px solid var(--line);border-top:4px solid var(--face);border-radius:12px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
+.mcard.mn{border-top-color:var(--disc)}
+.mcard header{display:flex;flex-direction:column;gap:2px}
+.mcard header b{font-family:var(--display);font-size:20px;line-height:1.15}
+.mrule{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.tests{display:flex;flex-wrap:wrap;gap:4px}
+.tests span{font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:999px}
+.tests .ok{background:color-mix(in srgb,var(--par) 15%,transparent);color:var(--par)}
+.tests .no{background:color-mix(in srgb,var(--disc) 15%,transparent);color:var(--disc)}
+.mcard .lab{margin:2px 0 0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.mcard ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:13.5px;line-height:1.4}
+.mcard li{padding-left:18px;position:relative}
+.pro li::before{content:'+';position:absolute;left:2px;color:var(--par);font-weight:700}
+.con li::before{content:'−';position:absolute;left:2px;color:var(--disc);font-weight:700}
+.verdict{margin-top:auto;font-size:13px;font-weight:700;padding:6px 10px;border-radius:8px;text-align:center}
+.verdict.g{background:color-mix(in srgb,var(--par) 16%,transparent);color:var(--par)}
+.verdict.a{background:var(--accent-soft);color:var(--accent)}
+.verdict.r{background:var(--faint);color:var(--muted)}
+@media (max-width:900px){.stepper{grid-template-columns:repeat(5,1fr)}}
+@media (max-width:640px){.stepper{grid-template-columns:1fr 1fr}}
+@media (min-width:821px){.index.desk-hide{display:none}}
+.work .prop{border:2px solid var(--accent);border-radius:10px;padding:10px 12px;margin:6px 0;background:var(--surface);display:flex;flex-direction:column;gap:6px}
+.work .prop .ph{font-family:var(--body);font-size:14px;font-weight:600;color:var(--accent)}
+.work .prop .pr{display:grid;grid-template-columns:minmax(0,1fr) 22px minmax(0,1.3fr);align-items:center;gap:6px;font-size:14px}
+.work .prop .pr i{font-style:normal;color:var(--accent);text-align:center;font-size:20px;font-family:var(--body)}
+.stepper{grid-template-columns:repeat(5,1fr)}
+@media (max-width:640px){.stepper{grid-template-columns:1fr}}
+.free .tw{overflow-x:auto;margin:4px 0 6px}
+.cft{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:14px;min-width:520px}
+.cft th{font:600 12px var(--body);color:var(--muted);text-align:right;padding:6px 10px;border-bottom:1.5px solid var(--line)}
+.cft th:first-child,.cft td:first-child{text-align:left;font-family:var(--body);white-space:nowrap}
+.cft td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--faint);color:var(--ink)}
+.cft tr.sub td{font-weight:600}
+.cft tr.tot td{font-weight:700;border-top:2px solid var(--ink);font-size:15px}
+.cft tr.dim td{color:var(--muted);font-size:13px}
+.cft td.neg{color:var(--disc)}
+.cft tr.hl td{background:var(--accent-soft)}
+.cft tr.hl td:first-child{box-shadow:inset 4px 0 0 var(--accent)}
+.why{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px;margin:6px 0 8px;align-items:start}
+@media (max-width:820px){.why{grid-template-columns:1fr}}
+.tpl{width:100%;border-collapse:collapse;font-size:14px}
+.tpl td{padding:6px 8px;border-bottom:1px solid var(--faint);vertical-align:top}
+.tpl td.sg{width:26px;text-align:center;font:700 16px var(--mono)}
+.tpl td.sg.c{color:var(--par)}.tpl td.sg.d{color:var(--disc)}.tpl td.sg.m{color:var(--muted)}.tpl td.sg.f{color:var(--face)}.tpl td.sg.x{color:var(--disc)}
+.tpl td.tag{font-size:12px;color:var(--muted);text-align:right}
+.tpl tr.sub td{font-weight:600;border-top:1.5px solid var(--line)}
+.tpl tr.strike td:nth-child(2){text-decoration:line-through;color:var(--muted)}
+.tpl tr.on td{background:var(--accent-soft)}.tpl tr.on td:first-child{box-shadow:inset 4px 0 0 var(--accent)}.tpl tr.on td.tag{color:var(--accent);font-weight:600}
+.wcard{border:2px solid var(--accent);border-radius:12px;padding:14px 16px;background:var(--surface)}
+.wcard h3{font-family:var(--display);font-size:19px;margin:0 0 8px;line-height:1.2}
+.wcard p{margin:0 0 8px;font-size:14.5px;line-height:1.5}
+.nwcr{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 10px;font-family:var(--body)}
+.nb{border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px;font-size:13px;line-height:1.4;color:var(--ink)}
+.nb b{font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+.nb .big{font:700 17px var(--body)}
+.nb.up{background:color-mix(in srgb,var(--disc) 13%,transparent);border-left:5px solid var(--disc)}.nb.up .big,.nb.up b{color:var(--disc)}
+.nb.dn{background:color-mix(in srgb,var(--par) 13%,transparent);border-left:5px solid var(--par)}.nb.dn .big,.nb.dn b{color:var(--par)}
+.wex{margin-top:8px;padding:10px 12px;border-radius:8px;background:var(--bg);font:13.5px/1.6 var(--mono)}
+
+.work .cases{display:flex;flex-direction:column;gap:4px;margin-top:8px;font-family:var(--body)}
+.work .cases div{display:grid;grid-template-columns:86px 1fr;gap:8px;padding:5px 8px;border-radius:8px;font-size:13px;line-height:1.35;color:var(--muted);white-space:normal}
+.work .cases div b{font-family:var(--mono);color:var(--ink)}
+.work .cases div.on{background:var(--accent-soft);color:var(--ink)}.work .cases div.on b{color:var(--accent)}
+</style>
+<style>
+body{margin:0}
+.homebar{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1120px;margin:0 auto;padding:14px 0 0;font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;font-size:14px}
+.homebar a{color:var(--accent,#6B3FA0);text-decoration:none;font-weight:600}
+.homebar a:hover{text-decoration:underline}
+.homebar span{color:var(--muted,#5B6578)}
+</style>
+<nav class="homebar" aria-label="Site"><a href="index.html">← All FIA 203 topics</a><span>FIA 203 Corporate Finance</span></nav>
+
+
+<div class="wrap shell">
+  <p class="eyebrow">Corporate Finance</p>
+  <h1>Risk and Return</h1>
+  <div class="stepper" role="tablist" aria-label="Steps" id="stepper"></div>
+</div>
+<div id="steps"></div>
+
+<script>
+(()=>{
+const L=v=>{const a=Math.abs(v),s=v<0?'−':'';return s+'₹'+a.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})+'L'};
+const f2=v=>Math.abs(v)<0.005?'–':v<0?`(${Math.abs(v).toFixed(2)})`:v.toFixed(2);
+const pc=(v,d=1)=>(v*100).toFixed(d)+'%';
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NS='http://www.w3.org/2000/svg';
+const el=(t,a,x)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(x!=null)e.textContent=x;return e};
+const K=()=>({a:css('--accent'),aS:css('--accent-soft'),f:css('--face'),fS:css('--face-soft'),m:css('--muted'),l:css('--line'),fa:css('--faint'),ink:css('--ink'),par:css('--par'),d:css('--disc'),surf:css('--surface')});
+const T=(s,x,y,t,o={})=>s.append(el('text',{x,y,'text-anchor':o.anchor||'middle',class:o.mono?'mono':'',style:`fill:${o.fill||css('--muted')};${o.bold?'font-weight:600;':''}${o.size?'font-size:'+o.size+'px;':''}`},t));
+const Rc=(s,x,y,w,h,fill,o={})=>{if(h<=0||w<=0)return;s.append(el('rect',{x,y,width:w,height:h,fill,rx:o.rx??3,...(o.stroke?{stroke:o.stroke,'stroke-width':o.sw||1}:{}),...(o.op!=null?{opacity:o.op}:{})}))};
+const Ln=(s,x1,y1,x2,y2,st,w=1)=>s.append(el('line',{x1,y1,x2,y2,stroke:st,'stroke-width':w}));
+const note=t=>`<div class="nt">${t}</div>`;
+const npv=(c,r)=>c.reduce((s,x,t)=>s+x/Math.pow(1+r,t),0);
+const irr=c=>{let lo=-0.5,hi=1;for(let i=0;i<100;i++){const m=(lo+hi)/2;(npv(c,lo)*npv(c,m)<=0)?hi=m:lo=m}return (lo+hi)/2};
+
+const R0=v=>(v<0?'−':'')+'₹'+Math.round(Math.abs(v)).toLocaleString('en-IN');
+const P1=v=>(v<0?'−':'')+Math.abs(v).toFixed(1)+'%';
+/* x-y axes; returns scale functions */
+function axes(s,k,o){const {x0=80,x1=700,y0=290,y1=24,xmin,xmax,ymin,ymax,xt,yt,fx=v=>v+'%',fy=v=>v+'%',xl='',yl=''}=o;
+ const X=v=>x0+(v-xmin)/(xmax-xmin)*(x1-x0),Y=v=>y0-(v-ymin)/(ymax-ymin)*(y0-y1);
+ for(let v=Math.ceil(ymin/yt-1e-9)*yt;v<=ymax+1e-9;v+=yt){Ln(s,x0,Y(v),x1,Y(v),Math.abs(v)<1e-9?k.ink:k.fa,Math.abs(v)<1e-9?1.5:1);T(s,x0-8,Y(v)+4,fy(+v.toFixed(4)),{anchor:'end',size:11})}
+ for(let v=Math.ceil(xmin/xt-1e-9)*xt;v<=xmax+1e-9;v+=xt)T(s,X(v),y0+18,fx(+v.toFixed(4)),{size:11});
+ if(xl)T(s,(x0+x1)/2,y0+36,xl,{size:12});if(yl)T(s,x0-8,y1-10,yl,{anchor:'start',size:12});
+ return {X,Y}}
+const dot=(s,x,y,col,r=6,fill)=>s.append(el('circle',{cx:x,cy:y,r,fill:fill||col,stroke:col,'stroke-width':2.5}));
+const poly=(s,pts,col,w=3,op=1)=>s.append(el('polyline',{points:pts.map(p=>p.join(',')).join(' '),fill:'none',stroke:col,'stroke-width':w,'stroke-linejoin':'round',opacity:op}));
+const TB=(s,x,y,t,o={})=>{const w=t.length*(o.size||12)*0.62+10,an=o.anchor||'middle',x0=an==='start'?x-5:an==='end'?x-w+5:x-w/2;Rc(s,x0,y-(o.size||12)-2,w,(o.size||12)+8,css('--surface'),{rx:4,op:.92});T(s,x,y,t,o)};
+
+/* Risk and Return, rebuilt simple: measure return, measure risk, plot them. */
+const YRS=['Yr 1','Yr 2','Yr 3','Yr 4','Yr 5'];
+const SA=[9,11,10,8,12], SBb=[30,-15,25,-10,20];          // both average 10%
+const mean=a=>a.reduce((x,v)=>x+v,0)/a.length;
+const sdev=a=>{const m=mean(a);return Math.sqrt(a.reduce((x,v)=>x+(v-m)**2,0)/(a.length-1))};
+const HIST2=[['Treasury bills',3.1,3.8],['Government bonds',9.2,5.8],['Corporate bonds',8.5,6.2],['Large company stocks',20.2,12.3],['Small company stocks',32.9,17.4]];
+
+/* bar chart of yearly returns with an average line */
+function yearBars(s,k,series,{lo,hi,x0=90,x1=640,y0=270,y1=30}){
+ const {X,Y}=axes(s,k,{xmin:0,xmax:5,ymin:lo,ymax:hi,xt:10,yt:hi-lo>40?10:5,x0,x1,y0,y1,fx:()=>''});
+ const n=series.length,bw=Math.min(34,90/n);
+ series.forEach(({vals,col},j)=>{vals.forEach((v,i)=>{const cx=X(i+0.5)+(j-(n-1)/2)*(bw+6);
+   Rc(s,cx-bw/2,Math.min(Y(v),Y(0)),bw,Math.max(2,Math.abs(Y(v)-Y(0))),col,{rx:3});
+   T(s,cx,v>=0?Y(v)-6:Y(v)+15,v+'%',{mono:1,bold:1,size:11,fill:col})})});
+ YRS.forEach((t,i)=>T(s,X(i+0.5),y0+18,t,{size:12}));
+ return {X,Y};
+}
+
+/* ================= STEP 1: measuring return and risk ================= */
+const S1={n:1,label:'Return and risk',eyebrow:'Step 1 · Two numbers describe an investment',title:'How Do We Measure Return and Risk?',specH:'The example',
+ sub:'Every investment is judged on two things: how much it earns, and how much that earning swings. Finance measures return with the mean and risk with the standard deviation.',
+ state:{p1:110,wild:1},
+ spec:(st,id)=>id==='ret'?[['Bought at','₹100','d'],['Dividend','₹4','c'],['Price a year later','₹'+st.p1,'c']]:id==='avg'?[['Stock','Kaveri Textiles',''],['Years','5','']]:[['Stock A','steady','c'],['Stock B','swings a lot','d'],['Both have a mean of','10% a year','']],
+ tabs:[
+ {id:'ret',name:'Return in one year',short:'What you got ÷ what you paid',
+  def:'You buy a share for ₹100. During the year it pays a ₹4 dividend, and at the end it trades at a new price. Your return is everything you gained, the dividend plus the price change, divided by what you paid.',
+  contrast:'Return has two parts: the dividend, which is cash in hand, and the change in price. If the price falls far enough, the return is negative even after the dividend.',
+  ctl:[{key:'p1',label:'Price after one year',min:80,max:130,step:1,fmt:v=>'₹'+v,note:'The dividend stays at ₹4.'}],
+  draw(s,st){const k=K(),p0=100,d=4,g=st.p1-p0,r=(d+g)/p0,base=260,h=v=>v*1.6;Ln(s,40,base,720,base,k.l,1.5);
+   Rc(s,110,base-h(p0),90,h(p0),k.m,{rx:4,op:.7});T(s,155,base-h(p0)-8,'₹100',{mono:1,bold:1,size:14,fill:k.ink});T(s,155,base+20,'You paid',{size:12,bold:1,fill:k.ink});
+   Rc(s,300,base-h(st.p1),90,h(st.p1),k.a,{rx:4});Rc(s,300,base-h(st.p1)-h(d),90,h(d),k.par,{rx:2});
+   T(s,345,base-h(st.p1)-h(d)-8,'₹'+st.p1+' + ₹4',{mono:1,bold:1,size:14,fill:k.ink});T(s,345,base+20,'You have, a year later',{size:12,bold:1,fill:k.ink});
+   T(s,345,base-h(st.p1)/2+5,'share',{bold:1,size:13,fill:k.surf});
+   const col=r>=0?k.par:k.d;
+   T(s,580,110,'Your return',{size:13});T(s,580,150,P1(r*100),{mono:1,bold:1,size:34,fill:col});
+   T(s,580,185,`(₹4 ${g>=0?'+':'−'} ₹${Math.abs(g)}) ÷ ₹100`,{mono:1,size:13,fill:k.ink});
+   return {legend:[[k.m,'Price paid'],[k.a,'Price now'],[k.par,'Dividend']],
+    work:`<div class="fm">Return = (dividend + change in price) ÷ price paid</div><div>= (4 + ${g}) ÷ 100</div><div class="big">= ${P1(r*100)}</div>`+note(`= ${P1(4)} from the dividend + ${P1(g)} from the price change`)}}},
+ {id:'avg',name:'Return: the mean',short:'The typical year',
+  def:'One year tells you little. Look at several years of returns and take the mean: add them up and divide by the number of years. The mean is how finance measures return: what you would expect in a typical year.',
+  contrast:'The mean hides how bumpy the ride was: a year of +20% and a year of −5% sit behind the same 10% mean. That bumpiness is what we call risk, and it needs its own number.',ctl:[],
+  draw(s){const k=K(),v=[12,-5,20,8,15],m=mean(v);const {X,Y}=yearBars(s,k,[{vals:v,col:k.a}],{lo:-10,hi:25});
+   Ln(s,X(0),Y(m),X(5),Y(m),k.f,2.5);TB(s,X(5)+8,Y(m)+4,'mean '+m+'%',{anchor:'start',bold:1,size:13,fill:k.f});
+   return {legend:[[k.a,'Return each year'],[k.f,'Mean']],
+    work:`<div class="fm">Mean = sum of returns ÷ number of years</div><div>= (12 − 5 + 20 + 8 + 15) ÷ 5 = 50 ÷ 5</div><div class="big">Mean return = ${m}%</div>`}}},
+ {id:'risk',name:'Risk: the standard deviation',short:'How much returns swing',
+  def:'Two stocks, both with a mean return of 10% a year. Stock A earns close to 10% every year. Stock B jumps from +30% to −15%. Same mean, very different ride. The standard deviation measures how far a year’s return typically lands from the mean: it is how finance measures risk.',
+  contrast:'Bigger swings mean a bigger standard deviation, and that is what finance means by risk: not losing money as such, but not knowing what you will get. Slide B’s swings to zero and it becomes as safe as A.',
+  ctl:[{key:'wild',label:'How much stock B swings',min:0,max:1.5,step:0.1,fmt:v=>'×'+v.toFixed(1),note:'Its mean stays at 10%.'}],
+  draw(s,st){const k=K(),B=SBb.map(v=>Math.round((10+(v-10)*st.wild)*10)/10),sA=sdev(SA),sB=sdev(B);
+   const lo=Math.min(-20,Math.floor(Math.min(...B)/10)*10-5),hi=Math.max(35,Math.ceil(Math.max(...B)/10)*10+5);
+   const {X,Y}=yearBars(s,k,[{vals:SA,col:k.f},{vals:B,col:k.d}],{lo,hi,x1:600});
+   Ln(s,X(0),Y(10),X(5),Y(10),k.ink,2);TB(s,X(5)+8,Y(10)+4,'mean 10%',{anchor:'start',bold:1,size:12,fill:k.ink});
+   T(s,690,Y(hi)+30,'Standard deviation',{size:12});T(s,690,Y(hi)+56,'A  '+sA.toFixed(1)+'%',{mono:1,bold:1,size:16,fill:k.f});T(s,690,Y(hi)+80,'B  '+sB.toFixed(1)+'%',{mono:1,bold:1,size:16,fill:k.d});
+   const dev=B.map(v=>v-10);
+   return {legend:[[k.f,'Stock A: steady'],[k.d,'Stock B: swings a lot']],
+    work:`<div class="k">Stock B, step by step</div><div>1. Distance from the mean: ${dev.map(d=>(d>=0?'+':'')+d.toFixed(0)).join(', ')}</div><div>2. Square them and add: ${dev.reduce((a,d)=>a+d*d,0).toFixed(0)}</div><div>3. Divide by years − 1 (4): variance ${(dev.reduce((a,d)=>a+d*d,0)/4).toFixed(1)}</div><div class="big">4. Square root: SD = ${sB.toFixed(1)}%</div>`+note(`Stock A: SD ${sA.toFixed(1)}%.`)}}}
+ ]};
+
+/* ================= STEP 2: the risk–return picture ================= */
+const S2={n:2,label:'Risk–return picture',eyebrow:'Step 2 · Put both numbers on one chart',title:'Plotting Risk Against Return',specH:'The chart',
+ sub:'Now each investment is just two numbers, so it can be one dot: risk (standard deviation) along the bottom, return (mean) up the side. Where an investment sits tells you what kind of deal it is.',
+ state:{view:0,rf:5},
+ spec:(st,id)=>id==='pick'?[['Across','risk: standard deviation',''],['Up','return: mean','']]:[['Data','US markets, 1926 to 2004','c'],['Source','the course deck (Ibbotson)','']],
+ tabs:[
+ {id:'pick',name:'Which would you pick?',short:'Reading the chart',
+  def:'Put stocks A and B from Step 1 on the chart, with two more: stock C earns more than A with the same risk, and stock D is as risky as B but earns more. Up is good, right is bad.',
+  contrast:'Any investor prefers more return for the same risk (move up) and less risk for the same return (move left). A beats B: same return, less risk. C beats A. The real question is between C and D: more return only comes with more risk.',ctl:[],
+  draw(s){const k=K(),sA=sdev(SA),sB=sdev(SBb),{X,Y}=axes(s,k,{xmin:0,xmax:25,ymin:0,ymax:20,xt:5,yt:5,xl:'Risk: standard deviation',yl:'Return: mean',x0:80,x1:620,y0:280,y1:30});
+   const pts=[['A',sA,10,k.f],['B',sB,10,k.d],['C',sA,14,k.par],['D',sB,17,k.a]];
+   s.append(el('polygon',{points:[[X(0),Y(20)],[X(6),Y(20)],[X(0),Y(15)]].map(p=>p.join(',')).join(' '),fill:k.par,opacity:.08}));
+   Ln(s,X(sA),Y(10),X(sB),Y(10),k.l,1.5);Ln(s,X(sA),Y(10),X(sA),Y(14),k.l,1.5);
+   T(s,X((sA+sB)/2),Y(10)+18,'same return, more risk',{size:11});T(s,X(sA)+8,Y(12)+4,'more return, same risk',{anchor:'start',size:11});
+   pts.forEach(([n,x,y,col])=>{dot(s,X(x),Y(y),col,8);T(s,X(x)+13,n==='A'?Y(y)+20:Y(y)-9,`${n}: ${y}%, σ ${x.toFixed(1)}%`,{anchor:'start',bold:1,size:12,fill:col})});
+   T(s,690,80,'Better',{bold:1,size:14,fill:k.par});T(s,690,98,'up and left',{size:12});
+   T(s,690,230,'Worse',{bold:1,size:14,fill:k.d});T(s,690,248,'down and right',{size:12});
+   return {legend:[[k.f,'A'],[k.d,'B'],[k.par,'C'],[k.a,'D']],
+    work:`<div class="k">Reading the dots</div><div>A beats B: same 10%, far less risk</div><div>C beats A: more return, same risk</div><div class="rule">C or D? Depends on how much risk you can bear.</div>`}}},
+ {id:'hist',name:'What history shows',short:'More risk, more return',
+  def:'The same chart for whole classes of investments, using eighty years of US data from the deck. Each dot is one asset class: its mean yearly return against its standard deviation.',
+  contrast:'The dots line up: the riskier the asset, the higher its mean return. Investors demand to be paid for bearing risk. Treasury bills, almost risk free, earned the least; small company stocks, the most volatile, earned the most.',ctl:[],
+  draw(s){const k=K(),{X,Y}=axes(s,k,{xmin:0,xmax:35,ymin:0,ymax:20,xt:5,yt:5,xl:'Risk: standard deviation',yl:'Return: mean',x0:80,x1:640,y0:280,y1:30});
+   const pts=HIST2.map(([n,sd,r])=>[X(sd),Y(r)]);poly(s,[pts[0],pts[3],pts[4]],k.l,1.5);
+   const LBL=[[X(3.1)+14,Y(1.6),'start'],[X(9.2)+14,Y(4.4),'start'],[X(8.5)-14,Y(8.6),'end'],[X(20.2)-14,Y(15.6),'end'],[X(32.9)-14,Y(19.6),'end']];
+   HIST2.forEach(([n,sd,r],i)=>{const col=[k.m,k.f,k.f,k.a,k.d][i],[lx,ly,an]=LBL[i];
+    dot(s,X(sd),Y(r),col,7);T(s,lx,ly,n,{anchor:an,bold:1,size:12,fill:col});T(s,lx,ly+15,`${r}%, σ ${sd}%`,{anchor:an,mono:1,size:11,fill:k.m})});
+   return {legend:[[k.m,'Bills'],[k.f,'Bonds'],[k.a,'Large stocks'],[k.d,'Small stocks']],
+    work:`<div class="k">Mean return · standard deviation</div>${HIST2.map(([n,sd,r])=>`<div>${n}: ${r}% · ${sd}%</div>`).join('')}`}}},
+ {id:'prem',name:'The risk premium',short:'The reward for bearing risk',
+  def:'Treasury bills are the closest thing to a risk-free investment. Split each asset’s mean return into two parts: the risk-free rate everyone can earn, and the extra on top. That extra is the risk premium, the reward for bearing risk.',
+  contrast:'Large stocks earned 8.5% a year more than bills; small stocks 13.6% more. To estimate today’s expected return, add the premium to today’s bill rate. Next step: what happens to risk when you hold more than one investment.',
+  ctl:[{key:'rf',label:'Today’s Treasury bill rate',min:1,max:10,step:0.5,fmt:v=>v.toFixed(1)+'%',note:'The deck uses 5%.'}],
+  draw(s,st){const k=K(),rows=[['Treasury bills',3.8,k.m],['Corporate bonds',6.2,k.f],['Large company stocks',12.3,k.a],['Small company stocks',17.4,k.d]];
+   const {X,Y}=axes(s,k,{xmin:0,xmax:4,ymin:0,ymax:20,xt:10,yt:5,yl:'Mean return',x0:80,x1:620,y0:270,y1:30,fx:()=>''});
+   rows.forEach(([n,r,col],i)=>{const cx=X(i+0.5),w=64;Rc(s,cx-w/2,Y(3.8),w,Y(0)-Y(3.8),k.fa,{stroke:k.l,rx:0});
+    if(r>3.8){Rc(s,cx-w/2,Y(r),w,Y(3.8)-Y(r),col,{rx:3});T(s,cx,(Y(r)+Y(3.8))/2+5,'+'+(r-3.8).toFixed(1)+'%',{mono:1,bold:1,size:13,fill:k.surf})}
+    T(s,cx,Y(r)-8,r+'%',{mono:1,bold:1,size:12,fill:k.ink});T(s,cx,288,n,{size:12,bold:1,fill:k.ink})});
+   Ln(s,X(0),Y(3.8),X(4),Y(3.8),k.m,1.5);TB(s,X(4)+6,Y(3.8)+4,'risk-free 3.8%',{anchor:'start',size:11,fill:k.m});
+   T(s,690,Y(15),'Risk premium',{size:12,bold:1,fill:k.ink});T(s,690,Y(15)+16,'= mean return',{size:11});T(s,690,Y(15)+30,'− risk-free rate',{size:11});
+   return {legend:[[k.fa,'Risk-free part (bills)',k.l],[k.a,'Risk premium on top']],
+    work:`<div class="fm">Expected return = bill rate today + risk premium</div><div>Large stocks: ${st.rf.toFixed(1)}% + 8.5% = <span class="c">${(st.rf+8.5).toFixed(1)}%</span></div><div>Small stocks: ${st.rf.toFixed(1)}% + 13.6% = <span class="c">${(st.rf+13.6).toFixed(1)}%</span></div><div>Corporate bonds: ${st.rf.toFixed(1)}% + 2.4% = ${(st.rf+2.4).toFixed(1)}%</div>`}}}
+ ]};
+
+
+/* ================= STEP 3: two investments together ================= */
+const ICE=[24,-4,20,0,20], RAIN=[0,20,4,16,5];   // sunny years 1,3,5; rainy years 2,4
+const WX=['Sunny','Rainy','Sunny','Rainy','Sunny'];
+const cov2=(a,b)=>{const ma=mean(a),mb=mean(b);return a.reduce((x,v,i)=>x+(v-ma)*(b[i]-mb),0)/(a.length-1)};
+const sI=sdev(ICE),sR=sdev(RAIN),rIR=cov2(ICE,RAIN)/(sI*sR);
+const mix=w=>ICE.map((v,i)=>w*v+(1-w)*RAIN[i]);
+const S3={n:3,label:'Two risky assets',eyebrow:'Step 3 · A portfolio of two risky assets',title:'Return and Risk of Two Risky Assets',specH:'The example',
+ sub:'Two risky assets: an ice-cream maker that does well in sunny years and a raincoat maker that does well in rainy ones. Hold both and see what happens to the mean and the standard deviation.',
+ state:{w:50,rho:-0.5},
+ spec:(st,id)=>id==='rho'?[['Ice cream','mean 12%, SD '+sI.toFixed(1)+'%','d'],['Raincoats','mean 9%, SD '+sR.toFixed(1)+'%','f'],['Correlation',st.rho.toFixed(1),'']]:[['Ice cream','mean 12%, SD '+sI.toFixed(1)+'%','d'],['Raincoats','mean 9%, SD '+sR.toFixed(1)+'%','f'],['In ice cream',st.w+'%','']],
+ tabs:[
+ {id:'pm',name:'Mean of a portfolio',short:'A weighted average',
+  def:'Put part of your money in each risky asset. Each year the portfolio earns the weighted average of the two returns. So its mean is simply the weighted average of the two means.',
+  contrast:'The mean behaves the way you would expect: half in each gives a mean halfway between 12% and 9%. Look at the green bars, though: the year-to-year swings have nearly vanished. That is the next tab.',
+  ctl:[{key:'w',label:'Share in ice cream',min:0,max:100,step:10,fmt:v=>v+'%',note:'The rest goes into raincoats.'}],
+  draw(s,st){const k=K(),w=st.w/100,P=mix(w).map(v=>Math.round(v*10)/10),{X,Y}=yearBars(s,k,[{vals:ICE,col:k.d},{vals:RAIN,col:k.f},{vals:P,col:k.par}],{lo:-10,hi:30,x1:640});
+   WX.forEach((t,i)=>T(s,X(i+0.5),308,t,{size:11,fill:t==='Sunny'?k.d:k.f}));
+   const m=mean(P);Ln(s,X(0),Y(m),X(5),Y(m),k.par,2);TB(s,X(5)+6,Y(m)+4,'mean '+m.toFixed(1)+'%',{anchor:'start',bold:1,size:12,fill:k.par});
+   return {legend:[[k.d,'Ice cream'],[k.f,'Raincoats'],[k.par,'Your portfolio']],
+    work:`<div class="fm">Portfolio return each year = w × ice cream + (1 − w) × raincoats</div><div>${P.map(v=>v+'%').join(', ')}</div><div class="fm">Mean = w × 12% + (1 − w) × 9%</div><div>= ${w.toFixed(1)} × 12% + ${(1-w).toFixed(1)} × 9%</div><div class="big">Mean = ${m.toFixed(1)}%</div>`}}},
+ {id:'ps',name:'Risk of a portfolio',short:'Less than either one alone',
+  def:'Now the standard deviation of the same portfolio. Plot every possible mix of the two risky assets on the risk–return chart, from all raincoats to all ice cream.',
+  contrast:'A common mistake is to take the weighted average of the two SDs. That is wrong: it is true only if the two assets always move together. The right answer is the SD of the portfolio’s own returns, far lower here, because a bad year for one is a good year for the other. This is diversification.',
+  ctl:[{key:'w',label:'Share in ice cream',min:0,max:100,step:5,fmt:v=>v+'%',note:''}],
+  draw(s,st){const k=K(),w=st.w/100,{X,Y}=axes(s,k,{xmin:0,xmax:14,ymin:8,ymax:13,xt:2,yt:1,xl:'Risk: standard deviation',yl:'Return: mean',x0:80,x1:620,y0:280,y1:30});
+   Ln(s,X(sR),Y(9),X(sI),Y(12),k.d,1.5);TB(s,X((sR+sI)/2)+16,Y(10.5)+18,'Wrong: averaging the SDs',{anchor:'start',bold:1,size:12,fill:k.d});
+   const c=[];for(let q=0;q<=1.0001;q+=0.01){const p=mix(q);c.push([X(sdev(p)),Y(mean(p))])}poly(s,c,k.par,3);
+   dot(s,X(sR),Y(9),k.f,7);T(s,X(sR)+12,Y(9)+5,'All raincoats',{anchor:'start',bold:1,size:12,fill:k.f});dot(s,X(sI),Y(12),k.ink,7);T(s,X(sI)-6,Y(12)-12,'All ice cream',{anchor:'end',bold:1,size:12,fill:k.ink});
+   const p=mix(w),sp=sdev(p),mp=mean(p),avg=w*sI+(1-w)*sR;
+   if(w>0&&w<1){s.append(el('circle',{cx:X(avg),cy:Y(mp),r:7,fill:k.surf,stroke:k.d,'stroke-width':2.5}));const cx=X(avg),cy=Y(mp);Ln(s,cx-4,cy-4,cx+4,cy+4,k.d,2);Ln(s,cx-4,cy+4,cx+4,cy-4,k.d,2);
+    TB(s,X(avg)+12,Y(mp)-12,`Wrong: ${avg.toFixed(1)}%`,{anchor:'start',mono:1,bold:1,size:12,fill:k.d})}
+   dot(s,X(sp),Y(mp),k.par,9,k.surf);TB(s,X(sp)+14,Y(mp)-12,`Right: ${sp.toFixed(1)}%`,{anchor:'start',mono:1,bold:1,size:12,fill:k.par});
+   T(s,X(4.2),Y(11.55),'Right: true portfolio risk',{anchor:'start',bold:1,size:12,fill:k.par});
+   return {legend:[[k.par,'Right: SD of the portfolio’s returns'],[k.d,'Wrong: weighted average of the two SDs']],
+    work:`<div class="k">Right</div><div>SD of the portfolio’s own yearly returns = <span class="c">${sp.toFixed(1)}%</span></div><div class="k">Wrong</div><div>${w.toFixed(2)} × ${sI.toFixed(1)}% + ${(1-w).toFixed(2)} × ${sR.toFixed(1)}% = <span style="color:var(--disc)">${avg.toFixed(1)}%</span></div>`+note('Averaging the SDs is right only when the two assets always move together (correlation +1).')}}},
+ {id:'rho',name:'Why risk falls: correlation',short:'How the two move together',
+  def:'Correlation measures how two returns move together, from −1 (always opposite) to +1 (always together). Ice cream and raincoats, at '+rIR.toFixed(2)+', are close to −1. Slide the correlation to see how much risk a half-and-half portfolio sheds.',
+  contrast:'At +1 the two rise and fall together and mixing only averages the risk: no benefit. The lower the correlation, the more the swings cancel; at −1 the right mix removes risk altogether. Real stocks mostly sit between 0 and +1, so diversification helps but never removes all risk.',
+  ctl:[{key:'rho',label:'Correlation',min:-1,max:1,step:0.1,fmt:v=>(v>0?'+':'')+v.toFixed(1),note:''}],
+  draw(s,st){const k=K(),sdp=(w,r)=>Math.sqrt((w*sI)**2+((1-w)*sR)**2+2*w*(1-w)*sI*sR*r),mp=w=>w*12+(1-w)*9;
+   const {X,Y}=axes(s,k,{xmin:0,xmax:14,ymin:8,ymax:13,xt:2,yt:1,xl:'Risk: standard deviation',yl:'Return: mean',x0:80,x1:620,y0:280,y1:30});
+   const cur=(r,col,wd,op)=>{const c=[];for(let q=0;q<=1.0001;q+=0.01)c.push([X(sdp(q,r)),Y(mp(q))]);poly(s,c,col,wd,op)};
+   cur(1,k.m,1.5,.6);cur(-1,k.m,1.5,.6);cur(st.rho,k.par,3.5,1);
+   T(s,X(sdp(0.5,1))+8,Y(10.5)+4,'+1',{anchor:'start',bold:1,size:12,fill:k.m});T(s,X(0)+8,Y(mp(sR/(sI+sR)))+20,'−1',{anchor:'start',bold:1,size:12,fill:k.m});
+   dot(s,X(sR),Y(9),k.f,7);dot(s,X(sI),Y(12),k.d,7);
+   const h=sdp(0.5,st.rho);dot(s,X(h),Y(10.5),k.par,9,k.surf);TB(s,X(h)+14,Y(10.5)-12,`50/50: SD ${h.toFixed(1)}%`,{anchor:'start',mono:1,bold:1,size:12,fill:k.par});
+   return {legend:[[k.par,'Your correlation'],[k.m,'Correlation +1 and −1']],
+    work:`<div class="fm">SD² = (w₁σ₁)² + (w₂σ₂)² + 2(w₁σ₁)(w₂σ₂) × correlation</div><div>50/50 with correlation ${st.rho.toFixed(1)}</div><div class="big">SD = ${h.toFixed(1)}%</div>`+note(`If the risks simply averaged: ${((sI+sR)/2).toFixed(1)}%.`)}}}
+ ]};
+
+
+/* ================= STEP 4: many risky assets ================= */
+const SG=.40,CV=.3*SG*SG,sdN=n=>Math.sqrt(SG*SG/n+(1-1/n)*CV)*100,FLOOR=Math.sqrt(CV)*100;
+const S4={n:4,label:'Many risky assets',eyebrow:'Step 4 · From two assets to many',title:'Diversification and the Risk That Remains',specH:'The example',
+ sub:'Keep adding risky assets to the portfolio. Some risk disappears quickly; some never does. Then add a risk-free asset and every investor faces the same simple choice.',
+ state:{n:5,wm:100},
+ spec:(st,id)=>id==='cml'?[['Risk-free rate','4%',''],['Market portfolio','M','c'],['In M',st.wm+'%','']]:[['Each stock','SD 40%',''],['Between any two stocks','correlation 0.3',''],['Stocks held',id==='kinds'?'1 and 30':String(st.n),'c']],
+ tabs:[
+ {id:'more',name:'Adding more assets',short:'Risk falls, then levels off',
+  def:'Start with one stock and keep adding others, in equal amounts. Each stock alone has an SD of 40%, and any two have a correlation of 0.3: they tend to move together a little, as real stocks do.',
+  contrast:'The first few stocks cut risk sharply; after twenty or thirty the curve is almost flat. Risk falls from 40% towards about 22% and stops there, because stocks do move together: some risk cannot be diversified away.',
+  ctl:[{key:'n',label:'Number of stocks held',min:1,max:50,step:1,fmt:v=>v,note:''}],
+  draw(s,st){const k=K(),{X,Y}=axes(s,k,{xmin:0,xmax:50,ymin:0,ymax:45,xt:10,yt:10,xl:'Number of stocks',yl:'Portfolio SD',fx:v=>v,x0:80,x1:640,y0:280,y1:30});
+   const c=[];for(let n=1;n<=50;n++)c.push([X(n),Y(sdN(n))]);
+   s.append(el('polygon',{points:[[X(1),Y(FLOOR)],...c,[X(50),Y(FLOOR)]].map(p=>p.join(',')).join(' '),fill:k.aS}));
+   Rc(s,X(0),Y(FLOOR),X(50)-X(0),Y(0)-Y(FLOOR),k.fS,{rx:0});poly(s,c,k.a,3);Ln(s,X(0),Y(FLOOR),X(50),Y(FLOOR),k.f,2);
+   T(s,X(30),Y(FLOOR)+60,'Risk that remains',{bold:1,size:13,fill:k.f});T(s,X(30),Y(34),'Risk diversified away',{bold:1,size:13,fill:k.a});
+   const v=sdN(st.n);dot(s,X(st.n),Y(v),k.d,8,k.surf);TB(s,X(st.n)+12,Y(v)-12,v.toFixed(1)+'%',{anchor:'start',mono:1,bold:1,size:12,fill:k.d});
+   return {legend:[[k.aS,'Diversified away',k.a],[k.fS,'Remains',k.f]],
+    work:`<div>${st.n} stock${st.n>1?'s':''}: portfolio SD <span class="c">${v.toFixed(1)}%</span></div><div>Floor, however many stocks: ${FLOOR.toFixed(1)}%</div>`+note(st.n<10?'Each extra stock still helps a lot.':st.n<30?'The gains are getting small.':'Almost all the risk that can go has gone.')}}},
+ {id:'kinds',name:'Two kinds of risk',short:'Systematic and unsystematic',
+  def:'The risk that disappears comes from events that hit one company. The risk that remains comes from events that hit the whole economy, so every stock in the portfolio feels them at once.',
+  contrast:'Unsystematic risk can be removed almost for free by diversifying, so the market does not pay anyone for bearing it. Only systematic risk is rewarded. That is why we need a measure of a stock’s systematic risk alone: beta, in the next step.',ctl:[],
+  draw(s){const k=K(),uni=['A strike at one factory','A big customer contract is lost','A product recall','The CEO resigns'],sys=['RBI raises interest rates','A weak monsoon','A slowdown in GDP','Inflation picks up'];
+   [[20,'Unsystematic risk','firm-specific · diversifiable',k.a,uni],[390,'Systematic risk','market-wide · not diversifiable',k.f,sys]].forEach(([x,h,sub,col,items])=>{
+    Rc(s,x,8,350,46,col,{rx:8,op:.14});T(s,x+16,28,h,{anchor:'start',bold:1,fill:col,size:15});T(s,x+16,46,sub,{anchor:'start',size:12});
+    items.forEach((t,j)=>{const y=66+j*48;Rc(s,x,y,350,40,k.surf,{stroke:k.l,rx:8});Rc(s,x,y,5,40,col,{rx:2});T(s,x+18,y+25,t,{anchor:'start',bold:1,fill:k.ink,size:13})})});
+   T(s,195,276,'Cancels out across many stocks',{bold:1,size:12,fill:k.a});T(s,565,276,'Hits every stock together',{bold:1,size:12,fill:k.f});
+   T(s,380,312,'Total risk = systematic risk + unsystematic risk',{mono:1,bold:1,size:13,fill:k.ink});
+   return {legend:[[k.a,'Unsystematic: removed by diversifying'],[k.f,'Systematic: remains, and is rewarded']],
+    work:`<div class="k">One stock</div><div>SD 40% = systematic + unsystematic</div><div class="k">Thirty stocks</div><div>SD ≈ ${sdN(30).toFixed(1)}%: almost only systematic</div>`+note('Investors are paid only for the systematic part.')}}},
+ {id:'cml',name:'Adding a risk-free asset',short:'The capital market line',
+  def:'With many risky assets, the best portfolios form a curve, the efficient frontier. Now add a risk-free asset, such as Treasury bills. Draw a line from the risk-free rate that just touches the frontier: the touching point is the market portfolio, M.',
+  contrast:'Every investor holds the same two things, bills and M; only the mix differs. Cautious investors lend, bold investors borrow at the risk-free rate to hold more than 100% in M. All sit on one straight line: intercept the risk-free rate, slope the extra return M offers per unit of SD. The CML uses total risk (SD) and works for these efficient portfolios; for a single stock we need beta, next.',
+  ctl:[{key:'wm',label:'Share in the market portfolio',min:0,max:150,step:5,fmt:v=>v+'%',note:'Above 100% means borrowing at the risk-free rate.'}],
+  draw(s,st){const k=K(),rf=4,fe=e=>Math.sqrt(100+25*(e-8)**2);let best=0,eM=0;for(let e=8;e<=20;e+=0.005){const sl=(e-rf)/fe(e);if(sl>best){best=sl;eM=e}}const sM=fe(eM);
+   const {X,Y}=axes(s,k,{xmin:0,xmax:35,ymin:0,ymax:20,xt:5,yt:5,xl:'Risk: standard deviation (x)',yl:'Return: mean (y)',x0:80,x1:640,y0:280,y1:30});
+   [[16,7],[18,8.5],[20,7],[22,10],[24,8],[26,11],[28,9.5],[30,12],[25,6.5],[31,10.5]].forEach(([x,y])=>dot(s,X(x),Y(y),k.m,3,k.m));
+   const lo=[],hi=[];for(let e=5.6;e<=8.001;e+=0.05)lo.push([X(fe(e)),Y(e)]);for(let e=8;e<=14.2;e+=0.05)hi.push([X(fe(e)),Y(e)]);
+   poly(s,lo,k.m,1.5,.5);poly(s,hi,k.ink,3,.85);T(s,X(fe(14.2))-4,Y(14.2)-10,'efficient frontier',{anchor:'end',bold:1,size:12,fill:k.ink});T(s,X(28),Y(5),'individual risky assets',{size:11});
+   Ln(s,X(0),Y(rf),X(35),Y(rf+best*35),k.a,3);T(s,X(23),Y(rf+best*23)-14,'Capital market line',{anchor:'end',bold:1,size:12,fill:k.a});
+   const x1=2.5,x2=8;Ln(s,X(x1),Y(rf+best*x1),X(x2),Y(rf+best*x1),k.a,1.2);Ln(s,X(x2),Y(rf+best*x1),X(x2),Y(rf+best*x2),k.a,1.2);
+   T(s,X((x1+x2)/2),Y(rf+best*x1)+15,'run',{size:11,fill:k.a});T(s,X(x2)+6,Y(rf+best*(x1+x2)/2)+4,'rise',{anchor:'start',size:11,fill:k.a});
+   dot(s,X(0),Y(rf),k.f,6);T(s,X(0)+10,Y(rf)+16,'intercept: risk-free 4%',{anchor:'start',size:12,bold:1,fill:k.f});dot(s,X(sM),Y(eM),k.ink,7);T(s,X(sM)+12,Y(eM)+18,'M: market portfolio',{anchor:'start',bold:1,size:12,fill:k.ink});
+   const w=st.wm/100,sp=w*sM,ep=rf+w*(eM-rf);dot(s,X(sp),Y(ep),k.d,8,k.surf);TB(s,X(sp)-12,Y(ep)-12,w<1?'lending':w>1?'borrowing':'all in M',{anchor:'end',bold:1,size:12,fill:k.d});
+   return {legend:[[k.a,'Capital market line'],[k.ink,'Efficient frontier of risky assets'],[k.d,'Your mix']],
+    work:`<div class="fm">CML: y = intercept + slope × x</div><div>E(Rp) = Rf + [(E(RM) − Rf) ÷ σM] × σp</div><div>slope = (${eM.toFixed(1)}% − 4%) ÷ ${sM.toFixed(1)}% = <span class="c">${best.toFixed(2)}</span> extra return per 1% of SD</div><div>${st.wm}% in M${st.wm>100?' (borrowing)':st.wm<100?', rest in bills':''}: σp = ${sp.toFixed(1)}%</div><div>E(Rp) = 4% + ${best.toFixed(2)} × ${sp.toFixed(1)}%</div><div class="big">E(Rp) = ${ep.toFixed(1)}%</div>`}}}
+ ]};
+
+
+/* ================= STEP 5: beta and the SML ================= */
+const S5={n:5,label:'Beta and SML',eyebrow:'Step 5 · Pricing systematic risk',title:'Beta and the Security Market Line',specH:'The example',
+ sub:'Only systematic risk is rewarded. Beta measures how much of it a stock carries; the security market line turns beta into the return investors require.',
+ state:{beta:1.5,p0:100},
+ spec:(st,id)=>id==='mis'?[['Stock A beta','1.2','c'],['Next year','₹120 + ₹2 dividend','c'],['Today’s price','₹'+st.p0.toFixed(1),'d']]:id==='sml'?[['Risk-free rate','3%',''],['Market return','10%','c'],['Beta',st.beta.toFixed(1),'c']]:[['The market','beta 1',''],['Your stock','beta '+st.beta.toFixed(1),'c']],
+ tabs:[
+ {id:'beta',name:'Beta',short:'How much a stock moves with the market',
+  def:'Beta measures a stock’s systematic risk: how much it moves when the market moves. Plot the stock’s returns against the market’s; the slope of the line through them is beta. In formula form, β = Cov(Ri, RM) ÷ Var(RM).',
+  contrast:'The beta of the market portfolio is always exactly 1, because Cov(RM, RM) = Var(RM): the market moves one for one with itself. Every other beta is read against this benchmark. A stock with beta 1.5 carries one and a half times the market’s systematic risk; a stock with beta 0.5 carries half of it.',
+  ctl:[{key:'beta',label:'Beta',min:0,max:2.5,step:0.1,fmt:v=>v.toFixed(1),note:''}],
+  draw(s,st){const k=K(),{X,Y}=axes(s,k,{xmin:-20,xmax:20,ymin:-40,ymax:40,xt:10,yt:20,xl:'Return on the market (x)',yl:'Return on the stock (y)',x0:300,x1:700,y0:290,y1:30});
+   Ln(s,X(0),Y(-40),X(0),Y(40),k.l,1);Ln(s,X(-20),Y(-20),X(20),Y(20),k.m,1.5);T(s,X(20)-4,Y(20)+18,'market, β = 1',{anchor:'end',size:11});
+   Ln(s,X(-20),Y(-20*st.beta),X(20),Y(20*st.beta),k.a,3);TB(s,X(-19),Y(-19*st.beta)+24,'slope = β',{anchor:'start',bold:1,size:12,fill:k.a});
+   dot(s,X(10),Y(10*st.beta),k.par,6);dot(s,X(-10),Y(-10*st.beta),k.d,6);
+   T(s,40,90,'Market +10%',{anchor:'start',bold:1,size:14,fill:k.ink});T(s,40,118,'Stock '+(st.beta*10>=0?'+':'')+(st.beta*10).toFixed(0)+'%',{anchor:'start',mono:1,bold:1,size:20,fill:k.par});
+   T(s,40,170,'Market −10%',{anchor:'start',bold:1,size:14,fill:k.ink});T(s,40,198,'Stock −'+(st.beta*10).toFixed(0)+'%',{anchor:'start',mono:1,bold:1,size:20,fill:k.d});
+   return {legend:[[k.a,'Your stock'],[k.m,'The market, β = 1']],
+    work:(()=>{const b=st.beta,up=(b*10).toFixed(0),cat=b===0?3:b<1?2:b===1?0:1;
+     const rows=[['β = 1','The market portfolio, always. Moves one for one with the market.'],['β > 1','Aggressive: moves more than the market, in both directions.'],['0 < β < 1','Defensive: moves less than the market, in both directions.'],['β = 0','No systematic risk: does not move with the market at all.']];
+     return `<div class="k">Interpretation</div><div class="rule" style="font-size:16px">Stock A has a beta of ${b.toFixed(1)}. If the market rises by 10%, stock A is expected to rise by ${up}%; if the market falls by 10%, stock A is expected to fall by ${up}%.</div><div class="nt">Stock A carries ${b.toFixed(1)} times the market’s systematic risk.</div><div class="cases">${rows.map((r,i)=>`<div class="${i===cat?'on':''}"><b>${r[0]}</b><span>${r[1]}</span></div>`).join('')}</div>`})()}}},
+ {id:'sml',name:'The security market line',short:'Required return from beta',
+  def:'Investors require the risk-free rate plus a reward for systematic risk. The reward for one unit of beta is the market risk premium, RM − RF. So R = RF + β(RM − RF): a straight line with beta on the x axis. This is the CAPM, and the line is the security market line.',
+  contrast:'Beta 0 earns the risk-free rate; beta 1 earns the market return. The deck’s example: β = 1.5, RF = 3%, RM = 10% gives 13.5%. Quick quiz: β = 1.2, RF = 5%, RM = 13% gives 14.6%.',
+  ctl:[{key:'beta',label:'Beta',min:0,max:2.5,step:0.1,fmt:v=>v.toFixed(1),note:''}],
+  draw(s,st){const k=K(),rf=3,rm=10,r=rf+st.beta*(rm-rf),{X,Y}=axes(s,k,{xmin:0,xmax:2.5,ymin:0,ymax:22,xt:0.5,yt:5,fx:v=>v.toFixed(1),xl:'Beta (x)',yl:'Required return (y)',x0:80,x1:640,y0:280,y1:30});
+   Ln(s,X(0),Y(rf),X(2.5),Y(rf+2.5*(rm-rf)),k.a,3);T(s,X(2.2),Y(rf+2.2*(rm-rf))-14,'Security market line',{anchor:'end',bold:1,size:12,fill:k.a});
+   Ln(s,X(0),Y(rf),X(1),Y(rf),k.a,1.2);Ln(s,X(1),Y(rf),X(1),Y(rm),k.a,1.2);T(s,X(0.78),Y(rf)+16,'β up by 1',{size:11,fill:k.a});T(s,X(1)+6,Y(6.5)+4,'+7% = slope',{anchor:'start',size:11,fill:k.a});
+   dot(s,X(0),Y(rf),k.f,6);T(s,X(0)+10,Y(rf)+18,'intercept: RF 3%',{anchor:'start',bold:1,size:12,fill:k.f});
+   dot(s,X(1),Y(rm),k.ink,6);T(s,X(1)+10,Y(rm)+16,'Market: β 1, 10%',{anchor:'start',size:12,bold:1,fill:k.ink});
+   Ln(s,X(st.beta),Y(0),X(st.beta),Y(r),k.l,1);Ln(s,X(0),Y(r),X(st.beta),Y(r),k.l,1);dot(s,X(st.beta),Y(r),k.d,8,k.surf);TB(s,X(st.beta)-12,Y(r)-12,r.toFixed(1)+'%',{anchor:'end',mono:1,bold:1,size:13,fill:k.d});
+   return {legend:[[k.a,'SML'],[k.d,'Your stock']],
+    work:`<div class="fm">SML: y = intercept + slope × x</div><div>R = RF + (RM − RF) × β, slope = 10% − 3% = 7%</div><div>= 3% + 7% × ${st.beta.toFixed(1)}</div><div class="big">R = ${r.toFixed(1)}%</div>`}}},
+ {id:'mis',name:'Underpriced or overpriced?',short:'Above or below the SML',
+  def:'The SML gives the return a stock should offer for its beta: the required return. Analysts also forecast the return it will actually offer at today’s price: the expected return. Stock A has a beta of 1.2 and is expected to be worth ₹120 next year plus a ₹2 dividend. Move today’s price.',
+  contrast:'Above the SML the stock offers more than its risk requires. That can only happen if its price is too low, so we call it underpriced: investors buy, the price rises and the expected return falls back to the line. Below the SML the price is too high: overpriced, investors sell, the price falls and the return rises back to the line. On the line the price is fair.',
+  ctl:[{key:'p0',label:'Today’s price of stock A',min:95,max:125,step:0.5,fmt:v=>'₹'+v.toFixed(1),note:'Expected value next year stays at ₹120 + ₹2.'}],
+  draw(s,st){const k=K(),rf=3,rm=10,b=1.2,req=rf+b*(rm-rf),exp=(122/st.p0-1)*100,fair=122/(1+req/100),gap=exp-req;
+   const {X,Y}=axes(s,k,{xmin:0,xmax:2.5,ymin:0,ymax:30,xt:0.5,yt:5,fx:v=>v.toFixed(1),xl:'Beta (x)',yl:'Return (y)',x0:80,x1:600,y0:280,y1:30});
+   s.append(el('polygon',{points:[[X(0),Y(rf)],[X(2.5),Y(rf+2.5*7)],[X(2.5),Y(30)],[X(0),Y(30)]].map(q=>q.join(',')).join(' '),fill:k.par,opacity:.07}));
+   s.append(el('polygon',{points:[[X(0),Y(rf)],[X(2.5),Y(rf+2.5*7)],[X(2.5),Y(0)],[X(0),Y(0)]].map(q=>q.join(',')).join(' '),fill:k.d,opacity:.07}));
+   Ln(s,X(0),Y(rf),X(2.5),Y(rf+2.5*7),k.a,3);T(s,X(2.45),Y(rf+2.45*7)+18,'SML',{anchor:'end',bold:1,size:12,fill:k.a});
+   T(s,X(0.1),Y(26),'Above the line: underpriced → buy',{anchor:'start',bold:1,size:12,fill:k.par});T(s,X(1.5),Y(4),'Below the line: overpriced → sell',{anchor:'start',bold:1,size:12,fill:k.d});
+   dot(s,X(b),Y(req),k.a,5);const col=Math.abs(gap)<0.15?k.ink:gap>0?k.par:k.d;
+   if(Math.abs(gap)>=0.15){Ln(s,X(b),Y(Math.min(30,Math.max(0,exp))),X(b),Y(req),col,2);T(s,X(b)+10,(Y(Math.min(30,Math.max(0,exp)))+Y(req))/2+4,(gap>0?'+':'')+gap.toFixed(1)+'%',{anchor:'start',mono:1,bold:1,size:12,fill:col})}
+   dot(s,X(b),Y(Math.min(30,Math.max(0,exp))),col,9,k.surf);TB(s,X(b)-14,Y(Math.min(30,Math.max(0,exp)))+4,'A: '+exp.toFixed(1)+'%',{anchor:'end',mono:1,bold:1,size:12,fill:col});
+   TB(s,X(b)+12,gap<0?Y(req)-10:Y(req)+18,'required '+req.toFixed(1)+'%',{anchor:'start',mono:1,size:11,fill:k.a});
+   const verdict=Math.abs(gap)<0.15?'Fairly priced':gap>0?'Underpriced':'Overpriced';
+   T(s,690,90,'Today’s price',{size:12});T(s,690,112,'₹'+st.p0.toFixed(1),{mono:1,bold:1,size:18,fill:k.ink});T(s,690,146,'Fair price',{size:12});T(s,690,168,'₹'+fair.toFixed(2),{mono:1,bold:1,size:18,fill:k.a});
+   T(s,690,206,verdict,{bold:1,size:16,fill:col});
+   return {legend:[[k.a,'SML: required return'],[k.par,'Underpriced region'],[k.d,'Overpriced region']],
+    work:`<div class="fm">Required return (SML) = 3% + 1.2 × 7% = ${req.toFixed(1)}%</div><div class="fm">Expected return = (₹120 + ₹2) ÷ ₹${st.p0.toFixed(1)} − 1 = ${exp.toFixed(1)}%</div><div class="big" style="color:${col===k.ink?'var(--ink)':gap>0?'var(--par)':'var(--disc)'}">${verdict}</div>`+note(Math.abs(gap)<0.15?'Expected return equals the required return: the price is fair.':gap>0?`It offers ${gap.toFixed(1)}% more than its beta requires, because its price is below the fair ₹${fair.toFixed(2)}.`:`It offers ${(-gap).toFixed(1)}% less than its beta requires, because its price is above the fair ₹${fair.toFixed(2)}.`)}}}
+ ]};
+
+const STEPS=[S1,S2,S3,S4,S5];
+
+/* ================= framework ================= */
+const stepper=document.getElementById('stepper'),host=document.getElementById('steps');
+STEPS.forEach((S,si)=>{
+  const b=document.createElement('button');b.setAttribute('role','tab');b.setAttribute('aria-selected',si===0);b.innerHTML=`<small>Step ${S.n}</small><span>${S.label}</span>`;
+  b.addEventListener('click',()=>{[...stepper.children].forEach(x=>x.setAttribute('aria-selected',x===b));STEPS.forEach(X=>X.sec.hidden=X!==S);S.render();window.scrollTo({top:0,behavior:'smooth'})});
+  stepper.append(b);
+  const sec=document.createElement('section');sec.className='step';sec.hidden=si>0;S.sec=sec;
+  sec.innerHTML=`<div class="wrap"><header><p class="eyebrow">${S.eyebrow}</p><h2 class="steph">${S.title}</h2><p class="sub">${S.sub}</p><div class="spec" aria-label="The project"></div></header>
+   <div class="layout"><div class="index" role="tablist" aria-label="Concepts"></div>
+   <section class="stage" role="tabpanel" aria-live="polite"><h2 class="nm"></h2><p class="def"></p>
+   <svg viewBox="0 0 760 330" role="img"></svg><div class="free" hidden></div><div class="trio legend"></div>
+   <div class="readout"><div class="work"></div><div class="ctl"></div></div>
+   <p class="contrast"></p><div class="nav"><button class="btn prev">Previous</button><button class="btn primary next">Next</button></div></section></div></div>`;
+  host.append(sec);
+  const q=c=>sec.querySelector(c),idx=q('.index');let cur=0;
+  if(S.solo){q('.layout').classList.add('solo');if(S.tabs.length===1)idx.hidden=true;else idx.classList.add('desk-hide')}
+  S.tabs.forEach((t,i)=>{const bt=document.createElement('button');bt.className='term';bt.setAttribute('role','tab');bt.innerHTML=`<b>${t.name}</b><span>${t.short}</span>`;bt.addEventListener('click',()=>show(i));idx.append(bt)});
+  q('.prev').addEventListener('click',()=>show(cur-1));q('.next').addEventListener('click',()=>{if(cur<S.tabs.length-1)show(cur+1);else if(STEPS[si+1])stepper.children[si+1].click()});
+  function show(i){cur=Math.max(0,Math.min(S.tabs.length-1,i));const t=S.tabs[cur];
+    [...idx.children].forEach((b,j)=>b.setAttribute('aria-selected',j===cur));
+    q('.nm').textContent=t.name;q('.def').textContent=t.def;q('.contrast').textContent=t.contrast;
+    q('.prev').disabled=cur===0;const last=cur===S.tabs.length-1;q('.next').disabled=last&&!STEPS[si+1];q('.next').textContent=last&&STEPS[si+1]?'Next: '+STEPS[si+1].label:'Next';
+    q('.prev').style.visibility=S.tabs.length===1&&si===0?'hidden':'';q('.next').style.visibility=last&&!STEPS[si+1]?'hidden':'';
+    if(S.tabs.length===1&&si>0){q('.prev').disabled=false;q('.prev').textContent='Previous: '+STEPS[si-1].label;q('.prev').onclick=()=>stepper.children[si-1].click()}
+    q('svg').setAttribute('aria-label',t.name+' chart');buildCtl(t);S.render()}
+  function buildCtl(t){const box=q('.ctl');box.innerHTML='';box.hidden=!t.ctl.length;q('.readout').classList.toggle('noctl',!t.ctl.length);
+    t.ctl.forEach(c=>{
+      if(c.type==='seg'){const w=document.createElement('div');w.className='seg';
+        c.options.forEach(([v,l])=>{const b=document.createElement('button');b.type='button';b.textContent=l;b.classList.toggle('on',S.state[c.key]===v);b.addEventListener('click',()=>{S.state[c.key]=v;[...w.children].forEach(x=>x.classList.toggle('on',x===b));S.render()});w.append(b)});box.append(w);return}
+      const id=`s${S.n}-${t.id}-${c.key}`,w=document.createElement('div');w.className='ctl';
+      w.innerHTML=`<label for="${id}">${c.label} <output></output></label><input id="${id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}" value="${Math.min(c.max,Math.max(c.min,S.state[c.key]))}">${c.note?`<small>${c.note}</small>`:''}`;
+      const inp=w.querySelector('input'),out=w.querySelector('output');S.state[c.key]=+inp.value;out.textContent=c.fmt(+inp.value);
+      inp.addEventListener('input',()=>{S.state[c.key]=+inp.value;out.textContent=c.fmt(+inp.value);S.render()});box.append(w)})}
+  S.render=()=>{const t=S.tabs[cur],svg=q('svg');svg.innerHTML='';
+    const sp=S.spec(S.state,t.id);q('.spec').hidden=!sp.length;
+    q('.spec').innerHTML='<div class="spec-h">'+(S.specH||'The project')+'</div>'+sp.map(([l,v,c])=>`<div><span>${l}</span><b class="${c}">${v}</b></div>`).join('');
+    const out=t.draw(svg,S.state),isT=!!out.html;svg.toggleAttribute('hidden',isT);q('.free').hidden=!isT;if(isT)q('.free').innerHTML=out.html;
+    q('.work').innerHTML=out.work;q('.legend').hidden=!out.legend.length;
+    q('.legend').innerHTML=out.legend.map(([c,l,st])=>`<span><i style="background:${c};${st?'border:1px solid '+st:''}"></i>${l}</span>`).join('')};
+  show(0);
+});
+const rr=()=>STEPS.forEach(S=>S.render());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',rr);
+new MutationObserver(rr).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+})();
+</script>
+
+</html>

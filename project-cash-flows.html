@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Project Cash Flows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: three-step stepper; cash-flow tables replace the chart where the table is the picture; in each step a concept index on the left and a stage on the right, as in the bond walkthrough. Term index on the left; on the right one stage per term, each with its own picture on a shared cash-flow timeline, a worked number and, where it helps, one control. */
+:root{
+  --bg:#F4F4F1; --surface:#FFFFFF; --ink:#16223A; --muted:#5B6578; --line:#DADDD8; --faint:#E7E8E3;
+  --accent:#6B3FA0; --accent-soft:#EEE6F7; --face:#0F6E8C; --face-soft:#DCEEF3;
+  --prem:#2348B8; --disc:#B4530F; --par:#2F6B3F;
+  --display:'Source Serif 4', Georgia, serif; --body:'IBM Plex Sans','Segoe UI',Arial,sans-serif; --mono:'IBM Plex Mono',Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12131A; --surface:#1C1E29; --ink:#ECEDF2; --muted:#A1A6B8; --line:#2F3242; --faint:#262938;
+  --accent:#B794E6; --accent-soft:#2E2340; --face:#5BB8D4; --face-soft:#16384A;
+  --prem:#8FA8F5; --disc:#F0A266; --par:#86C998; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12131A; --surface:#1C1E29; --ink:#ECEDF2; --muted:#A1A6B8; --line:#2F3242; --faint:#262938;
+  --accent:#B794E6; --accent-soft:#2E2340; --face:#5BB8D4; --face-soft:#16384A;
+  --prem:#8FA8F5; --disc:#F0A266; --par:#86C998; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;padding-inline:20px;padding-block:28px 40px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 4px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.05;margin:0}
+.sub{color:var(--muted);margin:6px 0 0;max-width:64ch}
+header{display:flex;flex-direction:column;gap:14px}
+.spec{display:flex;flex-wrap:wrap;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.spec>div{display:flex;flex-direction:column;justify-content:center;gap:2px;padding:12px 18px;border-left:1px solid var(--line);flex:1 1 120px}
+.spec>div:first-child{border-left:none}
+.spec span{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.spec b{font-family:var(--mono);font-weight:500;font-size:18px}
+.spec .spec-h{font-family:var(--display);font-weight:700;font-size:20px;background:var(--accent-soft);color:var(--accent);flex:0 0 auto}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px;align-items:start}
+.index{display:flex;flex-direction:column;gap:6px}
+.term{font:inherit;text-align:left;border:1px solid transparent;background:transparent;color:var(--ink);border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;flex-direction:column}
+.term b{font-weight:600}
+.term span{font-size:14px;color:var(--muted)}
+.term:hover{background:var(--surface)}
+.term[aria-selected="true"]{background:var(--surface);border-color:var(--accent)}
+.term[aria-selected="true"] b{color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.stage h2{font-family:var(--display);font-size:28px;margin:0}
+.stage .def{margin:0;max-width:66ch;color:var(--muted);font-size:17px}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:var(--body);font-size:13px;fill:var(--muted)}
+svg text.mono{font-family:var(--mono)}
+.readout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center}
+.work{background:var(--bg);border-radius:12px;padding:16px 18px;font-family:var(--mono);font-size:16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.work div{overflow-x:auto;white-space:nowrap}
+.work .k{font-family:var(--body);font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.work .big{font-size:28px}
+.c{color:var(--accent)} .f{color:var(--face)}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.ctl label{display:flex;justify-content:space-between;font-weight:500}
+.ctl output{font-family:var(--mono);color:var(--accent)}
+.ctl input{width:100%;accent-color:var(--accent)}
+.ctl small{color:var(--muted);font-size:14px}
+.slice{display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid var(--line);font-family:var(--mono);font-size:13px}
+.slice div{display:flex;align-items:center;padding-inline:8px;white-space:nowrap;overflow:hidden}
+.slice .a{background:var(--accent);color:var(--surface)} .slice .b{background:var(--face-soft);color:var(--face);flex:1}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:3px;background:var(--bg);gap:2px}
+.seg button{flex:1 1 140px;font:500 14px var(--body);border:none;background:transparent;color:var(--ink);padding:8px 10px;border-radius:9px;cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--accent);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.grid100{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;width:min(100%,220px);padding:6px;background:var(--face-soft);border:1px solid var(--face);border-radius:8px;margin-block:4px}
+.grid100 i{display:block;aspect-ratio:1;border-radius:2px;box-shadow:inset 0 0 0 1px var(--face)}
+.contrast{font-size:15px;color:var(--muted);border-left:3px solid var(--accent);padding-left:12px;margin:0;max-width:70ch}
+.nav{display:flex;justify-content:space-between;gap:10px}
+.btn{font:600 15px var(--body);padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.btn[disabled]{opacity:.35;cursor:default}
+@media (max-width:820px){.layout{grid-template-columns:1fr}.index{flex-direction:row;overflow-x:auto}.term{min-width:150px}.readout{grid-template-columns:1fr}}
+.steph{font-family:var(--display);font-weight:700;font-size:clamp(26px,3.6vw,36px);line-height:1.1;margin:0}
+.shell{padding-bottom:6px}
+.shell h1{font-size:clamp(30px,4.4vw,46px)}
+.stepper{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stepper button{font:inherit;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;gap:2px}
+.stepper small{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.stepper span{font-weight:600}
+.stepper button[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.stepper button[aria-selected="true"] small{color:var(--accent)}
+.step{padding-top:8px}
+.trio{display:flex;flex-wrap:wrap;gap:14px;font-size:14px;color:var(--muted)}
+.trio i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.work .fm{font-family:var(--mono);font-size:14px;color:var(--muted)}
+.work div{white-space:normal}
+.work .nt{font-family:var(--body);font-size:14px;color:var(--muted)}
+.readout{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr)}
+.ctl .ctl{gap:6px}
+@media (max-width:820px){.readout{grid-template-columns:1fr}}
+@media (max-width:640px){.stepper{grid-template-columns:1fr}}
+.fx{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-style:italic;font-size:19px;color:var(--ink);line-height:1.15;flex-wrap:nowrap}
+.fx .up{font-style:normal}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle}
+.fr>span:first-child{border-bottom:1.5px solid currentColor;padding:0 4px 2px}
+.fr>span:last-child{padding:2px 4px 0}
+.fx .fr{font-size:.92em}
+.brk{position:relative;display:inline-flex;align-items:center;padding:4px 8px;border-left:2px solid currentColor;border-right:2px solid currentColor}
+.brk::before,.brk::after{content:'';position:absolute;top:0;bottom:0;width:6px;border-top:2px solid currentColor;border-bottom:2px solid currentColor}
+.brk::before{left:0}.brk::after{right:0}
+.par{display:inline-flex;align-items:center}
+.par::before{content:'(';font-size:1.5em;font-style:normal;font-weight:300}.par::after{content:')';font-size:1.5em;font-style:normal;font-weight:300}
+.fx sup{font-size:.62em}
+.work .fwrap{overflow-x:auto;padding:6px 2px;white-space:nowrap}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:3px;background:var(--bg);gap:2px}
+.seg button{flex:1 1 140px;font:500 14px var(--body);border:none;background:transparent;color:var(--ink);padding:8px 10px;border-radius:9px;cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--accent);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.d{color:var(--disc)}
+/* v2: map step, summary cards */
+[hidden]{display:none!important}
+.stepper{grid-template-columns:repeat(5,1fr)}
+.layout.solo{grid-template-columns:1fr}
+.readout.noctl{grid-template-columns:1fr}
+.node{cursor:pointer}.node:hover rect:first-child{filter:brightness(.97)}.node:focus{outline:none}.node:focus-visible rect:first-child{stroke-width:3}
+.work .q{font-size:16px;color:var(--ink)}
+.work .rule{font-family:var(--body);font-size:20px;font-weight:600;line-height:1.3}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:6px 0 4px}
+.mcard{border:1px solid var(--line);border-top:4px solid var(--face);border-radius:12px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
+.mcard.mn{border-top-color:var(--disc)}
+.mcard header{display:flex;flex-direction:column;gap:2px}
+.mcard header b{font-family:var(--display);font-size:20px;line-height:1.15}
+.mrule{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.tests{display:flex;flex-wrap:wrap;gap:4px}
+.tests span{font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:999px}
+.tests .ok{background:color-mix(in srgb,var(--par) 15%,transparent);color:var(--par)}
+.tests .no{background:color-mix(in srgb,var(--disc) 15%,transparent);color:var(--disc)}
+.mcard .lab{margin:2px 0 0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.mcard ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:13.5px;line-height:1.4}
+.mcard li{padding-left:18px;position:relative}
+.pro li::before{content:'+';position:absolute;left:2px;color:var(--par);font-weight:700}
+.con li::before{content:'−';position:absolute;left:2px;color:var(--disc);font-weight:700}
+.verdict{margin-top:auto;font-size:13px;font-weight:700;padding:6px 10px;border-radius:8px;text-align:center}
+.verdict.g{background:color-mix(in srgb,var(--par) 16%,transparent);color:var(--par)}
+.verdict.a{background:var(--accent-soft);color:var(--accent)}
+.verdict.r{background:var(--faint);color:var(--muted)}
+@media (max-width:900px){.stepper{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:640px){.stepper{grid-template-columns:1fr 1fr}}
+@media (min-width:821px){.index.desk-hide{display:none}}
+.work .prop{border:2px solid var(--accent);border-radius:10px;padding:10px 12px;margin:6px 0;background:var(--surface);display:flex;flex-direction:column;gap:6px}
+.work .prop .ph{font-family:var(--body);font-size:14px;font-weight:600;color:var(--accent)}
+.work .prop .pr{display:grid;grid-template-columns:minmax(0,1fr) 22px minmax(0,1.3fr);align-items:center;gap:6px;font-size:14px}
+.work .prop .pr i{font-style:normal;color:var(--accent);text-align:center;font-size:20px;font-family:var(--body)}
+.stepper{grid-template-columns:repeat(3,1fr)}
+@media (max-width:640px){.stepper{grid-template-columns:1fr}}
+.free .tw{overflow-x:auto;margin:4px 0 6px}
+.cft{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:14px;min-width:520px}
+.cft th{font:600 12px var(--body);color:var(--muted);text-align:right;padding:6px 10px;border-bottom:1.5px solid var(--line)}
+.cft th:first-child,.cft td:first-child{text-align:left;font-family:var(--body);white-space:nowrap}
+.cft td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--faint);color:var(--ink)}
+.cft tr.sub td{font-weight:600}
+.cft tr.tot td{font-weight:700;border-top:2px solid var(--ink);font-size:15px}
+.cft tr.dim td{color:var(--muted);font-size:13px}
+.cft td.neg{color:var(--disc)}
+.cft tr.hl td{background:var(--accent-soft)}
+.cft tr.hl td:first-child{box-shadow:inset 4px 0 0 var(--accent)}
+.why{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px;margin:6px 0 8px;align-items:start}
+@media (max-width:820px){.why{grid-template-columns:1fr}}
+.tpl{width:100%;border-collapse:collapse;font-size:14px}
+.tpl td{padding:6px 8px;border-bottom:1px solid var(--faint);vertical-align:top}
+.tpl td.sg{width:26px;text-align:center;font:700 16px var(--mono)}
+.tpl td.sg.c{color:var(--par)}.tpl td.sg.d{color:var(--disc)}.tpl td.sg.m{color:var(--muted)}.tpl td.sg.f{color:var(--face)}.tpl td.sg.x{color:var(--disc)}
+.tpl td.tag{font-size:12px;color:var(--muted);text-align:right}
+.tpl tr.sub td{font-weight:600;border-top:1.5px solid var(--line)}
+.tpl tr.strike td:nth-child(2){text-decoration:line-through;color:var(--muted)}
+.tpl tr.on td{background:var(--accent-soft)}.tpl tr.on td:first-child{box-shadow:inset 4px 0 0 var(--accent)}.tpl tr.on td.tag{color:var(--accent);font-weight:600}
+.wcard{border:2px solid var(--accent);border-radius:12px;padding:14px 16px;background:var(--surface)}
+.wcard h3{font-family:var(--display);font-size:19px;margin:0 0 8px;line-height:1.2}
+.wcard p{margin:0 0 8px;font-size:14.5px;line-height:1.5}
+.nwcr{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 10px;font-family:var(--body)}
+.nb{border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px;font-size:13px;line-height:1.4;color:var(--ink)}
+.nb b{font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+.nb .big{font:700 17px var(--body)}
+.nb.up{background:color-mix(in srgb,var(--disc) 13%,transparent);border-left:5px solid var(--disc)}.nb.up .big,.nb.up b{color:var(--disc)}
+.nb.dn{background:color-mix(in srgb,var(--par) 13%,transparent);border-left:5px solid var(--par)}.nb.dn .big,.nb.dn b{color:var(--par)}
+.wex{margin-top:8px;padding:10px 12px;border-radius:8px;background:var(--bg);font:13.5px/1.6 var(--mono)}
+
+</style>
+<style>
+body{margin:0}
+.homebar{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1120px;margin:0 auto;padding:14px 0 0;font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;font-size:14px}
+.homebar a{color:var(--accent,#6B3FA0);text-decoration:none;font-weight:600}
+.homebar a:hover{text-decoration:underline}
+.homebar span{color:var(--muted,#5B6578)}
+</style>
+<nav class="homebar" aria-label="Site"><a href="index.html">← All FIA 203 topics</a><span>FIA 203 Corporate Finance</span></nav>
+
+
+<div class="wrap shell">
+  <p class="eyebrow">Corporate Finance</p>
+  <h1>Analysis of Project Cash Flows</h1>
+  <div class="stepper" role="tablist" aria-label="Steps" id="stepper"></div>
+</div>
+<div id="steps"></div>
+
+<script>
+(()=>{
+const L=v=>{const a=Math.abs(v),s=v<0?'−':'';return s+'₹'+a.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})+'L'};
+const f2=v=>Math.abs(v)<0.005?'–':v<0?`(${Math.abs(v).toFixed(2)})`:v.toFixed(2);
+const pc=(v,d=1)=>(v*100).toFixed(d)+'%';
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NS='http://www.w3.org/2000/svg';
+const el=(t,a,x)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(x!=null)e.textContent=x;return e};
+const K=()=>({a:css('--accent'),aS:css('--accent-soft'),f:css('--face'),fS:css('--face-soft'),m:css('--muted'),l:css('--line'),fa:css('--faint'),ink:css('--ink'),par:css('--par'),d:css('--disc'),surf:css('--surface')});
+const T=(s,x,y,t,o={})=>s.append(el('text',{x,y,'text-anchor':o.anchor||'middle',class:o.mono?'mono':'',style:`fill:${o.fill||css('--muted')};${o.bold?'font-weight:600;':''}${o.size?'font-size:'+o.size+'px;':''}`},t));
+const Rc=(s,x,y,w,h,fill,o={})=>{if(h<=0||w<=0)return;s.append(el('rect',{x,y,width:w,height:h,fill,rx:o.rx??3,...(o.stroke?{stroke:o.stroke,'stroke-width':o.sw||1}:{}),...(o.op!=null?{opacity:o.op}:{})}))};
+const Ln=(s,x1,y1,x2,y2,st,w=1)=>s.append(el('line',{x1,y1,x2,y2,stroke:st,'stroke-width':w}));
+const note=t=>`<div class="nt">${t}</div>`;
+const npv=(c,r)=>c.reduce((s,x,t)=>s+x/Math.pow(1+r,t),0);
+const irr=c=>{let lo=-0.5,hi=1;for(let i=0;i<100;i++){const m=(lo+hi)/2;(npv(c,lo)*npv(c,m)<=0)?hi=m:lo=m}return (lo+hi)/2};
+
+/* The project, from the course deck, in ₹ lakh: Nilgiri Packaging's three-year expansion */
+const P0={sales:24,costs:9.6,inv:27,T:35,nwc:3,salv:2.1,R:15,D:40};
+
+/* ================= STEP 1: what counts ================= */
+const S1={n:1,label:'What counts',eyebrow:'Step 1 · Cash flows, not profits',title:'Which Cash Flows Count?',
+ sub:'Nilgiri Packaging is considering a three-year expansion. The machine costs ₹27 lakh, sales will be ₹24 lakh a year and costs ₹9.6 lakh a year. We want the cash this project gives to the long-term suppliers of funds, not its accounting profit.',
+ state:{...P0},
+ spec:(st)=>[['Machine','₹27L, 3-year life','d'],['Sales','₹24L a year','c'],['Costs','₹9.6L a year','d'],['Tax rate',st.T+'%','']],
+ tabs:[
+ {id:'cash',name:'Cash flow, not profit',short:'Profit, then add back depreciation',
+  def:'Start from sales, take away costs and depreciation, and pay tax: that is profit after tax. Depreciation was subtracted only to work out the tax; no cash left the firm. So add it back. Interest is never subtracted: the cost of finance is in the discount rate.',
+  contrast:'Depreciation matters only because it lowers tax. Raise the tax rate and the operating cash flow falls, but by less than the profit does, because depreciation shields part of the income from tax.',
+  ctl:[{key:'T',label:'Tax rate',min:0,max:50,step:1,fmt:v=>v+'%',note:'The deck uses 35%.'}],
+  draw(s,st){const k=K(),t=st.T/100,dep=st.inv/3,pbt=st.sales-st.costs-dep,tax=pbt*t,pat=pbt-tax,ocf=pat+dep;
+   const base=286,Y=v=>base-v*9.4,X=i=>70+i*88,w=58;
+   const steps=[['Sales',0,st.sales,k.a,'+'],['Costs',st.sales,st.sales-st.costs,k.d,'−'],['Depreciation',st.sales-st.costs,pbt,k.d,'−'],['PBT',0,pbt,k.f,'='],['Tax',pbt,pat,k.d,'−'],['PAT',0,pat,k.f,'='],['Add back dep.',pat,ocf,k.par,'+'],['OCF',0,ocf,k.a,'=']];
+   Ln(s,30,base,740,base,k.l,1.5);
+   steps.forEach(([n,a,b,col,sg],i)=>{const top=Math.max(a,b),bot=Math.min(a,b),x=X(i)-w/2;
+    Rc(s,x,Y(top),w,Math.max(1.5,Y(bot)-Y(top)),col,{rx:3,op:sg==='='?1:.85});
+    if(i<steps.length-1){const nx=steps[i+1],lv=sg==='='?b:b;Ln(s,x+w,Y(lv),X(i+1)-w/2,Y(lv),k.l,1)}
+    T(s,X(i),Y(top)-8,(sg==='='?'':sg)+Math.abs(b-a).toFixed(2),{mono:1,bold:1,size:12,fill:sg==='='?k.ink:col});
+    T(s,X(i),base+18,n,{size:12,fill:sg==='='?k.ink:k.m,bold:sg==='='})});
+   T(s,X(6),Y(ocf)-26,'not a cash payment',{size:11,fill:k.par,bold:1});
+   return {legend:[[k.a,'Cash in'],[k.d,'Taken away'],[k.f,'Subtotal'],[k.par,'Added back']],
+    work:`<div class="fm">OCF = PAT + Depreciation</div><div>= ${pat.toFixed(2)} + ${dep.toFixed(2)} = <span class="c">${L(ocf)}</span> a year</div><div class="k">Same thing, from EBIT</div><div>EBIT × (1 − T) + Dep = ${pbt.toFixed(2)} × ${(1-t).toFixed(2)} + ${dep.toFixed(2)} = ${L(ocf)}</div>`+note(`Profit is ${L(pat)}; the cash is ${L(ocf)}.`)}}},
+ {id:'rel',name:'What to include',short:'Sunk and opportunity costs',
+  def:'Ask one question of every item: does this cash flow happen only because we take the project? If yes, it counts. If it happens either way, leave it out.',
+  contrast:'A sunk cost has already been paid and cannot be recovered, so it cannot change the decision. An opportunity cost is a benefit given up, such as rent a building could have earned; no cheque is written, but it is a real cost of the project.',ctl:[],
+  draw(s){const k=K(),inc=[['Rent the unused warehouse could earn','Opportunity cost: ₹1.5L a year given up'],['Extra stock and receivables','Working capital tied up, returned at the end'],['Resale value of the machine','Salvage value, after tax'],['Tax saved because of depreciation','Lower tax is real cash']],
+   exc=[['Market survey already paid, ₹2L','Sunk cost: paid whether or not we invest'],['Interest on the machine loan','Financing: already in the discount rate'],['Depreciation itself','An accounting entry, not a payment'],['Profit, as reported','Use cash flows, not earnings']];
+   [[30,'Include',k.par,inc],[395,'Leave out',k.d,exc]].forEach(([x,h,col,items])=>{
+    Rc(s,x,10,335,34,col,{rx:8,op:.14});T(s,x+16,32,h,{anchor:'start',bold:1,fill:col,size:15});
+    items.forEach(([a,b],j)=>{const y=54+j*68;Rc(s,x,y,335,58,k.surf,{stroke:k.l,rx:8});Rc(s,x,y,5,58,col,{rx:2});
+     T(s,x+18,y+24,a,{anchor:'start',bold:1,fill:k.ink,size:13});T(s,x+18,y+44,b,{anchor:'start',size:12})})});
+   return {legend:[[k.par,'Changes because of the project'],[k.d,'Happens anyway, or not cash']],
+    work:`<div class="k">The test</div><div class="rule">Does this cash flow happen only because we take the project?</div>`+note('Yes: include it. No: leave it out.')}}},
+ {id:'dep',name:'Depreciation: SLM or WDV',short:'Two ways to spread the cost',
+  def:'Straight line (SLM) charges the same amount each year: cost ÷ life. Written down value (WDV) charges a fixed percentage of whatever book value is left, so the charge is large early and shrinks.',
+  contrast:'WDV gives bigger deductions early, so less tax early, which is worth more in present value. Over three years it does not write the machine down to zero: the balance left is the book value used when the machine is sold. The examples that follow use SLM.',
+  ctl:[{key:'D',label:'WDV rate',min:10,max:70,step:5,fmt:v=>v+'%',note:'Percentage of the remaining book value each year.'}],
+  draw(s,st){const k=K(),d=st.D/100,slm=st.inv/3,w=[];let bv=st.inv;for(let t=0;t<3;t++){w.push(bv*d);bv-=bv*d}
+   const base=270,sc=Math.min(17,220/Math.max(slm,...w)),h=v=>v*sc,X=t=>150+t*190;Ln(s,40,base,720,base,k.l,1.5);
+   [1,2,3].forEach(t=>{const x=X(t-1);Rc(s,x-48,base-h(slm),44,h(slm),k.a,{rx:3});Rc(s,x+4,base-h(w[t-1]),44,h(w[t-1]),k.f,{rx:3});
+    T(s,x-26,base-h(slm)-8,slm.toFixed(2),{mono:1,bold:1,size:12,fill:k.a});T(s,x+26,base-h(w[t-1])-8,w[t-1].toFixed(2),{mono:1,bold:1,size:12,fill:k.f});T(s,x,base+20,'Year '+t,{size:12})});
+   T(s,690,base-120,'Book value',{anchor:'end',size:12});T(s,690,base-102,'after 3 years',{anchor:'end',size:12});
+   T(s,690,base-76,'SLM ₹0.00L',{anchor:'end',mono:1,bold:1,size:13,fill:k.a});T(s,690,base-56,'WDV '+L(bv),{anchor:'end',mono:1,bold:1,size:13,fill:k.f});
+   return {legend:[[k.a,'SLM'],[k.f,'WDV']],
+    work:`<div class="fm">SLM: annual dep = cost ÷ n</div><div>₹27L ÷ 3 = <span class="c">₹9.00L</span> each year</div><div class="fm">WDV: dep = book value × ${st.D}%</div><div>${w.map((v,i)=>`Yr ${i+1}: ${v.toFixed(2)}`).join(' · ')}</div>`+note(`WDV leaves a book value of ${L(bv)} after three years.`)}}}
+ ]};
+
+/* ================= STEP 2: build the cash flows ================= */
+function model(st,lvl){const t=st.T/100,dep=st.inv/3,Y=[1,2,3],r={};
+ r.sales=[0,...Y.map(()=>st.sales)];r.costs=[0,...Y.map(()=>-st.costs)];r.dep=[0,...Y.map(()=>-dep)];
+ r.pbt=r.sales.map((v,i)=>v+r.costs[i]+r.dep[i]);r.tax=r.pbt.map(v=>-v*t);r.pat=r.pbt.map((v,i)=>v+r.tax[i]);r.adddep=r.dep.map(v=>-v);r.ocf=r.pat.map((v,i)=>v+r.adddep[i]);
+ r.inv=[-st.inv,0,0,0];r.nwc=lvl>=2?[-st.nwc,0,0,st.nwc]:[0,0,0,0];
+ const nsv=st.salv-t*(st.salv-0);r.nsv=lvl>=3?[0,0,0,nsv]:[0,0,0,0];
+ r.cf=r.ocf.map((v,i)=>v+r.inv[i]+r.nwc[i]+r.nsv[i]);r.df=r.cf.map((_,i)=>1/Math.pow(1+st.R/100,i));r.pv=r.cf.map((v,i)=>v*r.df[i]);r.npv=r.pv.reduce((a,b)=>a+b,0);r.nsvv=nsv;return r}
+const ROWS=[['sales','Sales','',1],['costs','Costs','',1],['dep','Depreciation','',1],['pbt','PBT','sub',1],['tax','Tax','',1],['pat','PAT','sub',1],['adddep','Add: depreciation','',1],['ocf','Operating cash flow','sub',1],['inv','Initial investment','',1],['nwc','Change in NWC','',2],['nsv','Net salvage value','',3],['cf','Cash flow','tot',1]];
+function table(r,lvl,hl,cols,extra=[]){
+ const head=`<tr><th>₹ lakh</th>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>`;
+ const body=ROWS.filter(x=>x[3]<=lvl).map(([k,lab,cls])=>`<tr class="${cls} ${hl.includes(k)?'hl':''}"><td>${lab}</td>${r[k].map(v=>`<td class="${v<-0.004?'neg':''}">${f2(v)}</td>`).join('')}</tr>`).join('');
+ return `<div class="tw"><table class="cft">${head}${body}${extra.join('')}</table></div>`}
+const nwcRule=()=>`<div class="nwcr"><div class="nb up"><b>NWC goes up</b><span class="big">Cash OUT · subtract</span><span>More stock bought, more credit given to customers: cash gets locked up.</span></div><div class="nb dn"><b>NWC goes down</b><span class="big">Cash IN · add</span><span>Stock sold off, customers pay up, more credit from suppliers: locked cash comes back.</span></div></div>`;
+const S2={n:2,label:'Build the cash flows',eyebrow:'Step 2 · A new project, row by row',title:'Building the Project Cash Flows',
+ sub:'The deck’s template, filled in one block at a time: operating cash flow, then working capital, then salvage value, and finally the NPV.',
+ state:{...P0,why:0},
+ spec:(st)=>[['Machine','₹27L, SLM to zero','d'],['Sales, costs','₹'+st.sales+'L, ₹9.6L','c'],['Tax rate',st.T+'%',''],['Required return',st.R+'%','']],
+ tabs:[
+ {id:'why',name:'Why add, why subtract?',short:'The template, row by row',
+  def:'The template starts from accounting profit and turns it into cash. Each adjustment fixes one gap between profit and cash. Pick an adjustment to see why it is there.',
+  contrast:'One question explains every row: did cash actually move, and when? Profit records sales and costs when they are earned or matched; the project is worth the cash that moves in and out, year by year.',
+  ctl:[{key:'why',type:'seg',options:[[0,'Depreciation, added back'],[1,'Change in NWC'],[2,'Net salvage value'],[3,'Why no interest?']]}],
+  draw(s,st){const t=st.T/100,dep=st.inv/3,pbt=st.sales-st.costs-dep,tax=pbt*t,taxNo=(st.sales-st.costs)*t,nsv=st.salv-t*st.salv;
+   const rows=[['Sales','+','cash in','c',[]],['Expense','−','cash out','d',[]],['Depreciation','−','not cash: only to work out tax','m',[0]],['PBT','','','s',[]],['Tax','−','cash out, to the government','d',[]],['PAT','','','s',[]],['Add: depreciation','+','undo the non-cash charge','c',[0]],['Add or subtract: change in NWC','∓','cash locked in, or released','f',[1]],['Add: net salvage value','+','cash from selling the machine','c',[2]],['Interest','✕','not here: in the discount rate','x',[3]],['Cash flow','=','','s',[]]];
+   const tbl=`<table class="tpl">${rows.map(([n,sg,tag,c,hl])=>`<tr class="${c==='s'?'sub':''} ${c==='x'?'strike':''} ${hl.includes(st.why)?'on':''}"><td class="sg ${c}">${sg}</td><td>${n}</td><td class="tag">${tag}</td></tr>`).join('')}</table>`;
+   const cards=[
+    ['Subtract depreciation, then add it back',`<p>The machine’s <b>₹27L left the bank on day 0</b>; that cash is already in year 0. Depreciation spreads the same cost over three years in the accounts, ₹9L a year, but <b>no cash leaves in years 1 to 3</b>.</p><p>We subtract it only because the tax rules allow it, so it lowers the tax bill. Once tax is worked out, we add it back. Otherwise the same ₹27L would be counted twice.</p>`,`Tax without depreciation: 35% × ${(st.sales-st.costs).toFixed(2)} = ${taxNo.toFixed(2)}<br>Tax with depreciation: 35% × ${pbt.toFixed(2)} = ${tax.toFixed(2)}<br><b>Tax saved: ${(taxNo-tax).toFixed(2)} = 35% × ${dep.toFixed(2)}</b>, the only cash effect of depreciation.`],
+    ['Subtract an increase in working capital, add it back at the end',`<p>To run the line, Nilgiri must <b>hold stock and give customers credit</b>. ₹${st.nwc.toFixed(2)}L of cash sits in the warehouse and with customers instead of in the bank.</p><p>That cash is gone, yet <b>no expense shows in the profit and loss</b>, so the template subtracts it. When the project ends, the stock is sold off and customers pay up: the cash comes back, so it is added.</p>`,nwcRule()+`Here: −${st.nwc.toFixed(2)} in year 0 (NWC up), +${st.nwc.toFixed(2)} in year 3 (NWC back to zero).`],
+    ['Add the net salvage value',`<p>At the end the machine is sold. That is <b>real cash</b>, but it is not part of sales, so it needs its own row.</p><p>The machine was depreciated to zero, so the whole sale price is a <b>gain over book value, and the gain is taxed</b>. Add only what is left after that tax.</p>`,`NSV = Salvage − T × (Salvage − Book value)<br>= ${st.salv.toFixed(2)} − 0.35 × (${st.salv.toFixed(2)} − 0) = <b>${nsv.toFixed(2)}</b>`],
+    ['Why is interest not subtracted?',`<p>We are valuing the project for <b>all its long-term suppliers of funds</b>, lenders and shareholders together, not just for shareholders.</p><p>What they all require is captured in the <b>discount rate</b>. Subtracting interest in the cash flows as well would charge for the same money twice.</p>`,`Financing costs go in the discount rate, never in the cash flows.`]];
+   const [h,b,ex]=cards[st.why];
+   return {html:`<div class="why"><div>${tbl}</div><div class="wcard"><h3>${h}</h3>${b}<div class="wex">${ex}</div></div></div>`,legend:[],
+    work:`<div class="fm">Cash flow = PAT + Depreciation − Change in NWC + Net salvage value</div><div>Each term is a correction from profit to cash.</div>`}}},
+ {id:'ocf',name:'Operating cash flow',short:'Sales to OCF',
+  def:'Each year: sales less costs less depreciation gives PBT. Take away tax to get PAT, then add depreciation back. Year 0 carries the cost of the machine.',
+  contrast:'With only the machine and the operating cash flows, NPV at 15% is positive. The next two tabs add the items most often forgotten.',
+  ctl:[{key:'sales',label:'Annual sales',min:16,max:32,step:0.5,fmt:v=>'₹'+v.toFixed(1)+'L',note:'Costs stay at ₹9.6L a year.'}],
+  draw(s,st){const r=model(st,1);return {html:table(r,1,['sales','costs','dep','pbt','tax','pat','adddep','ocf'],['0','1','2','3']),legend:[],
+   work:`<div class="fm">OCF = (Sales − Costs − Dep) × (1 − T) + Dep</div><div>= (${st.sales.toFixed(2)} − 9.60 − 9.00) × 0.65 + 9.00</div><div class="big">OCF = ${L(r.ocf[1])}</div>`+note(`NPV at ${st.R}% so far: ${L(r.npv)}.`)}}},
+ {id:'nwc',name:'Net working capital',short:'Cash tied up, then returned',
+  def:'The project needs extra stock and credit to customers from day one. That money is put in at year 0 and comes back when the project ends and the stock is sold off.',
+  contrast:'You get every rupee of working capital back, yet NPV falls: money put in today returns three years later, and ₹3L in year 3 is worth less than ₹3L today.',
+  ctl:[{key:'nwc',label:'Working capital needed',min:0,max:8,step:0.5,fmt:v=>'₹'+v.toFixed(1)+'L',note:'Recovered in full at the end.'}],
+  draw(s,st){const r=model(st,2),r1=model(st,1);return {html:nwcRule()+table(r,2,['nwc'],['0','1','2','3']),legend:[],
+   work:`<div>Year 0: −${L(st.nwc)} · Year 3: +${L(st.nwc)}</div><div>Cost in today’s money = ${st.nwc.toFixed(2)} − ${st.nwc.toFixed(2)} ÷ 1.15³ = <span class="c">${L(st.nwc-st.nwc/Math.pow(1.15,3))}</span></div><div class="big">NPV = ${L(r.npv)}</div>`+note(`Without working capital it was ${L(r1.npv)}.`)}}},
+ {id:'nsv',name:'Net salvage value',short:'Resale, after tax',
+  def:'At the end the machine can be sold. If it sells for more than its book value, the gain is taxed. What the firm keeps is the net salvage value.',
+  contrast:'The machine was depreciated to zero, so the whole sale price is a taxable gain. Had the book value been higher than the sale price, the loss would save tax and the net salvage would be more than the sale price.',
+  ctl:[{key:'salv',label:'Sale price at the end',min:0,max:6,step:0.1,fmt:v=>'₹'+v.toFixed(1)+'L',note:'Book value at the end is zero under SLM.'}],
+  draw(s,st){const r=model(st,3),t=st.T/100;return {html:table(r,3,['nsv'],['0','1','2','3']),legend:[],
+   work:`<div class="fm">NSV = Salvage − T × (Salvage − Book value)</div><div>= ${st.salv.toFixed(2)} − ${t.toFixed(2)} × (${st.salv.toFixed(2)} − 0)</div><div class="big">NSV = ${L(r.nsvv)}</div>`+note(`NPV with working capital and salvage: ${L(r.npv)}.`)}}},
+ {id:'npv',name:'Cash flows and NPV',short:'Discount and add up',
+  def:'The last row is the project’s cash flow each year. Discount each one at the required return and add them up.',
+  contrast:'The same discounting as in capital budgeting. The hard part of a real project is not the NPV formula; it is getting this table right.',
+  ctl:[{key:'R',label:'Required return',min:5,max:30,step:0.5,fmt:v=>v.toFixed(1)+'%',note:''}],
+  draw(s,st){const r=model(st,3),cols=['0','1','2','3'];
+   const extra=[`<tr class="dim"><td>Discount factor at ${st.R}%</td>${r.df.map(v=>`<td>${v.toFixed(4)}</td>`).join('')}</tr>`,`<tr class="hl"><td>Present value</td>${r.pv.map(v=>`<td class="${v<0?'neg':''}">${f2(v)}</td>`).join('')}</tr>`];
+   const col=r.npv>=0?'var(--par)':'var(--disc)';
+   return {html:table(r,3,['cf'],cols,extra),legend:[],
+   work:`<div class="fm">NPV = sum of the present values</div><div>= ${r.pv.map(v=>f2(v)).join(' + ')}</div><div class="big" style="color:${col}">NPV = ${L(r.npv)}</div>`+note(r.npv>=0?'Positive: accept the expansion.':'Negative: reject it.')}}}
+ ]};
+
+/* ================= STEP 3: a cost-saving project ================= */
+const S3={n:3,label:'A cost-saving project',eyebrow:'Step 3 · Savings instead of sales',title:'A Cost-Saving Project',solo:true,
+ sub:'A new order-entry system costs ₹6.7 lakh. It saves ₹2.4 lakh a year before tax for five years, is depreciated straight line to zero, and can be sold for ₹0.5 lakh at the end. It also lets the firm hold ₹0.85 lakh less working capital.',
+ state:{save:2.4},
+ spec:()=>[['System','₹6.7L, 5-year life','d'],['Pre-tax saving','₹2.4L a year','c'],['Salvage','₹0.5L',''],['Tax rate','35%','']],
+ tabs:[{id:'save',name:'Order-entry system',short:'',
+  def:'Treat the saving exactly like extra sales: it raises profit, so it raises tax. Less working capital is the reverse of the earlier case: cash comes in at year 0 and goes back out at the end.',
+  contrast:'The template does not change: savings in place of sales, the same depreciation add-back, working capital and net salvage. A replacement project is handled the same way, using the difference the new machine makes.',
+  ctl:[{key:'save',label:'Pre-tax saving a year',min:1.2,max:3.6,step:0.1,fmt:v=>'₹'+v.toFixed(1)+'L',note:''}],
+  draw(s,st){const t=.35,dep=6.7/5,Y=[1,2,3,4,5],r={};
+   r.sales=[0,...Y.map(()=>st.save)];r.dep=[0,...Y.map(()=>-dep)];r.pbt=r.sales.map((v,i)=>v+r.dep[i]);r.tax=r.pbt.map(v=>-v*t);r.pat=r.pbt.map((v,i)=>v+r.tax[i]);r.adddep=r.dep.map(v=>-v);r.ocf=r.pat.map((v,i)=>v+r.adddep[i]);
+   r.inv=[-6.7,0,0,0,0,0];r.nwc=[0.85,0,0,0,0,-0.85];const nsv=0.5-t*0.5;r.nsv=[0,0,0,0,0,nsv];r.costs=[0,0,0,0,0,0];
+   r.cf=r.ocf.map((v,i)=>v+r.inv[i]+r.nwc[i]+r.nsv[i]);const R=irr(r.cf);
+   const rows=ROWS.filter(x=>x[0]!=='costs').map(x=>x[0]==='sales'?['sales','Saving before tax','',1]:x);
+   const head=`<tr><th>₹ lakh</th>${['0','1','2','3','4','5'].map(c=>`<th>${c}</th>`).join('')}</tr>`;
+   const body=rows.map(([k,lab,cls])=>`<tr class="${cls} ${['sales','nwc'].includes(k)?'hl':''}"><td>${lab}</td>${r[k].map(v=>`<td class="${v<-0.004?'neg':''}">${f2(v)}</td>`).join('')}</tr>`).join('');
+   return {html:`<div class="tw"><table class="cft">${head}${body}</table></div>`,legend:[],
+    work:`<div class="fm">OCF = Saving × (1 − T) + Dep × T</div><div>= ${st.save.toFixed(2)} × 0.65 + 1.34 × 0.35 = <span class="c">${L(r.ocf[1])}</span></div><div>Year 0: −6.70 + 0.85 = ${L(r.cf[0])}</div><div>Year 5: ${f2(r.ocf[5])} − 0.85 + ${nsv.toFixed(3)} = ${L(r.cf[5])}</div><div class="big">IRR = ${pc(R)}</div>`}}}]};
+
+const STEPS=[S1,S2,S3];
+
+/* ================= framework ================= */
+const stepper=document.getElementById('stepper'),host=document.getElementById('steps');
+STEPS.forEach((S,si)=>{
+  const b=document.createElement('button');b.setAttribute('role','tab');b.setAttribute('aria-selected',si===0);b.innerHTML=`<small>Step ${S.n}</small><span>${S.label}</span>`;
+  b.addEventListener('click',()=>{[...stepper.children].forEach(x=>x.setAttribute('aria-selected',x===b));STEPS.forEach(X=>X.sec.hidden=X!==S);S.render();window.scrollTo({top:0,behavior:'smooth'})});
+  stepper.append(b);
+  const sec=document.createElement('section');sec.className='step';sec.hidden=si>0;S.sec=sec;
+  sec.innerHTML=`<div class="wrap"><header><p class="eyebrow">${S.eyebrow}</p><h2 class="steph">${S.title}</h2><p class="sub">${S.sub}</p><div class="spec" aria-label="The project"></div></header>
+   <div class="layout"><div class="index" role="tablist" aria-label="Concepts"></div>
+   <section class="stage" role="tabpanel" aria-live="polite"><h2 class="nm"></h2><p class="def"></p>
+   <svg viewBox="0 0 760 330" role="img"></svg><div class="free" hidden></div><div class="trio legend"></div>
+   <div class="readout"><div class="work"></div><div class="ctl"></div></div>
+   <p class="contrast"></p><div class="nav"><button class="btn prev">Previous</button><button class="btn primary next">Next</button></div></section></div></div>`;
+  host.append(sec);
+  const q=c=>sec.querySelector(c),idx=q('.index');let cur=0;
+  if(S.solo){q('.layout').classList.add('solo');if(S.tabs.length===1)idx.hidden=true;else idx.classList.add('desk-hide')}
+  S.tabs.forEach((t,i)=>{const bt=document.createElement('button');bt.className='term';bt.setAttribute('role','tab');bt.innerHTML=`<b>${t.name}</b><span>${t.short}</span>`;bt.addEventListener('click',()=>show(i));idx.append(bt)});
+  q('.prev').addEventListener('click',()=>show(cur-1));q('.next').addEventListener('click',()=>{if(cur<S.tabs.length-1)show(cur+1);else if(STEPS[si+1])stepper.children[si+1].click()});
+  function show(i){cur=Math.max(0,Math.min(S.tabs.length-1,i));const t=S.tabs[cur];
+    [...idx.children].forEach((b,j)=>b.setAttribute('aria-selected',j===cur));
+    q('.nm').textContent=t.name;q('.def').textContent=t.def;q('.contrast').textContent=t.contrast;
+    q('.prev').disabled=cur===0;const last=cur===S.tabs.length-1;q('.next').disabled=last&&!STEPS[si+1];q('.next').textContent=last&&STEPS[si+1]?'Next: '+STEPS[si+1].label:'Next';
+    q('.prev').style.visibility=S.tabs.length===1&&si===0?'hidden':'';q('.next').style.visibility=last&&!STEPS[si+1]?'hidden':'';
+    if(S.tabs.length===1&&si>0){q('.prev').disabled=false;q('.prev').textContent='Previous: '+STEPS[si-1].label;q('.prev').onclick=()=>stepper.children[si-1].click()}
+    q('svg').setAttribute('aria-label',t.name+' chart');buildCtl(t);S.render()}
+  function buildCtl(t){const box=q('.ctl');box.innerHTML='';box.hidden=!t.ctl.length;q('.readout').classList.toggle('noctl',!t.ctl.length);
+    t.ctl.forEach(c=>{
+      if(c.type==='seg'){const w=document.createElement('div');w.className='seg';
+        c.options.forEach(([v,l])=>{const b=document.createElement('button');b.type='button';b.textContent=l;b.classList.toggle('on',S.state[c.key]===v);b.addEventListener('click',()=>{S.state[c.key]=v;[...w.children].forEach(x=>x.classList.toggle('on',x===b));S.render()});w.append(b)});box.append(w);return}
+      const id=`s${S.n}-${t.id}-${c.key}`,w=document.createElement('div');w.className='ctl';
+      w.innerHTML=`<label for="${id}">${c.label} <output></output></label><input id="${id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}" value="${Math.min(c.max,Math.max(c.min,S.state[c.key]))}">${c.note?`<small>${c.note}</small>`:''}`;
+      const inp=w.querySelector('input'),out=w.querySelector('output');S.state[c.key]=+inp.value;out.textContent=c.fmt(+inp.value);
+      inp.addEventListener('input',()=>{S.state[c.key]=+inp.value;out.textContent=c.fmt(+inp.value);S.render()});box.append(w)})}
+  S.render=()=>{const t=S.tabs[cur],svg=q('svg');svg.innerHTML='';
+    const sp=S.spec(S.state,t.id);q('.spec').hidden=!sp.length;
+    q('.spec').innerHTML='<div class="spec-h">'+(S.specH||'The project')+'</div>'+sp.map(([l,v,c])=>`<div><span>${l}</span><b class="${c}">${v}</b></div>`).join('');
+    const out=t.draw(svg,S.state),isT=!!out.html;svg.toggleAttribute('hidden',isT);q('.free').hidden=!isT;if(isT)q('.free').innerHTML=out.html;
+    q('.work').innerHTML=out.work;q('.legend').hidden=!out.legend.length;
+    q('.legend').innerHTML=out.legend.map(([c,l,st])=>`<span><i style="background:${c};${st?'border:1px solid '+st:''}"></i>${l}</span>`).join('')};
+  show(0);
+});
+const rr=()=>STEPS.forEach(S=>S.render());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',rr);
+new MutationObserver(rr).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();
+</script>
+
+</html>

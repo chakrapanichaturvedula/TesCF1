@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FIA 203 Corporate Finance</title>
+<meta name="description" content="Interactive walkthroughs and activities for FIA 203 Corporate Finance-I, IMT Hyderabad.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: course header, then one row per module in session order; each row lists its walkthroughs and activities as cards. */
+:root{
+  --bg:#F4F4F1; --surface:#FFFFFF; --ink:#16223A; --muted:#5B6578; --line:#DADDD8; --faint:#E7E8E3;
+  --accent:#6B3FA0; --accent-soft:#EEE6F7; --face:#0F6E8C; --face-soft:#DCEEF3;
+  --display:'Source Serif 4', Georgia, serif; --body:'IBM Plex Sans','Segoe UI',Arial,sans-serif; --mono:'IBM Plex Mono',Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#12131A; --surface:#1C1E29; --ink:#ECEDF2; --muted:#A1A6B8; --line:#2F3242; --faint:#262938;
+  --accent:#B794E6; --accent-soft:#2E2340; --face:#5BB8D4; --face-soft:#16384A; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;padding-inline:20px;padding-block:40px 60px}
+.wrap{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(34px,5.5vw,54px);line-height:1.02;margin:6px 0 0;text-wrap:balance}
+.lede{color:var(--muted);font-size:18px;max-width:62ch;margin:10px 0 0}
+.meta{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px;color:var(--muted);margin-top:12px}
+.meta b{color:var(--ink);font-weight:600}
+.module{display:grid;grid-template-columns:200px minmax(0,1fr);gap:20px;border-top:1px solid var(--line);padding-top:22px}
+.mhead .num{font-family:var(--mono);font-size:13px;color:var(--accent)}
+.mhead h2{font-family:var(--display);font-size:24px;line-height:1.15;margin:4px 0 6px;text-wrap:balance}
+.mhead p{margin:0;font-size:14px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.card{display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;text-decoration:none;color:var(--ink);transition:border-color .15s,transform .15s}
+a.card:hover{border-color:var(--accent);transform:translateY(-1px)}
+a.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kind{align-self:flex-start;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding:3px 9px;border-radius:999px}
+.kind.w{background:var(--accent-soft);color:var(--accent)}
+.kind.a{background:var(--face-soft);color:var(--face)}
+.card h3{font-family:var(--display);font-size:19px;margin:2px 0 0;line-height:1.2}
+.card p{margin:0;font-size:14px;color:var(--muted)}
+.card.soon{background:transparent;border-style:dashed;color:var(--muted)}
+.card.soon h3{color:var(--muted)}
+.foot{border-top:1px solid var(--line);padding-top:18px;font-size:13px;color:var(--muted)}
+@media (max-width:720px){.module{grid-template-columns:1fr;gap:10px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">IMT Hyderabad · PGDM · Term II</p>
+    <h1>FIA 203 Corporate Finance</h1>
+    <p class="lede">Interactive walkthroughs and activities for each topic in the course. Open any page, move the sliders, and see the numbers change. No login needed.</p>
+    <div class="meta"><span><b>Text</b> Ross, Westerfield, Jaffe and Kakani, Corporate Finance</span></div>
+  </header>
+
+  <section class="module" aria-labelledby="m0">
+    <div class="mhead"><span class="num">Start here</span><h2 id="m0">The Big Picture</h2><p>How every topic in the course connects.</p></div>
+    <div class="cards">
+      <a class="card" href="big-picture.html"><span class="kind w">Overview</span><h3>The Big Picture</h3><p>From the balance sheet to WACC: one map of the whole course.</p></a>
+    </div>
+  </section>
+
+  <section class="module" aria-labelledby="m1">
+    <div class="mhead"><span class="num">Module 1</span><h2 id="m1">Time Value of Money</h2><p>PV, FV, annuities, perpetuities, growth, APR and EAR.</p></div>
+    <div class="cards">
+      <a class="card" href="tvm-reading-cash-flows.html"><span class="kind a">Activity</span><h3>Reading Cash Flows</h3><p>Match stories to timelines, find the clue words, build the annuity, and the instant-loan APR.</p></a>
+    </div>
+  </section>
+
+  <section class="module" aria-labelledby="m2">
+    <div class="mhead"><span class="num">Module 2</span><h2 id="m2">Bond and Stock Valuation</h2><p>Bond prices and YTM; the dividend discount model.</p></div>
+    <div class="cards">
+      <a class="card" href="bond-valuation.html"><span class="kind w">Walkthrough</span><h3>Bond Valuation</h3><p>Key terms, pricing coupon, zero and perpetual bonds, and par, premium, discount.</p></a>
+      <a class="card" href="stock-valuation.html"><span class="kind w">Walkthrough</span><h3>Stock Valuation</h3><p>Why a share is worth its dividends; zero, constant and two-stage growth.</p></a>
+    </div>
+  </section>
+
+  <section class="module" aria-labelledby="m3">
+    <div class="mhead"><span class="num">Module 3</span><h2 id="m3">Capital Budgeting</h2><p>Investment rules and the analysis of project cash flows.</p></div>
+    <div class="cards">
+      <a class="card" href="capital-budgeting.html"><span class="kind w">Walkthrough</span><h3>Capital Budgeting</h3><p>A map of the methods, then NPV, payback, IRR and PI, and a merits and demerits summary.</p></a>
+      <a class="card" href="project-cash-flows.html"><span class="kind w">Walkthrough</span><h3>Project Cash Flows</h3><p>What counts, building the cash-flow table row by row, and a cost-saving project.</p></a>
+    </div>
+  </section>
+
+  <section class="module" aria-labelledby="m4">
+    <div class="mhead"><span class="num">Module 4</span><h2 id="m4">Risk and Return</h2><p>Single securities, portfolios, CML and CAPM.</p></div>
+    <div class="cards">
+      <a class="card" href="risk-and-return.html"><span class="kind w">Walkthrough</span><h3>Risk and Return</h3><p>Mean and standard deviation, the risk–return picture, two and many risky assets, beta and the SML.</p></a>
+    </div>
+  </section>
+
+  <section class="module" aria-labelledby="m5">
+    <div class="mhead"><span class="num">Module 5</span><h2 id="m5">Cost of Capital</h2><p>Cost of equity, cost of debt and WACC.</p></div>
+    <div class="cards">
+      <a class="card" href="cost-of-capital.html"><span class="kind w">Walkthrough</span><h3>Cost of Capital</h3><p>Cost of equity from CAPM, what drives beta, and WACC.</p></a>
+    </div>
+  </section>
+
+  <p class="foot">FIA 203 Corporate Finance-I · IMT Hyderabad</p>
+</div>
+</body>
+</html>

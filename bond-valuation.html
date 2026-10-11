@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bond Valuation Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: term index on the left; on the right one stage per term, each with its own picture on a shared cash-flow timeline, a worked number and, where it helps, one control. */
+:root{
+  --bg:#F4F4F1; --surface:#FFFFFF; --ink:#16223A; --muted:#5B6578; --line:#DADDD8; --faint:#E7E8E3;
+  --accent:#6B3FA0; --accent-soft:#EEE6F7; --face:#0F6E8C; --face-soft:#DCEEF3;
+  --prem:#2348B8; --disc:#B4530F; --par:#2F6B3F;
+  --display:'Source Serif 4', Georgia, serif; --body:'IBM Plex Sans','Segoe UI',Arial,sans-serif; --mono:'IBM Plex Mono',Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12131A; --surface:#1C1E29; --ink:#ECEDF2; --muted:#A1A6B8; --line:#2F3242; --faint:#262938;
+  --accent:#B794E6; --accent-soft:#2E2340; --face:#5BB8D4; --face-soft:#16384A;
+  --prem:#8FA8F5; --disc:#F0A266; --par:#86C998; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12131A; --surface:#1C1E29; --ink:#ECEDF2; --muted:#A1A6B8; --line:#2F3242; --faint:#262938;
+  --accent:#B794E6; --accent-soft:#2E2340; --face:#5BB8D4; --face-soft:#16384A;
+  --prem:#8FA8F5; --disc:#F0A266; --par:#86C998; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;padding-inline:20px;padding-block:28px 40px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 4px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.05;margin:0}
+.sub{color:var(--muted);margin:6px 0 0;max-width:64ch}
+header{display:flex;flex-direction:column;gap:14px}
+.spec{display:flex;flex-wrap:wrap;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.spec>div{display:flex;flex-direction:column;justify-content:center;gap:2px;padding:12px 18px;border-left:1px solid var(--line);flex:1 1 120px}
+.spec>div:first-child{border-left:none}
+.spec span{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.spec b{font-family:var(--mono);font-weight:500;font-size:18px}
+.spec .spec-h{font-family:var(--display);font-weight:700;font-size:20px;background:var(--accent-soft);color:var(--accent);flex:0 0 auto}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px;align-items:start}
+.index{display:flex;flex-direction:column;gap:6px}
+.term{font:inherit;text-align:left;border:1px solid transparent;background:transparent;color:var(--ink);border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;flex-direction:column}
+.term b{font-weight:600}
+.term span{font-size:14px;color:var(--muted)}
+.term:hover{background:var(--surface)}
+.term[aria-selected="true"]{background:var(--surface);border-color:var(--accent)}
+.term[aria-selected="true"] b{color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.stage h2{font-family:var(--display);font-size:28px;margin:0}
+.stage .def{margin:0;max-width:66ch;color:var(--muted);font-size:17px}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:var(--body);font-size:13px;fill:var(--muted)}
+svg text.mono{font-family:var(--mono)}
+.readout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center}
+.work{background:var(--bg);border-radius:12px;padding:16px 18px;font-family:var(--mono);font-size:16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.work div{overflow-x:auto;white-space:nowrap}
+.work .k{font-family:var(--body);font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.work .big{font-size:28px}
+.c{color:var(--accent)} .f{color:var(--face)}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.ctl label{display:flex;justify-content:space-between;font-weight:500}
+.ctl output{font-family:var(--mono);color:var(--accent)}
+.ctl input{width:100%;accent-color:var(--accent)}
+.ctl small{color:var(--muted);font-size:14px}
+.slice{display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid var(--line);font-family:var(--mono);font-size:13px}
+.slice div{display:flex;align-items:center;padding-inline:8px;white-space:nowrap;overflow:hidden}
+.slice .a{background:var(--accent);color:var(--surface)} .slice .b{background:var(--face-soft);color:var(--face);flex:1}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:3px;background:var(--bg);gap:2px}
+.seg button{flex:1 1 140px;font:500 14px var(--body);border:none;background:transparent;color:var(--ink);padding:8px 10px;border-radius:9px;cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--accent);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.grid100{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;width:min(100%,220px);padding:6px;background:var(--face-soft);border:1px solid var(--face);border-radius:8px;margin-block:4px}
+.grid100 i{display:block;aspect-ratio:1;border-radius:2px;box-shadow:inset 0 0 0 1px var(--face)}
+.contrast{font-size:15px;color:var(--muted);border-left:3px solid var(--accent);padding-left:12px;margin:0;max-width:70ch}
+.nav{display:flex;justify-content:space-between;gap:10px}
+.btn{font:600 15px var(--body);padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.btn[disabled]{opacity:.35;cursor:default}
+@media (max-width:820px){.layout{grid-template-columns:1fr}.index{flex-direction:row;overflow-x:auto}.term{min-width:150px}.readout{grid-template-columns:1fr}}
+.steph{font-family:var(--display);font-weight:700;font-size:clamp(26px,3.6vw,36px);line-height:1.1;margin:0}
+.shell{padding-bottom:6px}
+.shell h1{font-size:clamp(30px,4.4vw,46px)}
+.stepper{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stepper button{font:inherit;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;gap:2px}
+.stepper small{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.stepper span{font-weight:600}
+.stepper button[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.stepper button[aria-selected="true"] small{color:var(--accent)}
+.step{padding-top:8px}
+@media (max-width:640px){.stepper{grid-template-columns:1fr}}
+.work .fm{font-family:var(--mono);font-size:14px;color:var(--muted)}
+</style>
+<style>
+body{margin:0}
+.homebar{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1120px;margin:0 auto;padding:14px 0 0;font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;font-size:14px}
+.homebar a{color:var(--accent,#6B3FA0);text-decoration:none;font-weight:600}
+.homebar a:hover{text-decoration:underline}
+.homebar span{color:var(--muted,#5B6578)}
+</style>
+<nav class="homebar" aria-label="Site"><a href="index.html">← All FIA 203 topics</a><span>FIA 203 Corporate Finance</span></nav>
+
+
+<div class="wrap shell">
+  <p class="eyebrow">Corporate Finance</p>
+  <h1>Bond Valuation</h1>
+  <div class="stepper" role="tablist" aria-label="Steps">
+    <button role="tab" aria-selected="true" data-step="1"><small>Step 1</small><span>Key terms</span></button>
+    <button role="tab" aria-selected="false" data-step="2"><small>Step 2</small><span>Pricing a bond</span></button>
+    <button role="tab" aria-selected="false" data-step="3"><small>Step 3</small><span>Par, premium, discount</span></button>
+  </div>
+</div>
+<section class="step" id="step1">
+
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Step 1 · Key terms</p>
+    <h2 class="steph">Bond Anatomy</h2>
+    <p class="sub">One bond, six terms. Each term changes the picture below to show what it means for this bond's cash flows.</p>
+    <div class="spec" aria-label="The bond we are studying">
+      <div class="spec-h">Our bond</div>
+      <div><span>Face value</span><b class="f">₹1,000</b></div>
+      <div><span>Coupon rate</span><b class="c" id="s1-specCr">10%</b></div>
+      <div><span>Maturity</span><b>5 years</b></div>
+      <div><span>Coupons paid</span><b>Once a year</b></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="index" role="tablist" aria-label="Key terms" id="s1-index"></div>
+
+    <section class="stage" role="tabpanel" aria-live="polite">
+      <h2 id="s1-name"></h2>
+      <p class="def" id="s1-def"></p>
+      <svg id="s1-tl" viewBox="0 0 760 330" role="img" aria-label="Cash-flow timeline of the bond"></svg>
+      <div class="readout">
+        <div class="work" id="s1-work"></div>
+        <div class="ctl" id="s1-ctl"></div>
+      </div>
+      <p class="contrast" id="s1-contrast"></p>
+      <div class="nav"><button class="btn" id="s1-prev">Previous term</button><button class="btn primary" id="s1-next">Next term</button></div>
+    </section>
+  </div>
+</div>
+
+<script>(()=>{
+const F=1000; const st={cr:10,n:5,y:8};
+const $=id=>document.getElementById('s1-'+id);
+const inr=v=>'₹'+v.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const inr0=v=>'₹'+Math.round(v).toLocaleString('en-IN');
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const sup=n=>String(n).split('').map(d=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[d]).join('');
+
+const T=[
+ {id:'face',name:'Face value',short:'Repaid at the end',ctl:null,
+  def:'The amount the issuer repays when the bond matures. Also called par value or principal. It is printed on the bond and does not change.',
+  contrast:'Face value is not the price. You may pay more or less than ₹1,000 today, but you always get ₹1,000 back at maturity.'},
+ {id:'rate',name:'Coupon rate',short:'Interest rate printed on the bond',ctl:'cr',
+  def:'The annual interest rate the issuer promises when the bond is issued. It is applied to the face value to work out the coupon.',
+  contrast:'Coupon rate is a contract term and never changes. YTM is a market rate and changes every day. Comparing the two tells you whether the bond trades at par, a premium or a discount.'},
+ {id:'coupon',name:'Coupon',short:'Coupon rate × face value',ctl:null,
+  def:'The rupee interest the issuer pays every year until maturity. It is the coupon rate multiplied by the face value.',
+  contrast:'The coupon is the same every year regardless of what you paid for the bond or what happens to market rates.'},
+ {id:'mat',name:'Maturity',short:'How long the bond lives',ctl:null,
+  def:'The number of years until the face value is repaid. It sets how many coupons you receive and when the principal comes back.',
+  contrast:'Our bond matures in 5 years: five coupons of the same size, and the ₹1,000 face value comes back together with the last one.'},
+ {id:'ytm',name:'Yield to maturity',short:'Discounts each cash flow',ctl:'y',
+  def:'The return the market requires on this bond. It works as the discount rate: a cash flow in year t is multiplied by 1 ÷ (1 + YTM)ᵗ to find its value today.',
+  contrast:'YTM acts on each cash flow on its own. The further away a payment is, the more it shrinks. Adding up the shrunken amounts gives the price, which is the next tab.'},
+ {id:'price',name:'Price',short:'Same equation, either direction',ctl:'price',
+  def:'What the bond is worth today: PV of the coupons plus PV of the face value. Price and YTM are tied by this one equation, so knowing either one gives you the other.',
+  contrast:'In class we usually start from the YTM and find the price. In the market it runs the other way: the price is quoted, and the YTM is the one rate that makes the cash flows worth exactly that price.'}
+];
+let cur=0;
+
+const idx=$('index');
+T.forEach((t,i)=>{const b=document.createElement('button');b.className='term';b.setAttribute('role','tab');
+  b.innerHTML=`<b>${t.name}</b><span>${t.short}</span>`;b.addEventListener('click',()=>show(i));idx.append(b)});
+$('prev').addEventListener('click',()=>show(cur-1));$('next').addEventListener('click',()=>show(cur+1));
+
+function show(i){cur=Math.max(0,Math.min(T.length-1,i));
+  [...idx.children].forEach((b,j)=>b.setAttribute('aria-selected',j===cur));
+  const t=T[cur];$('name').textContent=t.name;$('def').textContent=t.def;$('contrast').textContent=t.contrast;
+  $('prev').disabled=cur===0;$('next').disabled=cur===T.length-1;
+  buildCtl(t.ctl);render();}
+
+st.dir='y2p';
+function priceAt(yPct){const c=st.cr/100,y=yPct/100;let p=0;for(let t=1;t<=st.n;t++)p+=(F*c+(t===st.n?F:0))/Math.pow(1+y,t);return p}
+function solveY(P){let lo=0,hi=60;for(let i=0;i<80;i++){const m=(lo+hi)/2;if(priceAt(m)>P)lo=m;else hi=m}return (lo+hi)/2}
+function buildCtl(k){
+  const box=$('ctl');
+  if(!k){box.innerHTML='';box.hidden=true;return}
+  box.hidden=false;
+  if(k==='price'){
+    box.innerHTML=`<div class="seg" role="group" aria-label="Direction"><button type="button" data-d="y2p">Know YTM → find price</button><button type="button" data-d="p2y">Know price → find YTM</button></div><div id="s1-pslot" class="ctl"></div>`;
+    const slot=()=>{
+      box.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.d===st.dir));
+      const ps=$('pslot');
+      if(st.dir==='y2p'){
+        st.y=Math.round(st.y*2)/2;
+        ps.innerHTML=`<label for="s1-s">Yield to maturity <output id="s1-so"></output></label><input id="s1-s" type="range" min="0" max="15" step="0.5" value="${st.y}"><small>Pick the market rate; the price follows.</small>`;
+        const s=$('s');const u=()=>{st.y=+s.value;$('so').textContent=st.y.toFixed(1)+'%';render()};s.addEventListener('input',u);$('so').textContent=st.y.toFixed(1)+'%';
+      } else {
+        const lo=Math.ceil(priceAt(15)/5)*5, hi=Math.floor(priceAt(0)/5)*5, p=Math.min(hi,Math.max(lo,Math.round(priceAt(st.y)/5)*5));
+        ps.innerHTML=`<label for="s1-s">Market price <output id="s1-so"></output></label><input id="s1-s" type="range" min="${lo}" max="${hi}" step="5" value="${p}"><small>Pick the price quoted in the market; the YTM follows.</small>`;
+        const s=$('s');const u=()=>{st.y=solveY(+s.value);$('so').textContent=inr0(+s.value);render()};s.addEventListener('input',u);st.y=solveY(p);$('so').textContent=inr0(p);
+      }
+    };
+    box.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{st.dir=b.dataset.d;slot();render()}));
+    slot();return;
+  }
+  if(k==='y')st.y=Math.round(st.y*2)/2;
+  const cfg={cr:['Coupon rate','%',0,15,0.5,'Changes the size of every coupon'],
+             n:['Years to maturity','',1,10,1,'Adds or removes years of coupons'],
+             y:['Yield to maturity','%',0,15,0.5,'The market rate used to discount. At 0% nothing is discounted.']}[k];
+  box.innerHTML=`<label for="s1-s">${cfg[0]} <output id="s1-so"></output></label><input id="s1-s" type="range" min="${cfg[2]}" max="${cfg[3]}" step="${cfg[4]}" value="${st[k]}"><small>${cfg[5]}</small>`;
+  const s=$('s');const upd=()=>{st[k]=+s.value;$('so').textContent=(k==='n'?s.value+' years':(+s.value).toFixed(1)+'%');render()};
+  s.addEventListener('input',upd);$('so').textContent=(k==='n'?st[k]+' years':st[k].toFixed(1)+'%');
+}
+
+const NS='http://www.w3.org/2000/svg';
+function el(tag,a,txt){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;return e}
+
+function render(){
+  const id=T[cur].id, c=st.cr/100, n=st.n, y=st.y/100, C=F*c;
+  $('specCr').textContent=(st.cr%1?st.cr.toFixed(1):st.cr)+'%';
+  const pvC=[],dfs=[];for(let t=1;t<=n;t++){dfs.push(1/Math.pow(1+y,t));pvC.push(C*dfs[t-1])}
+  const sumC=pvC.reduce((a,b)=>a+b,0), pvF=F/Math.pow(1+y,n), P=sumC+pvF;
+  const s=$('tl');s.innerHTML='';
+  const W=760,H=330,base=268,top=64,todayX=70,x0=170,x1=690;
+  const showToday=id==='price';
+  const max=Math.max(F+C, showToday?P:0, F)*1.04, k=(base-top)/max, h=v=>v*k;
+  const X=t=>x0+(x1-x0)*(t-1)/Math.max(1,n-1)*(n>1?1:0)+(n===1?(x1-x0)/2:0);
+  const bw=Math.min(40,(x1-x0)/n*0.55);
+  const cA=css('--accent'),cF=css('--face'),cM=css('--muted'),cL=css('--line'),cFaint=css('--faint'),cInk=css('--ink');
+
+  // axis
+  s.append(el('line',{x1:30,x2:W-10,y1:base,y2:base,stroke:cL,'stroke-width':1.5}));
+  s.append(el('text',{x:todayX,y:base+22,'text-anchor':'middle',style:`fill:${cInk};font-weight:600`},'Today'));
+  for(let t=1;t<=n;t++)s.append(el('text',{x:X(t),y:base+22,'text-anchor':'middle'},'Yr '+t));
+
+  const emC=['coupon','mat'].includes(id), emF=['face','mat','rate'].includes(id), pvMode=id==='ytm'||id==='price';
+  const ch=id==='rate'?30:h(C);
+  // bars
+  for(let t=1;t<=n;t++){
+    const x=X(t)-bw/2;
+    if(C>0){
+      const yc=base-ch;
+      if(pvMode){
+        s.append(el('rect',{x,y:yc,width:bw,height:h(C),fill:cFaint,stroke:cL,'stroke-width':1,rx:3}));
+        s.append(el('rect',{x:x+4,y:base-h(pvC[t-1]),width:bw-8,height:h(pvC[t-1]),fill:cA,opacity:.85,rx:2}));
+      } else if(id==='rate'){
+        s.append(el('rect',{x,y:yc,width:bw,height:ch,fill:'none',stroke:cA,'stroke-width':1.5,rx:3}));
+        s.append(el('text',{x:X(t),y:yc+20,'text-anchor':'middle',style:`fill:${cA};font-weight:600;font-size:15px`},'?'));
+      } else s.append(el('rect',{x,y:yc,width:bw,height:h(C),fill:emC?cA:cFaint,rx:3}));
+      if(emC&&!(emF&&t===n)&&(n<=7||t===1||t===n))s.append(el('text',{x:X(t),y:yc-(t===n&&emF?h(F)+8:8),'text-anchor':'middle',class:'mono',style:`fill:${cA}`},inr0(C)));
+    }
+    if(t===n){
+      const yb=base-(C>0?ch:0)-h(F);
+      if(pvMode){
+        s.append(el('rect',{x,y:yb,width:bw,height:h(F),fill:cFaint,stroke:cL,'stroke-width':1,rx:3}));
+        s.append(el('rect',{x:x+4,y:base-h(pvC[t-1]||0)-h(pvF),width:bw-8,height:h(pvF),fill:cF,opacity:.85,rx:2}));
+      } else s.append(el('rect',{x,y:yb,width:bw,height:h(F),fill:emF?cF:cFaint,rx:3}));
+      if(emF)s.append(el('text',{x:X(t),y:yb-8,'text-anchor':'middle',class:'mono',style:`fill:${cF};font-weight:600`},'₹1,000'));
+    }
+  }
+
+  // mode extras
+  if(id==='face'){
+    const xb=X(n)-bw/2-12;
+    s.append(el('text',{x:xb,y:base-h(F)/2,'text-anchor':'end',style:`fill:${cF}`},'Principal comes back here'));
+  }
+  if(id==='rate'&&C>0){
+    s.append(el('text',{x:(x0+x1)/2,y:24,'text-anchor':'middle',style:`fill:${cA}`},`A coupon is promised every year at ${st.cr.toFixed(1)}% of face value. How many rupees? Next tab.`));
+  }
+  if(id==='coupon'&&C>0){
+    s.append(el('text',{x:(x0+x1)/2,y:24,'text-anchor':'middle',style:`fill:${cA}`},`Coupon = ${st.cr.toFixed(1)}% × ₹1,000 = ${inr0(C)}, paid each year for ${n} years`));
+  }
+  if(id==='mat'){
+    const yb=22;
+    s.append(el('line',{x1:todayX,x2:X(n),y1:yb,y2:yb,stroke:cA,'stroke-width':2}));
+    s.append(el('line',{x1:todayX,x2:todayX,y1:yb-6,y2:yb+6,stroke:cA,'stroke-width':2}));
+    s.append(el('line',{x1:X(n),x2:X(n),y1:yb-6,y2:yb+6,stroke:cA,'stroke-width':2}));
+    s.append(el('rect',{x:(todayX+X(n))/2-70,y:yb-13,width:140,height:22,fill:css('--surface')}));
+    s.append(el('text',{x:(todayX+X(n))/2,y:yb+4,'text-anchor':'middle',style:`fill:${cA};font-weight:600`},`Maturity: ${n} year${n>1?'s':''}`));
+  }
+  if(pvMode){
+    s.append(el('rect',{x:x0,y:14,width:14,height:14,fill:cFaint,stroke:cL,rx:2}));
+    s.append(el('text',{x:x0+20,y:26},'Amount received'));
+    s.append(el('rect',{x:x0+150,y:14,width:14,height:14,fill:cA,rx:2}));
+    s.append(el('rect',{x:x0+166,y:14,width:14,height:14,fill:cF,rx:2}));
+    s.append(el('text',{x:x0+186,y:26},'Its value today (coupon, face value)'));
+  }
+  if(id==='ytm'){
+    for(let t=1;t<=n;t++){
+      const fv=t===n, topY=base-(C>0?h(C):0)-(fv?h(F):0)-8;
+      const lab=fv?(C>0?`${inr0(pvC[t-1])} + ${inr0(pvF)}`:inr0(pvF)):inr0(pvC[t-1]);
+      if(C>0||fv)s.append(el('text',{x:X(t),y:topY,'text-anchor':'middle',class:'mono',style:`fill:${cInk};font-weight:600`},lab));
+      if(n<=6)s.append(el('text',{x:X(t),y:base+40,'text-anchor':'middle',class:'mono',style:`fill:${cA}`},'÷'+(1+y).toFixed(2)+sup(t)));
+    }
+  }
+  if(id==='price'){
+    const tw=46,tx=todayX-tw/2;
+    s.append(el('rect',{x:tx,y:base-h(sumC),width:tw,height:h(sumC),fill:cA,rx:2}));
+    s.append(el('rect',{x:tx,y:base-h(sumC)-h(pvF),width:tw,height:h(pvF),fill:cF,rx:2}));
+    // par line and label
+    const yp=base-h(F);
+    s.append(el('line',{x1:todayX-50,x2:todayX+60,y1:yp,y2:yp,stroke:css('--par'),'stroke-width':1.5}));
+    s.append(el('text',{x:todayX+64,y:yp+4,style:`fill:${css('--par')}`},'₹1,000'));
+    s.append(el('text',{x:todayX,y:base-h(P)-10,'text-anchor':'middle',class:'mono',style:`fill:${cInk};font-weight:600`},inr0(P)));
+  } else {
+    s.append(el('rect',{x:todayX-23,y:base-60,width:46,height:60,fill:'none',stroke:cL,'stroke-width':1.5,rx:3}));
+    s.append(el('text',{x:todayX,y:base-24,'text-anchor':'middle',style:`fill:${cM};font-size:20px`},'?'));
+    s.append(el('text',{x:todayX,y:base-70,'text-anchor':'middle'},id==='ytm'?'Price: next tab':'Price'));
+  }
+
+  // worked numbers
+  const w=$('work');
+  const tag=Math.abs(P-F)<0.005?['Par',css('--par')]:P>F?['Premium',css('--prem')]:['Discount',css('--disc')];
+  w.innerHTML={
+    face:`<div class="k">In this bond</div><div class="big f">₹1,000</div><div>repaid in year ${n}, once</div>`,
+    coupon:`<div class="k">Coupon = coupon rate × face value</div><div>= ${st.cr.toFixed(1)}% × <span class="f">₹1,000</span></div><div class="big c">= ${inr0(C)} a year</div><div>${inr0(C)} × ${n} years = <span class="c">${inr0(C*n)}</span> of interest in total</div>`,
+    rate:`<div class="k">Coupon rate</div><div class="big">${st.cr.toFixed(1)}%</div><div style="white-space:normal">a year, applied to the <span class="f">₹1,000</span> face value</div>`,
+    mat:`<div class="k">In this bond</div><div class="big">${n} year${n>1?'s':''}</div><div><span class="c">${n} coupon${n>1?'s':''}</span> + <span class="f">1 repayment of ₹1,000</span></div>`,
+    ytm:`<div class="k">Value today of each cash flow at ${st.y.toFixed(1)}%</div>`+
+      Array.from({length:n},(_,i)=>{const t=i+1,df=dfs[i],fv=t===n;if(!C&&!fv)return'';
+        return `<div>Yr ${t}: ${fv&&C?`(${inr0(C)} + ₹1,000)`:fv?'₹1,000':inr0(C)} × ${df.toFixed(4)} = ${C?`<span class="c">${inr(pvC[i])}</span>`:''}${fv?`${C?' + ':''}<span class="f">${inr(pvF)}</span>`:''}</div>`}).join('')+
+      `<div style="font-family:var(--body);font-size:14px;color:var(--muted);white-space:normal">Discount factor = 1 ÷ (1 + YTM)ᵗ. It gets smaller every year.</div>`,
+    price:st.dir==='y2p'
+      ?`<div class="k">Given YTM ${st.y.toFixed(1)}%, find the price</div><div>PV of coupons <span class="c">${inr(sumC)}</span></div><div>+ PV of face value <span class="f">${inr(pvF)}</span></div><div class="big">= ${inr(P)} <span style="font-size:15px;color:${tag[1]}">${tag[0]}</span></div>`
+      :`<div class="k">Given price ${inr0(P)}, find the YTM</div><div style="white-space:normal;font-family:var(--body);font-size:15px">Find the rate y that makes PV of coupons + PV of face value equal ${inr0(P)}</div><div class="big">YTM = ${st.y.toFixed(2)}%</div><div>Check: <span class="c">${inr(sumC)}</span> + <span class="f">${inr(pvF)}</span> = ${inr(P)}</div><div style="white-space:normal;font-family:var(--body);font-size:15px;color:${tag[1]}">${tag[0]==='Par'?'Price is ₹1,000, so YTM equals the coupon rate.':tag[0]==='Premium'?'Price is above ₹1,000, so YTM is below the coupon rate.':'Price is below ₹1,000, so YTM is above the coupon rate.'}</div>`
+  }[id];
+}
+
+show(0);
+const rerender=()=>render();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',rerender);
+new MutationObserver(rerender).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();</script>
+
+</section>
+<section class="step" id="step2" hidden>
+<style>
+/* Step 2 additions: brace labels on the timeline and a three-bond legend. */
+.trio{display:flex;flex-wrap:wrap;gap:14px;font-size:14px;color:var(--muted)}
+.trio i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Step 2 · Pricing a bond</p>
+    <h2 class="steph">Bond Pricing</h2>
+    <p class="sub">Price is the present value of whatever the bond pays. Three bonds, three cash-flow patterns, one rule.</p>
+    <div class="spec" aria-label="The bonds we are pricing">
+      <div class="spec-h">Our bonds</div>
+      <div><span>Face value</span><b class="f">₹1,000</b></div>
+      <div><span>Coupon rate</span><b class="c" id="s2-specCr">10%</b></div>
+      <div><span>Maturity</span><b id="s2-specN">5 years</b></div>
+      <div><span>YTM</span><b id="s2-specY">8%</b></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="index" role="tablist" aria-label="Bond types" id="s2-index"></div>
+    <section class="stage" role="tabpanel" aria-live="polite">
+      <h2 id="s2-name"></h2>
+      <p class="def" id="s2-def"></p>
+      <svg id="s2-tl" viewBox="0 0 760 330" role="img" aria-label="Cash flows and their value today"></svg>
+      <div class="trio" id="s2-legend"></div>
+      <div class="readout">
+        <div class="work" id="s2-work"></div>
+        <div class="ctl" id="s2-ctl">
+          <label for="s2-s">Yield to maturity <output id="s2-so"></output></label>
+          <input id="s2-s" type="range" min="1" max="15" step="0.5" value="8">
+          <small>The same YTM is used for all three bonds.</small>
+        </div>
+      </div>
+      <p class="contrast" id="s2-contrast"></p>
+      <div class="nav"><button class="btn" id="s2-prev">Previous</button><button class="btn primary" id="s2-next">Next</button></div>
+    </section>
+  </div>
+</div>
+
+<script>(()=>{
+const F=1000,CR=0.10,C=F*CR,N=5;const st={y:8,view:'rs'};
+const $=id=>document.getElementById('s2-'+id);
+const inr=v=>'₹'+v.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const inr0=v=>'₹'+Math.round(v).toLocaleString('en-IN');
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const sup=n=>String(n).split('').map(d=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[d]).join('');
+const NS='http://www.w3.org/2000/svg';
+function el(tag,a,txt){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;return e}
+const af=y=>(1-Math.pow(1+y,-N))/y;
+const pCoupon=y=>C*af(y)+F/Math.pow(1+y,N), pZero=y=>F/Math.pow(1+y,N), pPerp=y=>C/y;
+
+const T=[
+ {id:'coupon',name:'Coupon bond',short:'Annuity + lump sum',
+  def:'Pays a fixed coupon every year and repays the face value at maturity. Its cash flows are two simple pieces: an annuity of coupons and one lump sum.',
+  contrast:'Two formulas you already know, added together: the PV of an annuity for the coupons and the PV of a single sum for the face value.'},
+ {id:'zero',name:'Zero coupon bond',short:'Lump sum only',
+  def:'Pays no coupons. The only cash flow is the face value at maturity, so the bond is bought below ₹1,000 and the investor earns the difference.',
+  contrast:'Same face value and maturity as the coupon bond, but with the coupons removed its price drops sharply. The whole return comes from the gap between price and face value.'},
+ {id:'perp',name:'Perpetual bond',short:'Coupons forever',
+  def:'Pays a fixed coupon every year forever and never repays the face value. Each distant coupon is worth less and less today, so the infinite stream still has a finite price.',
+  contrast:'The issuer never repays the ₹1,000, but the investor can always sell the bond to someone else at its market price.'},
+ {id:'all',name:'Side by side',short:'Same YTM, three prices',
+  def:'All three bonds priced at the same YTM. The curves show each bond at every YTM from 4% to 15%, in rupees.',
+  contrast:'Move the YTM and watch the perpetual bond: its price swings the most, because its cash flows stretch furthest into the future.'}
+];
+let cur=0;
+const idx=$('index');
+T.forEach((t,i)=>{const b=document.createElement('button');b.className='term';b.setAttribute('role','tab');
+  b.innerHTML=`<b>${t.name}</b><span>${t.short}</span>`;b.addEventListener('click',()=>show(i));idx.append(b)});
+$('prev').addEventListener('click',()=>show(cur-1));$('next').addEventListener('click',()=>show(cur+1));
+$('s').addEventListener('input',()=>{st.y=+$('s').value;render()});
+function show(i){cur=Math.max(0,Math.min(T.length-1,i));
+  [...idx.children].forEach((b,j)=>b.setAttribute('aria-selected',j===cur));
+  const t=T[cur];$('name').textContent=t.name;$('def').textContent=t.def;$('contrast').textContent=t.contrast;
+  $('prev').disabled=cur===0;$('next').disabled=cur===T.length-1;render()}
+
+function legendRow(items){$('legend').innerHTML=items.map(([c,l,b])=>`<span><i style="background:${c};${b?'border:1px solid '+css('--line'):''}"></i>${l}</span>`).join('')}
+
+function render(){
+  const id=T[cur].id,y=st.y/100;
+  $('so').textContent=st.y.toFixed(1)+'%';
+  const sp={coupon:['10%','5 years'],zero:['None (0%)','5 years'],perp:['10%','Never'],all:['As above','As above']}[id];$('specCr').textContent=sp[0];$('specN').textContent=sp[1];$('specY').textContent=(st.y%1?st.y.toFixed(1):st.y)+'%';
+  const s=$('tl');s.innerHTML='';
+  const cA=css('--accent'),cF=css('--face'),cM=css('--muted'),cL=css('--line'),cFaint=css('--faint'),cInk=css('--ink'),cPar=css('--par'),cS=css('--surface');
+  if(id==='all')return drawAll(s,y);
+  const W=760,base=262,todayX=110,x0=240,x1=700;
+  s.append(el('line',{x1:30,x2:W-10,y1:base,y2:base,stroke:cL,'stroke-width':1.5}));
+  s.append(el('text',{x:todayX,y:base+22,'text-anchor':'middle',style:`fill:${cInk};font-weight:600`},'Today'));
+
+  if(id==='perp'){
+    const yrs=15,X=t=>x0+(x1-x0-90)*(t-1)/(yrs-1),bw=18,max=C*1.35,k=150/max,h=v=>v*k;
+    for(let t=1;t<=yrs;t++){
+      const pv=C/Math.pow(1+y,t),x=X(t)-bw/2,op=1-0.45*(t-1)/(yrs-1);
+      s.append(el('rect',{x,y:base-h(C),width:bw,height:h(C),fill:cFaint,stroke:cL,'stroke-width':1,rx:2,opacity:op}));
+      s.append(el('rect',{x:x+3,y:base-h(pv),width:bw-6,height:h(pv),fill:cA,rx:1.5,opacity:op}));
+      if(t===1||t===5||t===10||t===15)s.append(el('text',{x:X(t),y:base+22,'text-anchor':'middle'},'Yr '+t));
+      if(t===1||t===5||t===10||t===15)s.append(el('text',{x:X(t),y:base-h(C)-8,'text-anchor':'middle',class:'mono',style:`fill:${cInk}`},inr0(pv)));
+    }
+    s.append(el('text',{x:X(yrs)+50,y:base-h(C)/2,'text-anchor':'middle',style:`fill:${cM};font-size:22px`},'…'));
+    s.append(el('text',{x:X(yrs)+50,y:base+22,'text-anchor':'middle',style:`fill:${cA};font-weight:600`},'forever'));
+    s.append(el('text',{x:(x0+x1)/2,y:40,'text-anchor':'middle',style:`fill:${cA}`},`₹100 every year, forever. Each coupon is worth less today than the one before.`));
+    const P=pPerp(y);
+    s.append(el('rect',{x:todayX-52,y:base-118,width:104,height:96,fill:css('--accent-soft'),stroke:cA,'stroke-width':1.5,rx:10}));
+    s.append(el('text',{x:todayX,y:base-90,'text-anchor':'middle'},'Price'));
+    s.append(el('text',{x:todayX,y:base-58,'text-anchor':'middle',class:'mono',style:`fill:${cInk};font-weight:600;font-size:20px`},inr0(P)));
+    s.append(el('text',{x:todayX,y:base-36,'text-anchor':'middle',style:`fill:${cA}`},'C ÷ y'));
+    legendRow([[cFaint,'Coupon received',1],[cA,'Its value today']]);
+    const cum=k=>C*(1-Math.pow(1+y,-k))/y;
+    $('work').innerHTML=`<div class="fm">P = C ÷ y</div><div>= ₹100 ÷ ${y.toFixed(3)}</div><div class="big">= ${inr(P)}</div>`+
+      `<div style="font-family:var(--body);font-size:14px;color:var(--muted);white-space:normal">Adding up the shaded bars: first 5 years ${inr0(cum(5))}, first 15 years ${inr0(cum(15))}, first 50 years ${inr0(cum(50))}. The total never passes ${inr0(P)}.</div>`;
+    return;
+  }
+
+  const X=t=>x0+(x1-x0)*(t-1)/(N-1),bw=40;
+  const P=id==='coupon'?pCoupon(y):pZero(y);
+  const max=Math.max(F+C,P)*1.04,k=(base-60)/max,h=v=>v*k;
+  const cpv=[],dfs=[];for(let t=1;t<=N;t++){dfs.push(1/Math.pow(1+y,t));cpv.push(C*dfs[t-1])}
+  const pvC=id==='coupon'?cpv.reduce((a,b)=>a+b,0):0,pvF=F*dfs[N-1];
+  for(let t=1;t<=N;t++){
+    const x=X(t)-bw/2;
+    s.append(el('text',{x:X(t),y:base+22,'text-anchor':'middle'},'Yr '+t));
+    let topAmt=0;
+    if(id==='coupon'){
+      s.append(el('rect',{x,y:base-h(C),width:bw,height:h(C),fill:cFaint,stroke:cL,'stroke-width':1,rx:3}));
+      s.append(el('rect',{x:x+4,y:base-h(cpv[t-1]),width:bw-8,height:h(cpv[t-1]),fill:cA,rx:2}));
+      topAmt=C;
+    } else {
+      s.append(el('rect',{x,y:base-14,width:bw,height:14,fill:'none',stroke:cL,'stroke-width':1,rx:3}));
+      s.append(el('text',{x:X(t),y:base-3,'text-anchor':'middle',style:'font-size:11px'},'₹0'));
+    }
+    if(t===N){
+      const yb=base-(id==='coupon'?h(C):0)-h(F);
+      s.append(el('rect',{x,y:yb,width:bw,height:h(F),fill:cFaint,stroke:cL,'stroke-width':1,rx:3}));
+      s.append(el('rect',{x:x+4,y:base-(id==='coupon'?h(cpv[t-1]):0)-h(pvF),width:bw-8,height:h(pvF),fill:cF,rx:2}));
+      topAmt+=F;
+    }
+    if(topAmt){const lab=t===N?(id==='coupon'?`${inr0(cpv[t-1])} + ${inr0(pvF)}`:inr0(pvF)):inr0(cpv[t-1]);
+      s.append(el('text',{x:X(t),y:base-h(topAmt)-8,'text-anchor':'middle',class:'mono',style:`fill:${cInk};font-weight:600`},lab))}
+  }
+  // brace labels
+  if(id==='coupon'){
+    const yb=base-h(C)-h(F)-34;
+    s.append(el('path',{d:`M${X(1)-20},${base+34} v6 H${X(N)+20} v-6`,fill:'none',stroke:cA,'stroke-width':1.5}));
+    s.append(el('text',{x:(X(1)+X(N))/2,y:base+56,'text-anchor':'middle',style:`fill:${cA};font-weight:600`},'Annuity: ₹100 a year for 5 years'));
+    s.append(el('text',{x:X(N)-28,y:base-h(C)-h(F)/2,'text-anchor':'end',style:`fill:${cF};font-weight:600`},'Lump sum: ₹1,000'));
+  } else {
+    s.append(el('text',{x:X(N)-28,y:base-h(F)/2,'text-anchor':'end',style:`fill:${cF};font-weight:600`},'Only cash flow: ₹1,000'));
+  }
+  // today stack
+  const tw=50,tx=todayX-tw/2;
+  if(pvC)s.append(el('rect',{x:tx,y:base-h(pvC),width:tw,height:h(pvC),fill:cA,rx:2}));
+  s.append(el('rect',{x:tx,y:base-h(pvC)-h(pvF),width:tw,height:h(pvF),fill:cF,rx:2}));
+  if(pvC){
+    s.append(el('text',{x:tx+tw+8,y:base-h(pvC)/2+4,class:'mono',style:`fill:${cA}`},inr0(pvC)));
+    s.append(el('text',{x:tx+tw+8,y:base-h(pvC)-h(pvF)/2+4,class:'mono',style:`fill:${cF}`},inr0(pvF)));
+  }
+  const yp=base-h(F);
+  s.append(el('line',{x1:tx-10,x2:tx+tw+10,y1:yp,y2:yp,stroke:cPar,'stroke-width':1.5}));
+  s.append(el('text',{x:tx+tw+16,y:yp+4,style:`fill:${cPar}`},'Face value ₹1,000'));
+  s.append(el('text',{x:todayX,y:base-h(P)-10,'text-anchor':'middle',class:'mono',style:`fill:${cInk};font-weight:600`},inr0(P)));
+  legendRow([[cFaint,'Amount received',1],[cA,'Value today of coupons'],[cF,'Value today of face value']]);
+
+  if(id==='coupon'){
+    $('work').innerHTML=`<div class="k">PV of coupons (annuity)</div><div>C × [1 − (1+y)⁻ⁿ] ÷ y = ₹100 × ${af(y).toFixed(4)} = <span class="c">${inr(pvC)}</span></div>`+
+      `<div class="k">PV of face value (lump sum)</div><div>F ÷ (1+y)ⁿ = ₹1,000 ÷ ${(1+y).toFixed(2)}${sup(N)} = <span class="f">${inr(pvF)}</span></div>`+
+      `<div class="k">Price</div><div class="big">${inr(P)}</div>`;
+  } else {
+    $('work').innerHTML=`<div class="fm">P = F ÷ (1+y)ⁿ</div><div>= ₹1,000 ÷ ${(1+y).toFixed(2)}${sup(N)}</div><div class="big">= <span class="f">${inr(P)}</span></div>`+
+      `<div style="font-family:var(--body);font-size:14px;color:var(--muted);white-space:normal">Pay ${inr(P)} today, receive ₹1,000 in year 5. The gain of ${inr(F-P)} is the entire return.</div>`;
+  }
+}
+
+function drawAll(s,y){
+  const cA=css('--accent'),cF=css('--face'),cP=css('--disc'),cL=css('--line'),cInk=css('--ink'),cPar=css('--par');
+  const W=760,H=330,L=70,R=130,T0=20,B=40,pw=W-L-R,ph=H-T0-B,lo=4,hi=15;
+  const yy=Math.max(lo,Math.min(hi,st.y)),pct=false;
+  const curves=[[pPerp,cP,'Perpetual'],[pCoupon,cA,'Coupon bond'],[pZero,cF,'Zero coupon']];
+  const val=(f,v)=>pct?(f(v/100)/f(yy/100)-1)*100:f(v/100);
+  let vmin,vmax,step,fmt;
+  if(pct){let mn=0,mx=0;curves.forEach(([f])=>{for(let v=lo;v<=hi;v+=0.25){const g=val(f,v);mn=Math.min(mn,g);mx=Math.max(mx,g)}});
+    step=(mx-mn)>200?50:20;vmin=Math.floor(mn/step)*step;vmax=Math.ceil(mx/step)*step;fmt=v=>(v>0?'+':'')+v+'%'}
+  else{vmin=0;vmax=2600;step=500;fmt=inr0}
+  const X=v=>L+pw*(v-lo)/(hi-lo),Y=p=>T0+ph-ph*(Math.max(vmin,Math.min(p,vmax))-vmin)/(vmax-vmin);
+  for(let v=vmin;v<=vmax+1e-9;v+=step){s.append(el('line',{x1:L,x2:L+pw,y1:Y(v),y2:Y(v),stroke:(pct&&v===0)?cPar:cL,'stroke-width':(pct&&v===0)?1.5:1}));s.append(el('text',{x:L-8,y:Y(v)+4,'text-anchor':'end'},fmt(v)))}
+  [4,6,8,10,12,14].forEach(v=>s.append(el('text',{x:X(v),y:H-14,'text-anchor':'middle'},v+'%')));
+  s.append(el('text',{x:L+pw/2,y:H-0,'text-anchor':'middle'},'YTM'));
+  if(pct)s.append(el('text',{x:L+pw-6,y:T0+12,'text-anchor':'end',style:`fill:${cInk}`},`% change in price compared with YTM ${yy.toFixed(1)}%`));
+  const labelsY=[];
+  curves.forEach(([f,c,name])=>{
+    const pts=[];for(let v=lo;v<=hi+1e-9;v+=0.25)pts.push(X(v)+','+Y(val(f,v)));
+    s.append(el('polyline',{points:pts.join(' '),fill:'none',stroke:c,'stroke-width':3,'stroke-linejoin':'round'}));
+    s.append(el('circle',{cx:X(yy),cy:Y(val(f,yy)),r:6,fill:css('--surface'),stroke:c,'stroke-width':2.5}));
+    labelsY.push([Y(val(f,hi)),c,name]);
+  });
+  labelsY.sort((a,b)=>a[0]-b[0]);let last=-99;
+  labelsY.forEach(([yv,c,name])=>{const yl=Math.max(yv+4,last+16);last=yl;s.append(el('text',{x:L+pw+8,y:yl,style:`fill:${c};font-weight:600`},name))});
+  s.append(el('line',{x1:X(yy),x2:X(yy),y1:T0,y2:T0+ph,stroke:css('--muted'),'stroke-width':1,opacity:.5}));
+  legendRow([[cA,'Coupon bond'],[cF,'Zero coupon'],[cP,'Perpetual']]);
+  $('work').innerHTML=`<div class="k">Prices at ${st.y.toFixed(1)}%</div>`+
+    `<div>Coupon bond <span class="c">${inr(pCoupon(y))}</span></div><div>Zero coupon <span class="f">${inr(pZero(y))}</span></div><div>Perpetual <span style="color:${cP}">${inr(pPerp(y))}</span></div>`;
+}
+
+show(0);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>render());
+new MutationObserver(()=>render()).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();</script>
+
+</section>
+<section class="step" id="step3" hidden>
+<style>
+/* Step 3 additions: soft fills for premium and discount, the rule card and the summary table. */
+:root{--prem-soft:#E3E9FA;--disc-soft:#FBEADC;--par-soft:#E2F0E5}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--prem-soft:#1E2B55;--disc-soft:#43291A;--par-soft:#1C3824}}
+:root[data-theme="dark"]{--prem-soft:#1E2B55;--disc-soft:#43291A;--par-soft:#1C3824}
+.rule{border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+.rule .k{font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.rule .r{font-family:var(--display);font-size:24px;font-weight:700;line-height:1.2}
+.rule p{margin:0;font-size:15px}
+.rule.par{background:var(--par-soft);color:var(--par)} .rule.prem{background:var(--prem-soft);color:var(--prem)} .rule.disc{background:var(--disc-soft);color:var(--disc)}
+.rule.neutral{background:var(--bg);color:var(--ink)}
+.sum{border-collapse:collapse;width:100%;font-family:var(--body);font-size:15px;font-variant-numeric:tabular-nums}
+.sum th,.sum td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.sum th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.sum td.n{text-align:right;font-family:var(--mono)}
+.tblwrap{overflow-x:auto}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Step 3 · Coupon rate vs YTM</p>
+    <h2 class="steph">Par, Premium, Discount</h2>
+    <p class="sub">The coupon rate is fixed when the bond is issued; the YTM moves with the market. Comparing the two tells you whether the bond sells at, above or below ₹1,000.</p>
+    <div class="spec" aria-label="The bond we are studying">
+      <div class="spec-h">Our bond</div>
+      <div><span>Face value</span><b class="f">₹1,000</b></div>
+      <div><span>Coupon rate</span><b class="c">10%</b></div>
+      <div><span>Maturity</span><b>5 years</b></div>
+      <div><span>YTM</span><b id="s3-specY">10%</b></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="index" role="tablist" aria-label="Cases" id="s3-index"></div>
+    <section class="stage" role="tabpanel" aria-live="polite">
+      <h2 id="s3-name"></h2>
+      <p class="def" id="s3-def"></p>
+      <svg id="s3-tl" viewBox="0 0 760 330" role="img" aria-label="Coupon compared with the return the market requires"></svg>
+      <div class="readout">
+        <div class="work" id="s3-work"></div>
+        <div id="s3-side"></div>
+      </div>
+      <p class="contrast" id="s3-contrast"></p>
+      <div class="nav"><button class="btn" id="s3-prev">Previous</button><button class="btn primary" id="s3-next">Next</button></div>
+    </section>
+  </div>
+</div>
+
+<script>(()=>{
+const F=1000,C=100,CRp=10,N=5;
+const $=id=>document.getElementById('s3-'+id);
+const inr=v=>'₹'+v.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const inr0=v=>'₹'+Math.round(v).toLocaleString('en-IN');
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NS='http://www.w3.org/2000/svg';
+function el(tag,a,txt){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;return e}
+const af=(y,n)=>n===0?0:(1-Math.pow(1+y,-n))/y;
+const price=(yPct,n=N)=>{const y=yPct/100;return n===0?F:C*af(y,n)+F/Math.pow(1+y,n)};
+
+const T=[
+ {id:'par',ytm:10,name:'Par',short:'Coupon rate = YTM',
+  def:'The market requires 10% and the bond pays 10%. The coupon gives investors exactly the return they want, so they pay exactly the face value.',
+  contrast:'At par, the price equals the face value. Nothing extra to pay for, nothing to make up.'},
+ {id:'prem',ytm:8,name:'Premium',short:'Coupon rate > YTM',
+  def:'The market requires only 8%, but the bond pays 10%. Investors get ₹20 a year more than they need, so they are willing to pay more than ₹1,000 for it.',
+  contrast:'The premium is not arbitrary. It is exactly the present value of the extra coupons over the bond\'s life.'},
+ {id:'disc',ytm:12,name:'Discount',short:'Coupon rate < YTM',
+  def:'The market requires 12%, but the bond pays only 10%. Investors fall ₹20 a year short, so they will only buy it below ₹1,000.',
+  contrast:'The discount is exactly the present value of the shortfall. The buyer recovers it as a gain when ₹1,000 is repaid at maturity.'},
+ {id:'sum',ytm:null,name:'Summary',short:'The three cases together',
+  def:'One bond, three market rates. The price curve falls as YTM rises and crosses ₹1,000 exactly where the YTM equals the 10% coupon rate.',
+  contrast:'Read the coupon rate and the YTM, and you know which side of ₹1,000 the price is on before you calculate anything.'}
+];
+let cur=0;
+const idx=$('index');
+T.forEach((t,i)=>{const b=document.createElement('button');b.className='term';b.setAttribute('role','tab');
+  b.innerHTML=`<b>${t.name}</b><span>${t.short}</span>`;b.addEventListener('click',()=>show(i));idx.append(b)});
+$('prev').addEventListener('click',()=>show(cur-1));$('next').addEventListener('click',()=>show(cur+1));
+function show(i){cur=Math.max(0,Math.min(T.length-1,i));
+  [...idx.children].forEach((b,j)=>b.setAttribute('aria-selected',j===cur));
+  const t=T[cur];$('name').textContent=t.name;$('def').textContent=t.def;$('contrast').textContent=t.contrast;
+  $('prev').disabled=cur===0;$('next').disabled=cur===T.length-1;
+  $('specY').textContent=t.ytm?t.ytm+'%':'8%, 10%, 12%';
+  buildSide();render()}
+
+function buildSide(){
+  const t=T[cur],side=$('side');
+  if(t.id==='sum'){side.className='rule neutral';
+    side.innerHTML=`<span class="k">The rule</span><p><b style="color:var(--par)">CR = YTM</b> → price = ₹1,000 (par)</p><p><b style="color:var(--prem)">CR &gt; YTM</b> → price &gt; ₹1,000 (premium)</p><p><b style="color:var(--disc)">CR &lt; YTM</b> → price &lt; ₹1,000 (discount)</p>`;return}
+  const r={par:['CR = YTM','10% = 10%','Price = ₹1,000'],prem:['CR > YTM','10% > 8%','Price > ₹1,000'],disc:['CR < YTM','10% < 12%','Price < ₹1,000']}[t.id];
+  side.className='rule '+t.id;side.innerHTML=`<span class="k">${r[0]}</span><span class="r">${r[1]}</span><p>${r[2]}: ${t.name.toLowerCase()}</p>`;
+}
+
+function render(){
+  const t=T[cur],s=$('tl');s.innerHTML='';
+  if(t.id==='sum')return drawSum(s);
+  const cA=css('--accent'),cL=css('--line'),cInk=css('--ink'),cM=css('--muted'),cS=css('--surface'),cPar=css('--par');
+  const col={par:cPar,prem:css('--prem'),disc:css('--disc')}[t.id],soft={par:css('--par-soft'),prem:css('--prem-soft'),disc:css('--disc-soft')}[t.id];
+  const y=t.ytm/100,req=F*y,gap=C-req,P=price(t.ytm),pvGap=gap*af(y,N);
+  const W=760,base=262,x0=330,x1=720,X=k=>x0+(x1-x0)*(k-1)/(N-1),bw=44,k=150/130,h=v=>v*k;
+  // axis
+  s.append(el('line',{x1:250,x2:W-10,y1:base,y2:base,stroke:cL,'stroke-width':1.5}));
+  s.append(el('text',{x:(x0+x1)/2,y:34,'text-anchor':'middle',style:`fill:${cInk}`},`Bond pays ₹100 a year. Market requires ${t.ytm}% × ₹1,000 = ${inr0(req)}.`));
+  for(let i=1;i<=N;i++){
+    const x=X(i)-bw/2;
+    s.append(el('text',{x:X(i),y:base+22,'text-anchor':'middle'},'Yr '+i));
+    const lo=Math.min(C,req);
+    s.append(el('rect',{x,y:base-h(lo),width:bw,height:h(lo),fill:cA,rx:3}));
+    if(gap>0){
+      s.append(el('rect',{x,y:base-h(C),width:bw,height:h(gap),fill:col,rx:3}));
+      s.append(el('text',{x:X(i),y:base-h(C)-8,'text-anchor':'middle',class:'mono',style:`fill:${col};font-weight:600`},'+'+inr0(gap)));
+    } else if(gap<0){
+      s.append(el('rect',{x,y:base-h(req),width:bw,height:h(-gap),fill:soft,stroke:col,'stroke-width':1.5,rx:3}));
+      s.append(el('text',{x:X(i),y:base-h(req)-8,'text-anchor':'middle',class:'mono',style:`fill:${col};font-weight:600`},'−'+inr0(-gap)));
+    } else {
+      s.append(el('text',{x:X(i),y:base-h(C)-8,'text-anchor':'middle',class:'mono',style:`fill:${col};font-weight:600`},'₹0 gap'));
+    }
+    s.append(el('line',{x1:x-6,x2:x+bw+6,y1:base-h(req),y2:base-h(req),stroke:cInk,'stroke-width':2}));
+  }
+  s.append(el('text',{x:X(1)-bw/2-10,y:base-h(req)+4,'text-anchor':'end',style:`fill:${cInk};font-weight:600`},'Required '+inr0(req)));
+  s.append(el('text',{x:X(1)-bw/2-10,y:base-h(Math.min(C,req))/2+4,'text-anchor':'end',style:`fill:${cA}`},'Coupon'));
+  s.append(el('text',{x:W-10,y:base+44,'text-anchor':'end',style:`fill:${css('--face')}`},'+ ₹1,000 face value in every case'));
+  // price gauge
+  const gx=90,gt=70,gb=250,gl=900,gh=1100,G=v=>gb-(gb-gt)*(v-gl)/(gh-gl);
+  s.append(el('text',{x:gx,y:gt-20,'text-anchor':'middle',style:`fill:${cInk};font-weight:600`},'Price today'));
+  s.append(el('rect',{x:gx-26,y:gt,width:52,height:gb-gt,fill:css('--faint'),rx:6}));
+  [900,950,1000,1050,1100].forEach(v=>s.append(el('text',{x:gx-34,y:G(v)+4,'text-anchor':'end',style:'font-size:12px'},inr0(v))));
+  const top=Math.min(G(P),G(F)),hgt=Math.abs(G(P)-G(F));
+  if(hgt>0.5)s.append(el('rect',{x:gx-26,y:top,width:52,height:hgt,fill:col,opacity:.85}));
+  s.append(el('line',{x1:gx-32,x2:gx+32,y1:G(F),y2:G(F),stroke:cPar,'stroke-width':2}));
+  s.append(el('line',{x1:gx-26,x2:gx+26,y1:G(P),y2:G(P),stroke:cInk,'stroke-width':3}));
+  s.append(el('text',{x:gx+34,y:G(P)+(gap===0?-8:4),class:'mono',style:`fill:${cInk};font-weight:600`},inr(P)));
+  if(gap!==0)s.append(el('text',{x:gx+34,y:G(F)+(gap>0?16:-8),style:`fill:${cPar};font-size:12px`},'par ₹1,000'));
+
+  const word=gap>0?'Extra':'Shortfall';
+  $('work').innerHTML=gap===0
+    ?`<div class="k">Coupon vs required return</div><div>₹100 − ₹100 = ₹0 a year</div><div class="k">Price</div><div class="big" style="color:${col}">₹1,000.00</div>`
+    :`<div class="k">${word} each year</div><div>₹100 − ${inr0(req)} = <span style="color:${col}">${gap>0?'+':'−'}${inr0(Math.abs(gap))}</span> a year for 5 years</div>`+
+     `<div class="k">PV of the ${word.toLowerCase()} at ${t.ytm}%</div><div>${inr0(Math.abs(gap))} × ${af(y,N).toFixed(4)} = <span style="color:${col}">${inr(Math.abs(pvGap))}</span></div>`+
+     `<div class="k">Price</div><div class="big">₹1,000 ${gap>0?'+':'−'} ${inr(Math.abs(pvGap))} = ${inr(P)}</div>`;
+}
+
+function drawSum(s){
+  const cL=css('--line'),cInk=css('--ink'),cA=css('--accent'),cPar=css('--par'),cPr=css('--prem'),cD=css('--disc');
+  const W=760,H=330,L=80,R=30,T0=20,B=44,pw=W-L-R,ph=H-T0-B,lo=2,hi=18,plo=700,phi=1400;
+  const X=v=>L+pw*(v-lo)/(hi-lo),Y=p=>T0+ph-ph*(p-plo)/(phi-plo);
+  s.append(el('rect',{x:L,y:T0,width:X(10)-L,height:Y(F)-T0,fill:css('--prem-soft')}));
+  s.append(el('rect',{x:X(10),y:Y(F),width:L+pw-X(10),height:T0+ph-Y(F),fill:css('--disc-soft')}));
+  [700,800,900,1000,1100,1200,1300,1400].forEach(v=>{s.append(el('line',{x1:L,x2:L+pw,y1:Y(v),y2:Y(v),stroke:cL,'stroke-width':1,opacity:.7}));s.append(el('text',{x:L-8,y:Y(v)+4,'text-anchor':'end'},inr0(v)))});
+  [2,4,6,8,10,12,14,16,18].forEach(v=>s.append(el('text',{x:X(v),y:H-B+20,'text-anchor':'middle'},v+'%')));
+  s.append(el('text',{x:L+pw/2,y:H-4,'text-anchor':'middle'},'YTM'));
+  s.append(el('line',{x1:L,x2:L+pw,y1:Y(F),y2:Y(F),stroke:cPar,'stroke-width':2}));
+  s.append(el('line',{x1:X(10),x2:X(10),y1:T0,y2:T0+ph,stroke:cA,'stroke-width':1.5}));
+  s.append(el('text',{x:X(10)+6,y:T0+14,style:`fill:${cA};font-weight:600`},'Coupon rate 10%'));
+  s.append(el('text',{x:L+10,y:Y(1060),style:`fill:${cPr};font-weight:600`},'Premium zone'));
+  s.append(el('text',{x:L+pw-10,y:Y(940),'text-anchor':'end',style:`fill:${cD};font-weight:600`},'Discount zone'));
+  const pts=[];for(let v=lo;v<=hi+1e-9;v+=0.25)pts.push(X(v)+','+Y(price(v)));
+  s.append(el('polyline',{points:pts.join(' '),fill:'none',stroke:cInk,'stroke-width':3}));
+  [[8,cPr],[10,cPar],[12,cD]].forEach(([v,c])=>{const p=price(v);
+    s.append(el('circle',{cx:X(v),cy:Y(p),r:7,fill:css('--surface'),stroke:c,'stroke-width':3}));
+    s.append(el('text',{x:X(v)+(v===10?-10:10),y:Y(p)+(v===10?22:-12),'text-anchor':v===10?'end':'start',class:'mono',style:`fill:${c};font-weight:600`},inr(p)))});
+  const rows=[['Par','10% = 10%',price(10),'₹0','par'],['Premium','10% > 8%',price(8),'+₹20','prem'],['Discount','10% < 12%',price(12),'−₹20','disc']];
+  $('work').innerHTML=`<div class="tblwrap"><table class="sum"><tr><th>Case</th><th>CR vs YTM</th><th>Per year vs required</th><th style="text-align:right">Price</th></tr>`+
+    rows.map(r=>`<tr><td style="color:var(--${r[4]});font-weight:600">${r[0]}</td><td>${r[1]}</td><td>${r[3]}</td><td class="n">${inr(r[2])}</td></tr>`).join('')+`</table></div>`;
+}
+
+show(0);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>render());
+new MutationObserver(()=>render()).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();</script>
+
+</section>
+<script>
+document.querySelectorAll('.stepper button').forEach(b=>b.addEventListener('click',()=>{
+  const n=b.dataset.step;
+  document.querySelectorAll('.stepper button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  document.querySelectorAll('.step').forEach(s=>s.hidden=s.id!=='step'+n);
+  window.scrollTo({top:0,behavior:'smooth'});
+}));
+</script>
+
+</html>

@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stock Valuation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: three-step stepper; in each step a concept index on the left and a stage on the right, as in the bond walkthrough. Term index on the left; on the right one stage per term, each with its own picture on a shared cash-flow timeline, a worked number and, where it helps, one control. */
+:root{
+  --bg:#F4F4F1; --surface:#FFFFFF; --ink:#16223A; --muted:#5B6578; --line:#DADDD8; --faint:#E7E8E3;
+  --accent:#6B3FA0; --accent-soft:#EEE6F7; --face:#0F6E8C; --face-soft:#DCEEF3;
+  --prem:#2348B8; --disc:#B4530F; --par:#2F6B3F;
+  --display:'Source Serif 4', Georgia, serif; --body:'IBM Plex Sans','Segoe UI',Arial,sans-serif; --mono:'IBM Plex Mono',Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12131A; --surface:#1C1E29; --ink:#ECEDF2; --muted:#A1A6B8; --line:#2F3242; --faint:#262938;
+  --accent:#B794E6; --accent-soft:#2E2340; --face:#5BB8D4; --face-soft:#16384A;
+  --prem:#8FA8F5; --disc:#F0A266; --par:#86C998; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12131A; --surface:#1C1E29; --ink:#ECEDF2; --muted:#A1A6B8; --line:#2F3242; --faint:#262938;
+  --accent:#B794E6; --accent-soft:#2E2340; --face:#5BB8D4; --face-soft:#16384A;
+  --prem:#8FA8F5; --disc:#F0A266; --par:#86C998; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;padding-inline:20px;padding-block:28px 40px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 4px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.05;margin:0}
+.sub{color:var(--muted);margin:6px 0 0;max-width:64ch}
+header{display:flex;flex-direction:column;gap:14px}
+.spec{display:flex;flex-wrap:wrap;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.spec>div{display:flex;flex-direction:column;justify-content:center;gap:2px;padding:12px 18px;border-left:1px solid var(--line);flex:1 1 120px}
+.spec>div:first-child{border-left:none}
+.spec span{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.spec b{font-family:var(--mono);font-weight:500;font-size:18px}
+.spec .spec-h{font-family:var(--display);font-weight:700;font-size:20px;background:var(--accent-soft);color:var(--accent);flex:0 0 auto}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px;align-items:start}
+.index{display:flex;flex-direction:column;gap:6px}
+.term{font:inherit;text-align:left;border:1px solid transparent;background:transparent;color:var(--ink);border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;flex-direction:column}
+.term b{font-weight:600}
+.term span{font-size:14px;color:var(--muted)}
+.term:hover{background:var(--surface)}
+.term[aria-selected="true"]{background:var(--surface);border-color:var(--accent)}
+.term[aria-selected="true"] b{color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.stage h2{font-family:var(--display);font-size:28px;margin:0}
+.stage .def{margin:0;max-width:66ch;color:var(--muted);font-size:17px}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:var(--body);font-size:13px;fill:var(--muted)}
+svg text.mono{font-family:var(--mono)}
+.readout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center}
+.work{background:var(--bg);border-radius:12px;padding:16px 18px;font-family:var(--mono);font-size:16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.work div{overflow-x:auto;white-space:nowrap}
+.work .k{font-family:var(--body);font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.work .big{font-size:28px}
+.c{color:var(--accent)} .f{color:var(--face)}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.ctl label{display:flex;justify-content:space-between;font-weight:500}
+.ctl output{font-family:var(--mono);color:var(--accent)}
+.ctl input{width:100%;accent-color:var(--accent)}
+.ctl small{color:var(--muted);font-size:14px}
+.slice{display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid var(--line);font-family:var(--mono);font-size:13px}
+.slice div{display:flex;align-items:center;padding-inline:8px;white-space:nowrap;overflow:hidden}
+.slice .a{background:var(--accent);color:var(--surface)} .slice .b{background:var(--face-soft);color:var(--face);flex:1}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:3px;background:var(--bg);gap:2px}
+.seg button{flex:1 1 140px;font:500 14px var(--body);border:none;background:transparent;color:var(--ink);padding:8px 10px;border-radius:9px;cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--accent);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.grid100{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;width:min(100%,220px);padding:6px;background:var(--face-soft);border:1px solid var(--face);border-radius:8px;margin-block:4px}
+.grid100 i{display:block;aspect-ratio:1;border-radius:2px;box-shadow:inset 0 0 0 1px var(--face)}
+.contrast{font-size:15px;color:var(--muted);border-left:3px solid var(--accent);padding-left:12px;margin:0;max-width:70ch}
+.nav{display:flex;justify-content:space-between;gap:10px}
+.btn{font:600 15px var(--body);padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.btn[disabled]{opacity:.35;cursor:default}
+@media (max-width:820px){.layout{grid-template-columns:1fr}.index{flex-direction:row;overflow-x:auto}.term{min-width:150px}.readout{grid-template-columns:1fr}}
+.steph{font-family:var(--display);font-weight:700;font-size:clamp(26px,3.6vw,36px);line-height:1.1;margin:0}
+.shell{padding-bottom:6px}
+.shell h1{font-size:clamp(30px,4.4vw,46px)}
+.stepper{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stepper button{font:inherit;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;gap:2px}
+.stepper small{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.stepper span{font-weight:600}
+.stepper button[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.stepper button[aria-selected="true"] small{color:var(--accent)}
+.step{padding-top:8px}
+.trio{display:flex;flex-wrap:wrap;gap:14px;font-size:14px;color:var(--muted)}
+.trio i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.work .fm{font-family:var(--mono);font-size:14px;color:var(--muted)}
+.work div{white-space:normal}
+.work .nt{font-family:var(--body);font-size:14px;color:var(--muted)}
+.readout{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr)}
+.ctl .ctl{gap:6px}
+@media (max-width:820px){.readout{grid-template-columns:1fr}}
+@media (max-width:640px){.stepper{grid-template-columns:1fr}}
+.fx{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-style:italic;font-size:19px;color:var(--ink);line-height:1.15;flex-wrap:nowrap}
+.fx .up{font-style:normal}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle}
+.fr>span:first-child{border-bottom:1.5px solid currentColor;padding:0 4px 2px}
+.fr>span:last-child{padding:2px 4px 0}
+.fx .fr{font-size:.92em}
+.brk{position:relative;display:inline-flex;align-items:center;padding:4px 8px;border-left:2px solid currentColor;border-right:2px solid currentColor}
+.brk::before,.brk::after{content:'';position:absolute;top:0;bottom:0;width:6px;border-top:2px solid currentColor;border-bottom:2px solid currentColor}
+.brk::before{left:0}.brk::after{right:0}
+.par{display:inline-flex;align-items:center}
+.par::before{content:'(';font-size:1.5em;font-style:normal;font-weight:300}.par::after{content:')';font-size:1.5em;font-style:normal;font-weight:300}
+.fx sup{font-size:.62em}
+.work .fwrap{overflow-x:auto;padding:6px 2px;white-space:nowrap}
+</style>
+<style>
+body{margin:0}
+.homebar{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1120px;margin:0 auto;padding:14px 0 0;font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;font-size:14px}
+.homebar a{color:var(--accent,#6B3FA0);text-decoration:none;font-weight:600}
+.homebar a:hover{text-decoration:underline}
+.homebar span{color:var(--muted,#5B6578)}
+</style>
+<nav class="homebar" aria-label="Site"><a href="index.html">← All FIA 203 topics</a><span>FIA 203 Corporate Finance</span></nav>
+
+
+<div class="wrap shell">
+  <p class="eyebrow">Corporate Finance</p>
+  <h1>Stock Valuation</h1>
+  <div class="stepper" role="tablist" aria-label="Steps" id="stepper"></div>
+</div>
+<div id="steps"></div>
+
+<script>
+(()=>{
+const inr2=v=>'₹'+v.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const inr0=v=>'₹'+Math.round(v).toLocaleString('en-IN');
+const money=v=>v<1000?inr2(v):inr0(v);
+const pc=(v,d=1)=>(v*100).toFixed(d).replace(/\.0+$/,'')+'%';
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const sup=n=>String(n).split('').map(d=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[d]).join('');
+const sub=n=>String(n).split('').map(d=>'₀₁₂₃₄₅₆₇₈₉'[d]).join('');
+const NS='http://www.w3.org/2000/svg';
+const el=(t,a,x)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(x!=null)e.textContent=x;return e};
+const K=()=>({a:css('--accent'),aS:css('--accent-soft'),f:css('--face'),fS:css('--face-soft'),m:css('--muted'),l:css('--line'),fa:css('--faint'),ink:css('--ink'),par:css('--par'),d:css('--disc'),surf:css('--surface')});
+const T=(s,x,y,t,o={})=>s.append(el('text',{x,y,'text-anchor':o.anchor||'middle',class:o.mono?'mono':'',style:`fill:${o.fill||css('--muted')};${o.bold?'font-weight:600;':''}${o.size?'font-size:'+o.size+'px;':''}`},t));
+const Rc=(s,x,y,w,h,fill,o={})=>{if(h<=0||w<=0)return;s.append(el('rect',{x,y,width:w,height:h,fill,rx:o.rx??3,...(o.stroke?{stroke:o.stroke,'stroke-width':o.sw||1}:{}),...(o.op!=null?{opacity:o.op}:{})}))};
+const Ln=(s,x1,y1,x2,y2,st,w=1)=>s.append(el('line',{x1,y1,x2,y2,stroke:st,'stroke-width':w}));
+const axis=(s,base,x1=30,x2=750)=>Ln(s,x1,base,x2,base,css('--line'),1.5);
+const brace=(s,x0,x1,y,col,txt)=>{s.append(el('path',{d:`M${x0},${y+8} v-8 H${x1} v8`,fill:'none',stroke:col,'stroke-width':1.8}));T(s,(x0+x1)/2,y-8,txt,{fill:col,bold:1,size:13})};
+const note=t=>`<div class="nt">${t}</div>`;
+const BASE=262;
+
+/* 15 fading bars that go on forever, with each one's value today inside */
+function forever(s,k,amt,R,{label,lab1}={}){
+  const yrs=15,x0=240,x1=700,X=t=>x0+(x1-x0-90)*(t-1)/(yrs-1),bw=18,max=Math.max(...amt)*1.35,h=v=>v*150/max;
+  axis(s,BASE);T(s,110,BASE+22,'Today',{bold:1,fill:k.ink});
+  for(let t=1;t<=yrs;t++){const A=amt[t-1],pv=A/Math.pow(1+R,t),x=X(t)-bw/2,op=1-0.45*(t-1)/(yrs-1);
+    Rc(s,x,BASE-h(A),bw,h(A),k.fa,{stroke:k.l,rx:2,op});Rc(s,x+3,BASE-h(pv),bw-6,h(pv),k.a,{rx:1.5,op});
+    if([1,5,10,15].includes(t)){T(s,X(t),BASE+22,'Yr '+t);T(s,X(t),BASE-h(A)-8,money(pv),{mono:1,fill:k.ink,size:11})}}
+  if(lab1)T(s,X(1),BASE-h(amt[0])-24,lab1,{fill:k.a,bold:1,size:12});
+  T(s,X(yrs)+50,BASE-40,'…',{fill:k.m,size:22});T(s,X(yrs)+50,BASE+22,'forever',{fill:k.a,bold:1});
+  if(label)T(s,470,30,label,{fill:k.a});
+}
+function tile(s,k,v,subtxt,lab='Price today'){Rc(s,52,BASE-122,116,100,k.aS,{stroke:k.a,sw:1.5,rx:10});T(s,110,BASE-94,lab);T(s,110,BASE-62,v,{mono:1,bold:1,fill:k.ink,size:19});T(s,110,BASE-38,subtxt,{fill:k.a,size:12})}
+function shareBar(s,k,y,a,b,la,lb){const x0=40,W=680,t=a+b,wa=W*a/t;
+  Rc(s,x0,y,wa,26,k.a,{rx:4});Rc(s,x0+wa,y,W-wa,26,k.f,{rx:4});
+  const ta=`${la} ${Math.round(a/t*100)}%`,tb=`${lb} ${Math.round(b/t*100)}%`;
+  if(wa>170)T(s,x0+10,y+18,ta,{anchor:'start',fill:k.surf,bold:1,size:12});else T(s,x0,y-6,ta,{anchor:'start',fill:k.a,bold:1,size:12});
+  if(W-wa>170)T(s,x0+W-10,y+18,tb,{anchor:'end',fill:k.surf,bold:1,size:12});else T(s,x0+W,y-6,tb,{anchor:'end',fill:k.f,bold:1,size:12})}
+
+/* ================= STEP 1: the idea ================= */
+const D1=10,G=0.05,RR=0.12,P0=D1/(RR-G);
+const S1={n:1,label:'The idea',eyebrow:'Step 1 · The idea behind valuation',title:'What Is a Share Worth?',
+ sub:'A share is worth what it will pay you, valued today. Follow one investor, then a chain of investors, and the dividends are all that remain.',
+ state:{N:3},
+ spec:()=>[['Next dividend','₹10','c'],['Dividend growth','5% a year',''],['Required return','12%','']],
+ tabs:[
+ {id:'vs',name:'Why shares are harder',short:'Three differences from a bond',
+  def:'A share is valued like a bond: price = present value of the cash flows you expect. But three things make it harder. The cash flows are not promised. The share never matures. And the return the market requires is not quoted anywhere.',
+  contrast:'So we start with what we can see: one investor who buys today and sells in a year. Next tab.',ctl:[],
+  draw(s){const k=K(),x0=200,X=t=>x0+(t-1)*85;
+   const row=(base,title,subt)=>{axis(s,base,30,750);T(s,110,base+20,'Today',{bold:1,fill:k.ink});T(s,30,base-112,title,{anchor:'start',bold:1,fill:k.ink,size:15});T(s,30,base-94,subt,{anchor:'start',size:12})};
+   row(140,'Bond','Promised, fixed, ends at maturity');
+   for(let t=1;t<=5;t++){Rc(s,X(t)-14,140-24,28,24,k.a,{rx:2});T(s,X(t),140+20,'Yr '+t,{size:12});T(s,X(t),140-30,'₹100',{mono:1,size:11,fill:k.ink})}
+   Rc(s,X(5)-14,140-24-64,28,64,k.f,{rx:2});T(s,X(5)+22,140-60,'+ ₹1,000 face value',{anchor:'start',fill:k.f,bold:1,size:12});T(s,X(5)+22,140-44,'then it ends',{anchor:'start',size:12});
+   row(300,'Share','Expected, can grow, never ends');
+   for(let t=1;t<=6;t++){const hh=22+6*t;Rc(s,X(t)-14,300-hh,28,hh,k.aS,{stroke:k.a,sw:1.5,rx:2});T(s,X(t),300+20,'Yr '+t,{size:12});T(s,X(t),300-hh-6,'D'+sub(t),{size:12,fill:k.a,bold:1})}
+   T(s,X(6)+70,300-30,'… forever',{fill:k.a,bold:1});T(s,X(6)+70,300-12,'no face value',{size:12});
+   return {legend:[[k.a,'Coupon (bond)'],[k.f,'Face value (bond)'],[k.aS,'Expected dividend (share)',k.a]],
+    work:`<div class="k">1. Cash flows</div><div class="nt">Bond: coupons fixed in the contract. Share: dividends are only expected, and can change.</div><div class="k">2. Life</div><div class="nt">Bond: ends at maturity with the face value. Share: no maturity, no face value.</div><div class="k">3. Discount rate</div><div class="nt">Bond: YTM can be read from its price. Share: R can't be read from the price alone. You first have to forecast the dividends, so R is always an estimate.</div>`}}},
+ {id:'one',name:'One investor',short:'Buy today, sell in a year',
+  def:'You buy the share today, collect next year\'s dividend and then sell. The price you should pay is the value today of those two cash flows.',
+  contrast:'This looks like progress, but it is not: to find P₀ we now need P₁, which is just as hard to know. Who pays you ₹150 next year? Next tab.',ctl:[],
+  draw(s){const k=K(),P1=D1*(1+G)/(RR-G),pD=D1/(1+RR),pP=P1/(1+RR),h=v=>v*190/175,tx=130,x1=540,bw=70;
+   axis(s,BASE);T(s,tx,BASE+22,'Today',{bold:1,fill:k.ink});T(s,x1,BASE+22,'Year 1');
+   Rc(s,x1-bw/2,BASE-h(D1),bw,h(D1),k.fa,{stroke:k.l});Rc(s,x1-bw/2+6,BASE-h(pD),bw-12,h(pD),k.a,{rx:2});
+   Rc(s,x1-bw/2,BASE-h(D1)-h(P1),bw,h(P1),k.fa,{stroke:k.l});Rc(s,x1-bw/2+6,BASE-h(D1)-h(pP),bw-12,h(pP),k.f,{rx:2});
+   T(s,x1+bw/2+12,BASE-h(D1)/2+4,'Dividend D₁ = ₹10',{anchor:'start',fill:k.a,bold:1});
+   T(s,x1+bw/2+12,BASE-h(D1)-h(P1)/2+4,'Selling price P₁ = ₹150',{anchor:'start',fill:k.f,bold:1});
+   Rc(s,tx-30,BASE-h(pD),60,h(pD),k.a,{rx:2});Rc(s,tx-30,BASE-h(pD)-h(pP),60,h(pP),k.f,{rx:2});
+   T(s,tx+38,BASE-h(pD)/2+4,inr2(pD),{anchor:'start',mono:1,fill:k.a});T(s,tx+38,BASE-h(pD)-h(pP)/2+4,inr2(pP),{anchor:'start',mono:1,fill:k.f});
+   T(s,tx,BASE-h(pD+pP)-10,inr2(pD+pP),{mono:1,bold:1,fill:k.ink});
+   T(s,(tx+x1)/2,BASE-110,'÷ 1.12',{mono:1,fill:k.ink,size:16,bold:1});T(s,(tx+x1)/2,BASE-90,'one year back',{size:12});
+   return {legend:[[k.fa,'Cash you receive in year 1',k.l],[k.a,'Dividend, valued today'],[k.f,'Selling price, valued today']],
+    work:`<div class="fm">P₀ = (D₁ + P₁) ÷ (1 + R)</div><div>= (₹10 + ₹150) ÷ 1.12</div><div class="big">= ${inr2(pD+pP)}</div>`}}},
+ {id:'chain',name:'A chain of investors',short:'Push the sale further away',
+  def:'P₁ is what the next investor pays, and she pays it for D₂ plus her own selling price P₂. Put that in place of P₁ and the unknown price moves one year further away. Then do the same for P₂, and so on.',
+  contrast:'Each push adds one more dividend and moves the unknown price one year further out. However large that price is, pushed far enough its value today is close to zero. The price today never changes; only where it comes from does.',
+  ctl:[{key:'N',label:'How far the sale is pushed (N)',min:1,max:40,step:1,fmt:v=>v+(v>1?' years':' year'),note:'Each investor sells to the next, who values the share the same way.'}],
+  draw(s,st){const k=K(),N=st.N,base=210,h=v=>v*150/150,tx=110,x0=200,x1=715,X=t=>N===1?(x0+x1)/2:x0+(x1-x0)*(t-1)/(N-1),bw=Math.max(5,Math.min(26,(x1-x0)/N*0.6));
+   let pvD=0;axis(s,base);T(s,tx,base+20,'Today',{bold:1,fill:k.ink});
+   const PN=D1*Math.pow(1+G,N)/(RR-G),pvS=PN/Math.pow(1+RR,N);
+   for(let t=1;t<=N;t++){const pv=D1*Math.pow(1+G,t-1)/Math.pow(1+RR,t);pvD+=pv;Rc(s,X(t)-bw/2,base-h(pv),bw,h(pv),k.a,{rx:1.5});
+     if(N<=12||t===1||t%10===0||t===N)T(s,X(t),base+20,N<=12?'Yr '+t:String(t),{size:12})}
+   Rc(s,X(N)-bw/2,base-h(D1*Math.pow(1+G,N-1)/Math.pow(1+RR,N))-h(pvS),bw,h(pvS),k.f,{rx:1.5});
+   const lx=X(N)>560?X(N)+bw/2:X(N),la=X(N)>560?'end':'middle',ly=base-h(D1*Math.pow(1+G,N-1)/Math.pow(1+RR,N))-h(pvS);
+   T(s,lx,ly-24,`P${sub(N)} = ${inr0(PN)}`,{fill:k.f,bold:1,size:12,anchor:la});
+   T(s,lx,ly-10,`worth ${inr2(pvS)} today`,{fill:k.f,size:12,anchor:la});
+   Rc(s,tx-28,base-h(pvD),56,h(pvD),k.a,{rx:2});Rc(s,tx-28,base-h(pvD)-h(pvS),56,h(pvS),k.f,{rx:2});
+   T(s,tx,base-h(pvD+pvS)-8,inr2(pvD+pvS),{mono:1,bold:1,fill:k.ink});
+   shareBar(s,k,262,pvD,pvS,'From dividends','From selling price');
+   return {legend:[[k.a,'Dividends, valued today'],[k.f,'Selling price, valued today']],
+    work:`<div class="fm">${N===1?'P₀ = D₁ ÷ (1+R) + P₁ ÷ (1+R)':N===2?'P₀ = D₁ ÷ (1+R) + D₂ ÷ (1+R)² + P₂ ÷ (1+R)²':N===3?'P₀ = D₁ ÷ (1+R) + D₂ ÷ (1+R)² + D₃ ÷ (1+R)³ + P₃ ÷ (1+R)³':'P₀ = D₁ ÷ (1+R) + … + D'+sub(N)+' ÷ (1+R)'+sup(N)+' + P'+sub(N)+' ÷ (1+R)'+sup(N)}</div><div>= <span class="c">${inr2(pvD)}</span> + <span class="f">${inr2(pvS)}</span></div><div class="big">= ${inr2(pvD+pvS)}</div>`+
+     note(`The price in year ${N}, P${sub(N)} = ${inr0(PN)}, is still unknown in practice, but it is ${N} year${N>1?'s':''} away, so today it is worth only ${inr2(pvS)}.`)}}},
+ {id:'all',name:'All dividends, forever',short:'The selling price disappears',
+  def:'Push the sale back for ever. The unknown price drops out, and the price today is the present value of every future dividend, starting next year.',
+  contrast:'This is the dividend discount model. One problem remains: nobody can forecast infinitely many dividends one by one. Step 2 handles the special cases where dividends follow a pattern: zero growth, constant growth, and growth that changes once.',ctl:[],
+  draw(s){const k=K(),amt=Array.from({length:15},(_,i)=>D1*Math.pow(1+G,i));forever(s,k,amt,RR,{label:'₹10 next year, growing 5% a year, forever. Each is worth less today than the one before.'});
+   tile(s,k,inr2(P0),'PV of all dividends');
+   let c=0;const cum=[];for(let t=1;t<=200;t++){c+=D1*Math.pow(1+G,t-1)/Math.pow(1+RR,t);if([10,30,100].includes(t))cum.push([t,c])}
+   return {legend:[[k.fa,'Dividend you receive',k.l],[k.a,'Its value today']],
+    work:`<div class="fm">P₀ = D₁ ÷ (1+R) + D₂ ÷ (1+R)² + D₃ ÷ (1+R)³ + …</div>`+cum.map(([t,v])=>`<div>First ${t} years: ${inr2(v)}</div>`).join('')+`<div class="big">All years: ${inr2(P0)}</div>`+
+     note('The same ₹142.86 as the one-year investor. The selling price was only ever the value of the dividends after it.')}}},
+ ]};
+
+/* ================= STEP 2: zero and constant growth ================= */
+const D0b=10,R2=0.12;
+const S2={n:2,label:'Zero and constant growth',eyebrow:'Step 2 · Shortcuts',title:'Zero Growth and Constant Growth',
+ sub:'Adding up dividends forever is easy when they follow a pattern. If they stay the same, the share is a perpetuity. If they grow at a steady rate, it is a growing perpetuity.',
+ state:{Rz:12,g:5,P:150},
+ spec:(st,id)=>id==='zero'?[['Dividend','₹12 every year','c'],['Growth','None',''],['Required return',pc(st.Rz/100),'']]
+   :id==='r'?[['Next dividend',inr2(D0b*(1+st.g/100)),'c'],['Growth',pc(st.g/100),''],['Market price',inr0(st.P),'f'],['Required return','?','']]
+   :[['Dividend just paid','₹10','c'],['Growth',pc(st.g/100),''],['Required return','12%','']],
+ tabs:[
+ {id:'zero',name:'Zero growth',short:'The same dividend forever',
+  def:'A mature company, say a power utility, pays ₹12 a share every year and never raises it. Its dividends are a perpetuity.',
+  contrast:'Same formula as the perpetual bond and the perpetuity on your TVM sheet. Preference shares, which pay a fixed dividend, are valued this way.',
+  ctl:[{key:'Rz',label:'Required return',min:6,max:20,step:0.5,fmt:v=>v.toFixed(1)+'%',note:'A higher required return makes each future dividend worth less.'}],
+  draw(s,st){const k=K(),R=st.Rz/100;forever(s,k,Array(15).fill(12),R,{label:'₹12 every year, forever. Each is worth less today than the one before.'});
+   tile(s,k,inr2(12/R),'D ÷ R');
+   return {legend:[[k.fa,'Dividend you receive',k.l],[k.a,'Its value today']],
+    work:`<div class="fm">P₀ = D ÷ R</div><div>= ₹12 ÷ ${R.toFixed(3)}</div><div class="big">= <span class="c">${inr2(12/R)}</span></div>`+note(`If you paid ${inr2(12/R)}, the ₹12 dividend would give you exactly ${pc(R)} a year.`)}}},
+ {id:'const',name:'Constant growth',short:'Dividends grow at g forever',
+  def:'A company just paid ₹10 a share and is expected to raise its dividend by g every year, forever. Its dividends are a growing perpetuity.',
+  contrast:'This is the growing perpetuity from your TVM sheet, also called the Gordon growth model. Use next year\'s dividend D₁, not the one just paid.',
+  ctl:[{key:'g',label:'Dividend growth rate g',min:0,max:10,step:0.5,fmt:v=>v.toFixed(1)+'%',note:'Must stay below the 12% required return.'}],
+  draw(s,st){const k=K(),g=st.g/100,d1=D0b*(1+g),amt=Array.from({length:15},(_,i)=>d1*Math.pow(1+g,i));
+   forever(s,k,amt,R2,{label:`D₀ = ₹10 was just paid and is not yours. Your first dividend is D₁ = ${inr2(d1)}.`,lab1:'D₁'});
+   tile(s,k,inr2(d1/(R2-g)),'D₁ ÷ (R − g)');
+   return {legend:[[k.fa,'Dividend you receive (grows each year)',k.l],[k.a,'Its value today']],
+    work:`<div class="fm">D₁ = D₀ × (1 + g)</div><div>= ₹10 × ${(1+g).toFixed(3)} = <span class="c">${inr2(d1)}</span></div><div class="fm">P₀ = D₁ ÷ (R − g)</div><div>= ${inr2(d1)} ÷ (0.12 − ${g.toFixed(3)}) = ${inr2(d1)} ÷ ${(R2-g).toFixed(3)}</div><div class="big">= <span class="c">${inr2(d1/(R2-g))}</span></div>`+
+     note(`Next year the price will be P₁ = D₂ ÷ (R − g) = ${inr2(d1*(1+g)/(R2-g))}. The price also grows at ${pc(g)} a year.`)}}},
+ {id:'near',name:'When g nears R',short:'Why growth must stay below R',
+  def:'The formula divides by R − g. Push the growth rate towards the 12% required return and watch what happens to the price.',
+  contrast:'As g approaches R, the gap R − g shrinks and the price shoots up; at g = R there is no finite answer. No company can outgrow the economy forever, so the long-run growth rate used here should be modest.',
+  ctl:[{key:'g',label:'Dividend growth rate g',min:0,max:11.5,step:0.5,fmt:v=>v.toFixed(1)+'%',note:'The required return stays at 12%.'}],
+  draw(s,st){const k=K(),g=st.g/100,L=80,Rr=40,top=30,base=280,pw=760-L-Rr,ph=base-top,ymax=2400,X=v=>L+pw*v/0.12,Y=p=>base-ph*Math.min(p,ymax)/ymax;
+   [0,600,1200,1800,2400].forEach(v=>{Ln(s,L,Y(v),L+pw,Y(v),k.l,1);T(s,L-8,Y(v)+4,inr0(v),{anchor:'end',size:12})});
+   [0,2,4,6,8,10,12].forEach(v=>T(s,X(v/100),base+20,v+'%',{size:12}));T(s,L+pw/2,base+38,'Dividend growth rate g',{size:12});
+   const pts=[];for(let v=0;v<=0.1175+1e-9;v+=0.0025){const p=D0b*(1+v)/(R2-v);pts.push(X(v)+','+Y(p));if(p>ymax)break}
+   s.append(el('polyline',{points:pts.join(' '),fill:'none',stroke:k.a,'stroke-width':3,'stroke-linejoin':'round'}));
+   Ln(s,X(0.12),top,X(0.12),base,k.d,2);T(s,X(0.12)-6,base-16,'g = R: no finite price',{anchor:'end',fill:k.d,bold:1,size:12});
+   const p=D0b*(1+g)/(R2-g);s.append(el('circle',{cx:X(g),cy:Y(p),r:7,fill:k.surf,stroke:k.a,'stroke-width':3}));
+   T(s,X(g)+(g>0.09?-12:12),Y(p)+(p>1900?18:-10),inr2(p),{anchor:g>0.09?'end':'start',mono:1,bold:1,fill:k.ink});
+   return {legend:[[k.a,'Price today at each growth rate'],[k.d,'Growth equal to the required return']],
+    work:`<div class="fm">P₀ = D₁ ÷ (R − g)</div><div>R − g = 12% − ${pc(g)} = <span class="c">${pc(R2-g)}</span></div><div>= ${inr2(D0b*(1+g))} ÷ ${(R2-g).toFixed(3)}</div><div class="big">= ${inr2(p)}</div>`+note('Each half-point of extra growth matters more than the last, because it shrinks a gap that is already small.')}}},
+ {id:'r',name:'Reading R from the price',short:'Dividend yield + growth',
+  def:'Turn the formula around. If you know the market price, the return investors expect is the dividend you get plus the growth of the price: R = D₁ ÷ P₀ + g.',
+  contrast:'Like reading a bond\'s YTM from its price. The dividend yield is cash in hand; the capital gains yield is the share price rising at g. Pay more for the same dividends and you should expect a lower return.',
+  ctl:[{key:'P',label:'Market price of the share',min:80,max:400,step:5,fmt:v=>inr0(v),note:'Growth stays as set on the constant-growth tab.'}],
+  draw(s,st){const k=K(),g=st.g/100,P=st.P,d1=D0b*(1+g),gain=P*g,R=d1/P+g,x0=60,W=640;
+   T(s,x0,40,`Invest ${inr0(P)} today. What do you get in one year?`,{anchor:'start',bold:1,fill:k.ink,size:15});
+   const sc=W/60,wa=d1*sc,wb=gain*sc;Rc(s,x0,62,wa,40,k.a,{rx:4});Rc(s,x0+wa,62,wb,40,k.par,{rx:4});
+   T(s,x0+wa/2,87,inr2(d1),{mono:1,bold:1,fill:k.surf,size:13});if(wb>50)T(s,x0+wa+wb/2,87,inr2(gain),{mono:1,bold:1,fill:k.surf,size:13});
+   T(s,x0,122,'Dividend',{anchor:'start',fill:k.a,bold:1,size:12});T(s,x0+wa+4,122,'Price rises by g',{anchor:'start',fill:k.par,bold:1,size:12});
+   T(s,x0+wa+wb+10,87,`= ${inr2(d1+gain)}`,{anchor:'start',mono:1,bold:1,fill:k.ink,size:14});
+   T(s,x0,178,'As a % of what you paid',{anchor:'start',bold:1,fill:k.ink,size:15});
+   const ps=W/0.25,wy=d1/P*ps,wg=g*ps;Rc(s,x0,198,wy,40,k.a,{rx:4});Rc(s,x0+wy,198,wg,40,k.par,{rx:4});
+   T(s,x0+wy/2,223,pc(d1/P,2),{mono:1,bold:1,fill:k.surf,size:13});if(wg>44)T(s,x0+wy+wg/2,223,pc(g,1),{mono:1,bold:1,fill:k.surf,size:13});
+   T(s,x0,258,'Dividend yield',{anchor:'start',fill:k.a,bold:1,size:12});T(s,x0+wy+4,258,'Capital gains yield',{anchor:'start',fill:k.par,bold:1,size:12});
+   T(s,x0+wy+wg+10,223,`R = ${pc(R,2)}`,{anchor:'start',mono:1,bold:1,fill:k.ink,size:16});
+   [0,5,10,15,20,25].forEach(v=>{Ln(s,x0+v/100*ps,282,x0+v/100*ps,288,k.m,1);T(s,x0+v/100*ps,304,v+'%',{size:11})});Ln(s,x0,285,x0+W,285,k.l,1);
+   return {legend:[[k.a,'Dividend yield'],[k.par,'Capital gains yield']],
+    work:`<div class="fm">R = D₁ ÷ P₀ + g</div><div>= ${inr2(d1)} ÷ ${inr0(P)} + ${pc(g)}</div><div>= <span class="c">${pc(d1/P,2)}</span> + <span style="color:var(--par)">${pc(g,2)}</span></div><div class="big">= ${pc(R,2)}</div>`}}}
+ ]};
+
+/* ================= STEP 3: two-stage growth ================= */
+const D03=4,G2=0.06,R3=0.13;
+const two=(g1,N)=>{const D=t=>t<=N?D03*Math.pow(1+g1,t):D03*Math.pow(1+g1,N)*Math.pow(1+G2,t-N);let pv1=0;const pvs=[];
+  for(let t=1;t<=N;t++){const v=D(t)/Math.pow(1+R3,t);pvs.push(v);pv1+=v}const PN=D(N+1)/(R3-G2),pvN=PN/Math.pow(1+R3,N);return {D,pv1,pvs,PN,pvN,P:pv1+pvN}};
+const S3={n:3,label:'Two-stage growth',eyebrow:'Step 3 · Two-stage growth',title:'Fast Growth, Then Steady',
+ sub:'A young company grows its dividend fast for a few years, then settles into steady growth. Split the timeline at year N: the first part is a growing annuity, the second is a growing perpetuity that starts at N.',
+ state:{g1:20,N:5},
+ spec:(st)=>[['Dividend just paid','₹4','c'],['Fast growth',`${st.g1}% for ${st.N} years`,''],['Then','6% forever',''],['Required return','13%','']],
+ tabs:[
+ {id:'stages',name:'The two stages',short:'Split the timeline at year N',
+  def:'A Hyderabad software company just paid ₹4 a share. Analysts expect the dividend to grow fast for N years while the business expands, then settle at 6% a year forever.',
+  contrast:'Neither shortcut from Step 2 fits the whole timeline, but each part is a shape you know. Stage 1 is a growing annuity: N dividends growing at g₁, then they stop. Stage 2 is a growing perpetuity: dividends growing at 6% forever, valued at year N.',
+  ctl:'g1N',
+  draw(s,st){const k=K(),g1=st.g1/100,N=st.N,{D}=two(g1,N),n=N+4,x0=150,x1=690,X=t=>x0+(x1-x0)*(t-1)/(n-1),bw=Math.min(34,(x1-x0)/n*0.6),max=D(n)*1.2,h=v=>v*175/max;
+   axis(s,BASE);T(s,90,BASE+22,'Today',{bold:1,fill:k.ink});
+   for(let t=1;t<=n;t++){const v=D(t),col=t<=N?k.a:k.f;Rc(s,X(t)-bw/2,BASE-h(v),bw,h(v),col,{rx:2});T(s,X(t),BASE+22,String(t),{size:12});
+     if(n<=10||t===1||t===N||t===N+1||t===n)T(s,X(t),BASE-h(v)-8,inr2(v),{mono:1,size:10,fill:k.ink})}
+   T(s,X(n)+42,BASE-30,'…',{size:22,fill:k.f});T(s,X(n)+42,BASE+22,'∞',{size:16,fill:k.f,bold:1});
+   brace(s,X(1)-bw/2,X(N)+bw/2,46,k.a,`Stage 1: growing annuity, ${st.g1}% for ${N} years`);brace(s,X(N+1)-bw/2,X(n)+bw/2+40,46,k.f,`Stage 2: growing perpetuity from year ${N}`);
+   const lines=[];const show=t=>lines.push(`<div>D${sub(t)} = ${t<=N?'₹4 × '+(1+g1).toFixed(2)+sup(t):'D'+sub(N)+' × 1.06'} = ${inr2(D(t))}</div>`);
+   if(N<=4){for(let t=1;t<=N;t++)show(t)}else{show(1);show(2);lines.push('<div>…</div>');show(N)}show(N+1);
+   return {legend:[[k.a,'Stage 1: growing annuity'],[k.f,'Stage 2: growing perpetuity']],work:`<div class="k">Dividends</div>`+lines.join('')}}},
+ {id:'s1',name:'Stage 1: growing annuity',short:'The fast years',
+  def:'The stage-1 dividends form a growing annuity: N payments, starting at D₁ and growing at g₁. With only a few of them, value each one on its own and add them up.',
+  contrast:'Fast growth, but each dividend is discounted more heavily the further out it is. With only a handful of years, adding them one by one is the simplest route.',
+  ctl:'g1N',
+  draw(s,st){const k=K(),g1=st.g1/100,N=st.N,{D,pvs,pv1}=two(g1,N),n=N+3,tx=100,x0=220,x1=700,X=t=>x0+(x1-x0)*(t-1)/(n-1),bw=Math.min(40,(x1-x0)/n*0.6),max=Math.max(D(N),pv1)*1.15,h=v=>v*180/max;
+   axis(s,BASE);T(s,tx,BASE+22,'Today',{bold:1,fill:k.ink});
+   for(let t=1;t<=n;t++){T(s,X(t),BASE+22,'Yr '+t,{size:12});
+     if(t<=N){Rc(s,X(t)-bw/2,BASE-h(D(t)),bw,h(D(t)),k.fa,{stroke:k.l});Rc(s,X(t)-bw/2+4,BASE-h(pvs[t-1]),bw-8,h(pvs[t-1]),k.a,{rx:2});
+       if(N<=7||t===1||t===N)T(s,X(t),BASE-h(D(t))-8,inr2(pvs[t-1]),{mono:1,size:11,fill:k.ink,bold:1})}
+     else Rc(s,X(t)-bw/2,BASE-h(D(t)),bw,h(D(t)),k.f,{rx:2,op:.2})}
+   T(s,(X(N+1)+X(n))/2,BASE-h(D(n))-14,'Stage 2: next tab',{fill:k.f,size:12});
+   Rc(s,tx-28,BASE-h(pv1),56,h(pv1),k.a,{rx:2});T(s,tx,BASE-h(pv1)-8,inr2(pv1),{mono:1,bold:1,fill:k.ink});
+   brace(s,X(1)-bw/2,X(N)+bw/2,40,k.a,`Growing annuity: ${N} dividends, each brought back to today`);
+   const lines=[];const show=t=>lines.push(`<div>Yr ${t}: ${inr2(D(t))} ÷ 1.13${sup(t)} = <span class="c">${inr2(pvs[t-1])}</span></div>`);
+   if(N<=5){for(let t=1;t<=N;t++)show(t)}else{show(1);show(2);lines.push('<div>…</div>');show(N)}
+   return {legend:[[k.fa,'Dividend you receive',k.l],[k.a,'Its value today']],
+    work:`<div class="fm">PV of stage 1 = D₁ ÷ 1.13 + D₂ ÷ 1.13² + … + D${sub(N)} ÷ 1.13${sup(N)}</div>`+lines.join('')+`<div class="big">Total = <span class="c">${inr2(pv1)}</span></div>`+note(`Same answer in one step with the growing-annuity formula: D₁ ÷ (R − g₁) × [1 − ((1 + g₁) ÷ (1 + R))${sup(N)}] = ${inr2(D(1))} ÷ (0.13 − ${g1.toFixed(2)}) × [1 − (${(1+g1).toFixed(2)} ÷ 1.13)${sup(N)}] = ${inr2(Math.abs(R3-g1)<1e-9?N*D(1)/(1+R3):D(1)/(R3-g1)*(1-Math.pow((1+g1)/(1+R3),N)))}.`)}}},
+ {id:'s2',name:'Stage 2: growing perpetuity',short:'Starting at year N',
+  def:'From year N + 1 the dividends grow at a steady 6% forever: a growing perpetuity that starts at N. Value it at year N with D ÷ (R − g₂), then bring that value back to today.',
+  contrast:'This is the same move as the tail of the growing annuity: value the far part where it starts, then discount it back.',
+  ctl:'g1N',
+  draw(s,st){const k=K(),g1=st.g1/100,N=st.N,{D,PN,pvN}=two(g1,N),n=N+4,tx=100,x0=260,x1=680,X=t=>x0+(x1-x0)*(t-1)/(n-1),bw=Math.min(30,(x1-x0)/n*0.55),max=PN*1.12,h=v=>v*190/max;
+   axis(s,BASE);T(s,tx,BASE+22,'Today',{bold:1,fill:k.ink});
+   for(let t=1;t<=n;t++){T(s,X(t),BASE+22,String(t),{size:12});const v=D(t);
+     if(t<=N)Rc(s,X(t)-bw/2,BASE-Math.max(2,h(v)),bw,Math.max(2,h(v)),k.a,{rx:2,op:.25});
+     else{const hl=t===N+1;Rc(s,X(t)-bw/2,BASE-Math.max(3,h(v)),bw,Math.max(3,h(v)),hl?k.d:k.f,{rx:2});if(hl){T(s,X(t)+4,BASE-h(v)-24,`D${sub(N+1)} = ${inr2(v)}`,{anchor:'start',mono:1,bold:1,fill:k.d,size:12});T(s,X(t)+4,BASE-h(v)-10,`(${inr2(D(N))} × 1.06)`,{anchor:'start',mono:1,fill:k.d,size:11})}}}
+   T(s,X(n)+40,BASE-20,'…',{size:22,fill:k.f});T(s,X(n)+40,BASE+22,'∞',{size:16,fill:k.f,bold:1});
+   const px=X(N)-(bw+10)/2;Rc(s,px,BASE-h(PN),bw+10,h(PN),k.fS,{stroke:k.f,sw:1.5});
+   T(s,px-6,BASE-h(PN)-24,`P${sub(N)} = ${inr2(PN)}`,{anchor:'end',mono:1,bold:1,fill:k.f,size:13});T(s,px-6,BASE-h(PN)-8,`value at year ${N}`,{anchor:'end',size:12,fill:k.f});
+   Rc(s,tx-28,BASE-h(pvN),56,h(pvN),k.f,{rx:2});T(s,tx,BASE-h(pvN)-8,inr2(pvN),{mono:1,bold:1,fill:k.ink});
+   T(s,(tx+X(1))/2,BASE-h(pvN)/2-6,`÷ 1.13${sup(N)}`,{mono:1,bold:1,fill:k.ink,size:15});T(s,(tx+X(1))/2,BASE-h(pvN)/2+12,`${N} years back`,{size:12});
+   return {legend:[[k.d,'First stage-2 dividend'],[k.fS,'Price at year N',k.f],[k.f,'Price at year N, valued today']],
+    work:`<div class="fm">P${sub(N)} = D${sub(N+1)} ÷ (R − g₂)</div><div>D${sub(N+1)} = ${inr2(D(N))} × 1.06 = <span style="color:var(--disc)">${inr2(D(N+1))}</span></div><div>P${sub(N)} = ${inr2(D(N+1))} ÷ (0.13 − 0.06) = <span class="f">${inr2(PN)}</span></div>`+
+     `<div class="fm">Value today = P${sub(N)} ÷ (1 + R)${sup(N)}</div><div>= ${inr2(PN)} ÷ 1.13${sup(N)} = ${inr2(PN)} ÷ ${Math.pow(1+R3,N).toFixed(2)}</div><div class="big">= <span class="f">${inr2(pvN)}</span></div>`}}},
+ {id:'total',name:'Put it together',short:'Stage 1 + stage 2',
+  def:'The price today is the value of the stage-1 dividends plus the value of the year-N price. Move the sliders and see where the value comes from.',
+  contrast:'Most of a growth stock\'s value usually sits in stage 2, beyond the fast years. That is why small changes in the long-run growth rate or the required return move the price a lot.',
+  ctl:'g1N',
+  draw(s,st){const k=K(),g1=st.g1/100,N=st.N,{D,pvs,pv1,PN,pvN,P}=two(g1,N),base=222,tx=100,x0=210,x1=520,X=t=>N===1?x0:x0+(x1-x0)*(t-1)/(N-1),bw=Math.min(36,(x1-x0)/N*0.55),max=Math.max(PN,P)*1.1,h=v=>v*170/max;
+   axis(s,base);T(s,tx,base+20,'Today',{bold:1,fill:k.ink});
+   for(let t=1;t<=N;t++){T(s,X(t),base+20,String(t),{size:12});Rc(s,X(t)-bw/2,base-Math.max(2,h(D(t))),bw,Math.max(2,h(D(t))),k.fa,{stroke:k.l});Rc(s,X(t)-bw/2+3,base-Math.max(1.5,h(pvs[t-1])),bw-6,Math.max(1.5,h(pvs[t-1])),k.a,{rx:1})}
+   const px=X(N)+bw/2+8;Rc(s,px,base-h(PN),bw+12,h(PN),k.fa,{stroke:k.l});Rc(s,px+4,base-h(pvN),bw+4,h(pvN),k.f,{rx:2});
+   T(s,px+bw+20,base-h(PN)+14,`P${sub(N)} = ${inr2(PN)}`,{anchor:'start',mono:1,bold:1,fill:k.ink,size:12});T(s,px+bw+20,base-h(pvN)+14,`worth ${inr2(pvN)} today`,{anchor:'start',mono:1,fill:k.f,size:12});
+   Rc(s,tx-28,base-h(pv1),56,h(pv1),k.a,{rx:2});Rc(s,tx-28,base-h(pv1)-h(pvN),56,h(pvN),k.f,{rx:2});T(s,tx,base-h(P)-8,inr2(P),{mono:1,bold:1,fill:k.ink});
+   shareBar(s,k,270,pv1,pvN,'From stage 1','From stage 2');
+   return {legend:[[k.fa,'Cash at that date',k.l],[k.a,'Stage-1 dividends, valued today'],[k.f,'Year-N price, valued today']],
+    work:`<div class="fm">P₀ = PV of stage 1 + P${sub(N)} ÷ (1 + R)${sup(N)}</div><div>= <span class="c">${inr2(pv1)}</span> + <span class="f">${inr2(pvN)}</span></div><div class="big">= ${inr2(P)}</div>`+note(`${Math.round(pvN/P*100)}% of the price comes from what happens after year ${N}.`)}}}
+ ]};
+const G1N=[{key:'g1',label:'Stage-1 growth rate',min:6,max:30,step:1,fmt:v=>v+'%',note:'Dividend growth during the fast years.'},{key:'N',label:'Years of fast growth (N)',min:2,max:10,step:1,fmt:v=>v+' years',note:'After that, 6% a year forever.'}];
+S3.tabs.forEach(t=>{if(t.ctl==='g1N')t.ctl=G1N});
+
+const STEPS=[S1,S2,S3];
+
+/* ================= framework ================= */
+const stepper=document.getElementById('stepper'),host=document.getElementById('steps');
+STEPS.forEach((S,si)=>{
+  const b=document.createElement('button');b.setAttribute('role','tab');b.setAttribute('aria-selected',si===0);b.innerHTML=`<small>Step ${S.n}</small><span>${S.label}</span>`;
+  b.addEventListener('click',()=>{[...stepper.children].forEach(x=>x.setAttribute('aria-selected',x===b));STEPS.forEach(X=>X.sec.hidden=X!==S);S.render();window.scrollTo({top:0,behavior:'smooth'})});
+  stepper.append(b);
+  const sec=document.createElement('section');sec.className='step';sec.hidden=si>0;S.sec=sec;
+  sec.innerHTML=`<div class="wrap"><header><p class="eyebrow">${S.eyebrow}</p><h2 class="steph">${S.title}</h2><p class="sub">${S.sub}</p><div class="spec" aria-label="Our stock"></div></header>
+   <div class="layout"><div class="index" role="tablist" aria-label="Concepts"></div>
+   <section class="stage" role="tabpanel" aria-live="polite"><h2 class="nm"></h2><p class="def"></p>
+   <svg viewBox="0 0 760 330" role="img"></svg><div class="trio legend"></div>
+   <div class="readout"><div class="work"></div><div class="ctl"></div></div>
+   <p class="contrast"></p><div class="nav"><button class="btn prev">Previous</button><button class="btn primary next">Next</button></div></section></div></div>`;
+  host.append(sec);
+  const q=c=>sec.querySelector(c),idx=q('.index');let cur=0;
+  S.tabs.forEach((t,i)=>{const bt=document.createElement('button');bt.className='term';bt.setAttribute('role','tab');bt.innerHTML=`<b>${t.name}</b><span>${t.short}</span>`;bt.addEventListener('click',()=>show(i));idx.append(bt)});
+  q('.prev').addEventListener('click',()=>show(cur-1));q('.next').addEventListener('click',()=>show(cur+1));
+  function show(i){cur=Math.max(0,Math.min(S.tabs.length-1,i));const t=S.tabs[cur];
+    [...idx.children].forEach((b,j)=>b.setAttribute('aria-selected',j===cur));
+    q('.nm').textContent=t.name;q('.def').textContent=t.def;q('.contrast').textContent=t.contrast;
+    q('.prev').disabled=cur===0;q('.next').disabled=cur===S.tabs.length-1;q('svg').setAttribute('aria-label',t.name+' chart');
+    buildCtl(t);S.render()}
+  function buildCtl(t){const box=q('.ctl');box.innerHTML='';box.hidden=!t.ctl.length;
+    t.ctl.forEach(c=>{const id=`s${S.n}-${t.id}-${c.key}`,w=document.createElement('div');w.className='ctl';
+      w.innerHTML=`<label for="${id}">${c.label} <output></output></label><input id="${id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}" value="${Math.min(c.max,Math.max(c.min,S.state[c.key]))}"><small>${c.note}</small>`;
+      const inp=w.querySelector('input'),out=w.querySelector('output');S.state[c.key]=+inp.value;out.textContent=c.fmt(+inp.value);
+      inp.addEventListener('input',()=>{S.state[c.key]=+inp.value;out.textContent=c.fmt(+inp.value);S.render()});box.append(w)})}
+  S.render=()=>{const t=S.tabs[cur],svg=q('svg');svg.innerHTML='';
+    q('.spec').innerHTML='<div class="spec-h">Our stock</div>'+S.spec(S.state,t.id).map(([l,v,c])=>`<div><span>${l}</span><b class="${c}">${v}</b></div>`).join('');
+    const out=t.draw(svg,S.state);q('.work').innerHTML=out.work;
+    q('.legend').innerHTML=out.legend.map(([c,l,st])=>`<span><i style="background:${c};${st?'border:1px solid '+st:''}"></i>${l}</span>`).join('')};
+  show(0);
+});
+const rr=()=>STEPS.forEach(S=>S.render());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',rr);
+new MutationObserver(rr).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();
+</script>
+
+</html>

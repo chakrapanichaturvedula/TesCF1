@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Capital Budgeting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: five-step stepper (a clickable map of methods first, a merits summary last); in each step a concept index on the left and a stage on the right, as in the bond walkthrough. Term index on the left; on the right one stage per term, each with its own picture on a shared cash-flow timeline, a worked number and, where it helps, one control. */
+:root{
+  --bg:#F4F4F1; --surface:#FFFFFF; --ink:#16223A; --muted:#5B6578; --line:#DADDD8; --faint:#E7E8E3;
+  --accent:#6B3FA0; --accent-soft:#EEE6F7; --face:#0F6E8C; --face-soft:#DCEEF3;
+  --prem:#2348B8; --disc:#B4530F; --par:#2F6B3F;
+  --display:'Source Serif 4', Georgia, serif; --body:'IBM Plex Sans','Segoe UI',Arial,sans-serif; --mono:'IBM Plex Mono',Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12131A; --surface:#1C1E29; --ink:#ECEDF2; --muted:#A1A6B8; --line:#2F3242; --faint:#262938;
+  --accent:#B794E6; --accent-soft:#2E2340; --face:#5BB8D4; --face-soft:#16384A;
+  --prem:#8FA8F5; --disc:#F0A266; --par:#86C998; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12131A; --surface:#1C1E29; --ink:#ECEDF2; --muted:#A1A6B8; --line:#2F3242; --faint:#262938;
+  --accent:#B794E6; --accent-soft:#2E2340; --face:#5BB8D4; --face-soft:#16384A;
+  --prem:#8FA8F5; --disc:#F0A266; --par:#86C998; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;padding-inline:20px;padding-block:28px 40px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 4px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1.05;margin:0}
+.sub{color:var(--muted);margin:6px 0 0;max-width:64ch}
+header{display:flex;flex-direction:column;gap:14px}
+.spec{display:flex;flex-wrap:wrap;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.spec>div{display:flex;flex-direction:column;justify-content:center;gap:2px;padding:12px 18px;border-left:1px solid var(--line);flex:1 1 120px}
+.spec>div:first-child{border-left:none}
+.spec span{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.spec b{font-family:var(--mono);font-weight:500;font-size:18px}
+.spec .spec-h{font-family:var(--display);font-weight:700;font-size:20px;background:var(--accent-soft);color:var(--accent);flex:0 0 auto}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px;align-items:start}
+.index{display:flex;flex-direction:column;gap:6px}
+.term{font:inherit;text-align:left;border:1px solid transparent;background:transparent;color:var(--ink);border-radius:12px;padding:10px 14px;cursor:pointer;display:flex;flex-direction:column}
+.term b{font-weight:600}
+.term span{font-size:14px;color:var(--muted)}
+.term:hover{background:var(--surface)}
+.term[aria-selected="true"]{background:var(--surface);border-color:var(--accent)}
+.term[aria-selected="true"] b{color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.stage h2{font-family:var(--display);font-size:28px;margin:0}
+.stage .def{margin:0;max-width:66ch;color:var(--muted);font-size:17px}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:var(--body);font-size:13px;fill:var(--muted)}
+svg text.mono{font-family:var(--mono)}
+.readout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center}
+.work{background:var(--bg);border-radius:12px;padding:16px 18px;font-family:var(--mono);font-size:16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.work div{overflow-x:auto;white-space:nowrap}
+.work .k{font-family:var(--body);font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.work .big{font-size:28px}
+.c{color:var(--accent)} .f{color:var(--face)}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.ctl label{display:flex;justify-content:space-between;font-weight:500}
+.ctl output{font-family:var(--mono);color:var(--accent)}
+.ctl input{width:100%;accent-color:var(--accent)}
+.ctl small{color:var(--muted);font-size:14px}
+.slice{display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid var(--line);font-family:var(--mono);font-size:13px}
+.slice div{display:flex;align-items:center;padding-inline:8px;white-space:nowrap;overflow:hidden}
+.slice .a{background:var(--accent);color:var(--surface)} .slice .b{background:var(--face-soft);color:var(--face);flex:1}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:3px;background:var(--bg);gap:2px}
+.seg button{flex:1 1 140px;font:500 14px var(--body);border:none;background:transparent;color:var(--ink);padding:8px 10px;border-radius:9px;cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--accent);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.grid100{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;width:min(100%,220px);padding:6px;background:var(--face-soft);border:1px solid var(--face);border-radius:8px;margin-block:4px}
+.grid100 i{display:block;aspect-ratio:1;border-radius:2px;box-shadow:inset 0 0 0 1px var(--face)}
+.contrast{font-size:15px;color:var(--muted);border-left:3px solid var(--accent);padding-left:12px;margin:0;max-width:70ch}
+.nav{display:flex;justify-content:space-between;gap:10px}
+.btn{font:600 15px var(--body);padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.btn[disabled]{opacity:.35;cursor:default}
+@media (max-width:820px){.layout{grid-template-columns:1fr}.index{flex-direction:row;overflow-x:auto}.term{min-width:150px}.readout{grid-template-columns:1fr}}
+.steph{font-family:var(--display);font-weight:700;font-size:clamp(26px,3.6vw,36px);line-height:1.1;margin:0}
+.shell{padding-bottom:6px}
+.shell h1{font-size:clamp(30px,4.4vw,46px)}
+.stepper{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stepper button{font:inherit;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;gap:2px}
+.stepper small{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.stepper span{font-weight:600}
+.stepper button[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.stepper button[aria-selected="true"] small{color:var(--accent)}
+.step{padding-top:8px}
+.trio{display:flex;flex-wrap:wrap;gap:14px;font-size:14px;color:var(--muted)}
+.trio i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.work .fm{font-family:var(--mono);font-size:14px;color:var(--muted)}
+.work div{white-space:normal}
+.work .nt{font-family:var(--body);font-size:14px;color:var(--muted)}
+.readout{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr)}
+.ctl .ctl{gap:6px}
+@media (max-width:820px){.readout{grid-template-columns:1fr}}
+@media (max-width:640px){.stepper{grid-template-columns:1fr}}
+.fx{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-style:italic;font-size:19px;color:var(--ink);line-height:1.15;flex-wrap:nowrap}
+.fx .up{font-style:normal}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle}
+.fr>span:first-child{border-bottom:1.5px solid currentColor;padding:0 4px 2px}
+.fr>span:last-child{padding:2px 4px 0}
+.fx .fr{font-size:.92em}
+.brk{position:relative;display:inline-flex;align-items:center;padding:4px 8px;border-left:2px solid currentColor;border-right:2px solid currentColor}
+.brk::before,.brk::after{content:'';position:absolute;top:0;bottom:0;width:6px;border-top:2px solid currentColor;border-bottom:2px solid currentColor}
+.brk::before{left:0}.brk::after{right:0}
+.par{display:inline-flex;align-items:center}
+.par::before{content:'(';font-size:1.5em;font-style:normal;font-weight:300}.par::after{content:')';font-size:1.5em;font-style:normal;font-weight:300}
+.fx sup{font-size:.62em}
+.work .fwrap{overflow-x:auto;padding:6px 2px;white-space:nowrap}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:3px;background:var(--bg);gap:2px}
+.seg button{flex:1 1 140px;font:500 14px var(--body);border:none;background:transparent;color:var(--ink);padding:8px 10px;border-radius:9px;cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--accent);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.d{color:var(--disc)}
+/* v2: map step, summary cards */
+[hidden]{display:none!important}
+.stepper{grid-template-columns:repeat(5,1fr)}
+.layout.solo{grid-template-columns:1fr}
+.readout.noctl{grid-template-columns:1fr}
+.node{cursor:pointer}.node:hover rect:first-child{filter:brightness(.97)}.node:focus{outline:none}.node:focus-visible rect:first-child{stroke-width:3}
+.work .q{font-size:16px;color:var(--ink)}
+.work .rule{font-family:var(--body);font-size:20px;font-weight:600;line-height:1.3}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:6px 0 4px}
+.mcard{border:1px solid var(--line);border-top:4px solid var(--face);border-radius:12px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
+.mcard.mn{border-top-color:var(--disc)}
+.mcard header{display:flex;flex-direction:column;gap:2px}
+.mcard header b{font-family:var(--display);font-size:20px;line-height:1.15}
+.mrule{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.tests{display:flex;flex-wrap:wrap;gap:4px}
+.tests span{font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:999px}
+.tests .ok{background:color-mix(in srgb,var(--par) 15%,transparent);color:var(--par)}
+.tests .no{background:color-mix(in srgb,var(--disc) 15%,transparent);color:var(--disc)}
+.mcard .lab{margin:2px 0 0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.mcard ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:13.5px;line-height:1.4}
+.mcard li{padding-left:18px;position:relative}
+.pro li::before{content:'+';position:absolute;left:2px;color:var(--par);font-weight:700}
+.con li::before{content:'−';position:absolute;left:2px;color:var(--disc);font-weight:700}
+.verdict{margin-top:auto;font-size:13px;font-weight:700;padding:6px 10px;border-radius:8px;text-align:center}
+.verdict.g{background:color-mix(in srgb,var(--par) 16%,transparent);color:var(--par)}
+.verdict.a{background:var(--accent-soft);color:var(--accent)}
+.verdict.r{background:var(--faint);color:var(--muted)}
+@media (max-width:900px){.stepper{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:640px){.stepper{grid-template-columns:1fr 1fr}}
+@media (min-width:821px){.index.desk-hide{display:none}}
+.work .prop{border:2px solid var(--accent);border-radius:10px;padding:10px 12px;margin:6px 0;background:var(--surface);display:flex;flex-direction:column;gap:6px}
+.work .prop .ph{font-family:var(--body);font-size:14px;font-weight:600;color:var(--accent)}
+.work .prop .pr{display:grid;grid-template-columns:minmax(0,1fr) 22px minmax(0,1.3fr);align-items:center;gap:6px;font-size:14px}
+.work .prop .pr i{font-style:normal;color:var(--accent);text-align:center;font-size:20px;font-family:var(--body)}
+</style>
+<style>
+body{margin:0}
+.homebar{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1120px;margin:0 auto;padding:14px 0 0;font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;font-size:14px}
+.homebar a{color:var(--accent,#6B3FA0);text-decoration:none;font-weight:600}
+.homebar a:hover{text-decoration:underline}
+.homebar span{color:var(--muted,#5B6578)}
+</style>
+<nav class="homebar" aria-label="Site"><a href="index.html">← All FIA 203 topics</a><span>FIA 203 Corporate Finance</span></nav>
+
+
+<div class="wrap shell">
+  <p class="eyebrow">Corporate Finance</p>
+  <h1>Capital Budgeting</h1>
+  <div class="stepper" role="tablist" aria-label="Steps" id="stepper"></div>
+</div>
+<div id="steps"></div>
+
+<script>
+(()=>{
+const L=v=>{const a=Math.abs(v),s=v<0?'−':'';return s+'₹'+a.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})+'L'};
+const L0=v=>{const a=Math.abs(v),s=v<0?'−':'';return s+'₹'+Math.round(a).toLocaleString('en-IN')+'L'};
+const pc=(v,d=2)=>(v*100).toFixed(d)+'%';
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const sup=n=>String(n).split('').map(d=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[d]).join('');
+const NS='http://www.w3.org/2000/svg';
+const el=(t,a,x)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(x!=null)e.textContent=x;return e};
+const K=()=>({a:css('--accent'),aS:css('--accent-soft'),f:css('--face'),fS:css('--face-soft'),m:css('--muted'),l:css('--line'),fa:css('--faint'),ink:css('--ink'),par:css('--par'),d:css('--disc'),surf:css('--surface')});
+const T=(s,x,y,t,o={})=>s.append(el('text',{x,y,'text-anchor':o.anchor||'middle',class:o.mono?'mono':'',style:`fill:${o.fill||css('--muted')};${o.bold?'font-weight:600;':''}${o.size?'font-size:'+o.size+'px;':''}`},t));
+const Rc=(s,x,y,w,h,fill,o={})=>{if(h<=0||w<=0)return;s.append(el('rect',{x,y,width:w,height:h,fill,rx:o.rx??3,...(o.stroke?{stroke:o.stroke,'stroke-width':o.sw||1}:{}),...(o.op!=null?{opacity:o.op}:{})}))};
+const Ln=(s,x1,y1,x2,y2,st,w=1)=>s.append(el('line',{x1,y1,x2,y2,stroke:st,'stroke-width':w}));
+const note=t=>`<div class="nt">${t}</div>`;
+const npv=(c,r)=>c.reduce((s,x,t)=>s+x/Math.pow(1+r,t),0);
+const irr=(c,lo=0,hi=1)=>{for(let i=0;i<100;i++){const m=(lo+hi)/2;(npv(c,lo)*npv(c,m)<=0)?hi=m:lo=m}return (lo+hi)/2};
+const P=[-200,50,100,150],PB=[-200,100,100,10],TA=[-100,100,10,10],TB=[-100,10,10,120],MU=[-200,200,800,-800];
+const IRRP=irr(P);
+
+/* NPV profile chart: series [{c,col,name}] */
+function profile(s,k,series,{rmin=0,rmax=0.4,ymin,ymax,R=null,marks=[],ytick,xtick=0.1,top=24,base=280}){
+  const Lx=78,Rx=110,pw=760-Lx-Rx,ph=base-top,X=r=>Lx+pw*(r-rmin)/(rmax-rmin),Y=v=>base-ph*(Math.max(ymin,Math.min(ymax,v))-ymin)/(ymax-ymin);
+  for(let v=Math.ceil(ymin/ytick)*ytick;v<=ymax+1e-9;v+=ytick){Ln(s,Lx,Y(v),Lx+pw,Y(v),v===0?k.ink:k.l,v===0?1.5:1);T(s,Lx-8,Y(v)+4,L0(v),{anchor:'end',size:11})}
+  for(let r=Math.ceil(rmin/xtick-1e-9)*xtick;r<=rmax+1e-9;r+=xtick)T(s,X(r),base+18,Math.round(r*100)+'%',{size:11});
+  T(s,Lx+pw/2,base+36,'Discount rate',{size:12});
+  series.forEach(({c,col,name})=>{const pts=[];for(let r=rmin;r<=rmax+1e-9;r+=(rmax-rmin)/200)pts.push(X(r)+','+Y(npv(c,r)));
+    s.append(el('polyline',{points:pts.join(' '),fill:'none',stroke:col,'stroke-width':3,'stroke-linejoin':'round'}));
+    if(name){const v=npv(c,rmax);T(s,Lx+pw+8,Y(v)+4,name,{anchor:'start',fill:col,bold:1,size:12})}});
+  if(R!=null){Ln(s,X(R),top,X(R),base,k.m,1);T(s,X(R)+4,top+12,'R = '+pc(R,1),{anchor:'start',size:11,fill:k.ink})}
+  marks.forEach(([r,v,col,lab,dy=-12,an='middle'])=>{s.append(el('circle',{cx:X(r),cy:Y(v),r:6,fill:k.surf,stroke:col,'stroke-width':2.5}));if(lab)T(s,X(r)+(an==='start'?8:an==='end'?-8:0),Y(v)+dy,lab,{anchor:an,fill:col,bold:1,size:12,mono:1})});
+  return {X,Y};
+}
+/* payback as "filling the cost": each year's cash flow fills the cost bar from left to right */
+function fillChart(s,k,rows,{cut}){
+  const x0=150,sc=520/300,X=v=>x0+v*sc,cx=X(200);
+  Ln(s,cx,30,cx,300,k.ink,2);T(s,cx,22,'Cost ₹200L recovered here',{fill:k.ink,bold:1,size:12});
+  rows.forEach(({name,col,flows},j)=>{const y=58+j*130,hgt=46;let cum=0;
+    T(s,24,y+hgt/2+5,name,{anchor:'start',fill:col,bold:1,size:14});
+    Rc(s,X(0),y,200*sc,hgt,k.fa,{stroke:k.l,rx:4});
+    let pb=null,byCut=0;
+    flows.forEach((c,i)=>{const t=i+1,a=cum,b=cum+c;
+      const inPart=Math.max(0,Math.min(b,200)-a),outPart=c-inPart,op=[.45,.72,1][i];
+      if(inPart>0)Rc(s,X(a),y,inPart*sc,hgt,col,{rx:0,op});
+      if(outPart>0)Rc(s,X(Math.max(a,200)),y+8,outPart*sc,hgt-16,col,{rx:0,op:.18,stroke:col});
+      const wi=inPart*sc,wo=outPart*sc,lab=`Yr ${t}: ${L0(c)}`;
+      if(wi>78)T(s,X(a)+wi/2,y+hgt/2+5,lab,{fill:op>.6?k.surf:k.ink,bold:1,size:11,mono:1});
+      else if(wo>78)T(s,X(Math.max(a,200))+wo/2,y+hgt/2+5,lab,{fill:k.ink,bold:1,size:11,mono:1});
+      else if(wi>22)T(s,X(a)+wi/2,y+hgt/2+5,'Y'+t,{fill:op>.6?k.surf:k.ink,bold:1,size:10});
+      if(pb==null&&b>=200-1e-9&&c>0)pb=i+(200-a)/c;
+      if(cut>=t)byCut=b;else if(cut>i)byCut=a+(cut-i)*c;
+      Ln(s,X(b),y-4,X(b),y+hgt+4,k.surf,1.5);cum=b});
+    const bx=X(byCut);s.append(el('polygon',{points:`${bx-7},${y+hgt+16} ${bx+7},${y+hgt+16} ${bx},${y+hgt+5}`,fill:k.d}));
+    const nr=Math.abs(bx-cx)<70;T(s,nr?bx-8:bx,y+hgt+30,`by cutoff: ${L0(byCut)}`,{anchor:nr?'end':'middle',fill:k.d,bold:1,size:11});
+    if(cum>200.5)T(s,X(200)+6,y-8,'after payback: ignored',{anchor:'start',size:11,fill:col});
+    const msg=pb!=null?`Paid back in ${pb.toFixed(2)} years`:`Never paid back: ${L0(200-cum)} short`;
+    T(s,X(0),y-8,msg,{anchor:'start',fill:k.ink,bold:1,size:12});
+  });
+}
+/* cumulative cash-flow chart */
+function cumChart(s,k,series,{ymin=-220,ymax=140,cut=null}){
+  const Lx=78,Rx=110,top=30,base=270,pw=760-Lx-Rx,ph=base-top,X=t=>Lx+pw*t/3,Y=v=>base-ph*(v-ymin)/(ymax-ymin);
+  for(let v=-200;v<=ymax;v+=50){Ln(s,Lx,Y(v),Lx+pw,Y(v),v===0?k.ink:k.l,v===0?1.5:1);T(s,Lx-8,Y(v)+4,L0(v),{anchor:'end',size:11})}
+  [0,1,2,3].forEach(t=>T(s,X(t),base+18,t?'Year '+t:'Today',{size:12}));
+  if(cut!=null){Ln(s,X(cut),top,X(cut),base,k.d,2);T(s,X(cut)+5,top+12,`Cutoff ${cut} yr${cut>1?'s':''}`,{anchor:'start',fill:k.d,bold:1,size:12})}
+  series.forEach(({cum,col,name,pb})=>{s.append(el('polyline',{points:cum.map((v,t)=>X(t)+','+Y(v)).join(' '),fill:'none',stroke:col,'stroke-width':3}));
+    cum.forEach((v,t)=>s.append(el('circle',{cx:X(t),cy:Y(v),r:4,fill:col})));
+    T(s,Lx+pw+8,Y(cum[3])+4,name,{anchor:'start',fill:col,bold:1,size:12});
+    if(pb!=null){s.append(el('circle',{cx:X(pb),cy:Y(0),r:7,fill:k.surf,stroke:col,'stroke-width':3}));T(s,X(pb),Y(0)+(name.includes('B')?22:-12),`${pb.toFixed(2)} yrs`,{fill:col,bold:1,size:12,mono:1})}});
+}
+const cumOf=(c,r=0)=>{let s=0;return c.map((x,t)=>s+=x/Math.pow(1+r,t))};
+const payback=cum=>{for(let t=1;t<cum.length;t++)if(cum[t]>=0&&cum[t-1]<0)return t-1+(-cum[t-1])/(cum[t]-cum[t-1]);return null};
+
+/* ================= STEP 1: the map of methods ================= */
+const M=[
+ {id:'npv',g:'d',t:'NPV',sub:['Net present','value'],rule:'NPV > 0',full:'Net present value',ask:'How much value does the project add, in today\'s rupees?',dec:'Accept if NPV > 0. Between projects, pick the higher NPV.',res:'NPV = ₹40.80L, above 0: accept',where:'Explained in Step 2.'},
+ {id:'irr',g:'d',t:'IRR',sub:['Internal rate','of return'],rule:'IRR > R',full:'Internal rate of return',ask:'What rate of return does the project itself earn?',dec:'Accept if IRR is above the required return R.',res:'IRR = 19.44%, above 10%: accept',where:'Explained in Step 4.'},
+ {id:'pi',g:'d',t:'PI',sub:['Profitability','index'],rule:'PI > 1',full:'Profitability index',ask:'How much value comes back for each rupee invested?',dec:'Accept if PI is above 1.',res:'PI = 1.20, above 1: accept',where:'Explained in Step 4.'},
+ {id:'dpb',g:'d',t:'Disc. payback',sub:['Discounted','payback period'],rule:'DPB < cutoff',full:'Discounted payback period',ask:'How long until the discounted cash flows recover the cost?',dec:'Accept if it is shorter than a cutoff set by management.',res:'2.64 years',where:'Explained in Step 3.'},
+ {id:'pb',g:'n',t:'Payback',sub:['Payback','period'],rule:'PB < cutoff',full:'Payback period',ask:'How long until the cash flows recover the cost?',dec:'Accept if it is shorter than a cutoff set by management.',res:'2.33 years',where:'Explained in Step 3.'},
+ {id:'aar',g:'n',t:'AAR',sub:['Average','accounting return'],rule:'AAR > target',full:'Average accounting return',ask:'What accounting profit does it earn on the book value invested?',dec:'Accept if AAR is above a target return set by management.',res:'33.3%',where:'Not covered further: it uses accounting profit, not cash flows, and ignores timing.'}
+];
+function mapDraw(s,sel){const k=K(),W=110,G=10,LY=190,LH=100,cx=[...[0,1,2,3].map(i=>20+i*(W+G)),...[0,1].map(i=>520+i*(W+G))];
+ const col=g=>g==='d'?k.f:k.d,soft=g=>g==='d'?k.fS:k.fa;
+ // root
+ Rc(s,263,10,240,50,k.aS,{stroke:k.a,sw:1.5,rx:10});T(s,383,32,'Capital budgeting methods',{bold:1,fill:k.ink,size:15});T(s,383,50,'Should Deccan Foods invest ₹200 lakh?',{size:12});
+ Ln(s,383,60,383,78,k.m,1.5);Ln(s,251,78,633,78,k.m,1.5);Ln(s,251,78,251,92,k.m,1.5);Ln(s,633,78,633,92,k.m,1.5);
+ [[251,250,'d','Discounted','Use the time value of money'],[633,230,'n','Non-discounted','Ignore the time value of money']].forEach(([x,w,g,a,b])=>{
+  Rc(s,x-w/2,92,w,50,soft(g),{stroke:col(g),sw:1.5,rx:10});T(s,x,113,a,{bold:1,fill:col(g),size:14});T(s,x,131,b,{size:12})});
+ const grp=(g,x)=>{const xs=M.map((m,i)=>m.g===g?cx[i]+W/2:null).filter(v=>v!=null);Ln(s,x,142,x,168,k.m,1.5);Ln(s,xs[0],168,xs[xs.length-1],168,k.m,1.5);xs.forEach(v=>Ln(s,v,168,v,LY,k.m,1.5))};
+ grp('d',251);grp('n',633);
+ M.forEach((m,i)=>{const on=i===sel,x=cx[i],c=col(m.g),g=el('g',{class:'node',tabindex:0,role:'button','aria-label':m.full+(on?', selected':'')});
+  g.addEventListener('click',()=>S0.go(i));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();S0.go(i)}});
+  Rc(g,x,LY,W,LH,on?c:k.surf,{stroke:c,sw:on?2.5:1.5,rx:10});
+  const fg=on?k.surf:k.ink,sm=on?k.surf:k.m;
+  T(g,x+W/2,LY+24,m.t,{bold:1,fill:on?k.surf:c,size:m.t.length>8?13:16});
+  m.sub.forEach((l,j)=>T(g,x+W/2,LY+42+j*14,l,{size:11,fill:sm}));
+  Rc(g,x+10,LY+70,W-20,20,on?'rgba(255,255,255,.18)':soft(m.g),{rx:6});T(g,x+W/2,LY+84,m.rule,{mono:1,bold:1,size:11,fill:fg});
+  s.append(g)});
+ T(s,383,318,'Click any method to see what it asks and its decision rule',{size:12,fill:k.a,bold:1});
+ const m=M[sel];
+ return {legend:[[k.f,'Discounted: uses the time value of money'],[k.d,'Non-discounted: ignores it']],
+  work:`<div class="k">What it asks</div><div class="nt q">${m.ask}</div><div class="k">Decision rule</div><div class="rule" style="color:${m.g==='d'?'var(--face)':'var(--disc)'}">${m.dec}</div><div class="k">Deccan Foods at 10%</div><div>${m.res}</div>`};
+}
+const S0={n:1,label:'The methods',eyebrow:'Step 1 · The big picture',title:'Six Ways to Judge a Project',solo:true,
+ sub:'Every method answers the same question, should we invest, in a different way. The first split is whether a method uses the time value of money.',
+ state:{},
+ spec:()=>[['Cost today','₹200L','d'],['Cash inflows','₹50L, ₹100L, ₹150L','c'],['Required return','10%','']],
+ tabs:M.map((m,i)=>({id:m.id,name:m.full,short:m.rule,def:'Discounted methods bring future cash back to today before judging the project; non-discounted methods take the rupees as they come.',contrast:m.where,ctl:[],draw(s){return mapDraw(s,i)}}))};
+
+/* ================= STEP 5: merits and demerits ================= */
+const SUM=[
+ ['d','NPV','NPV > 0',[1,1,1],['Uses all the cash flows and discounts them properly','Measures value added in rupees; values add up across projects'],['Needs a required return','A rupee figure is less intuitive than a percentage'],'Use as the main rule','g'],
+ ['d','IRR','IRR > R',[1,1,1],['A single percentage, easy to communicate','Agrees with NPV for one ordinary project'],['Cannot tell lending from borrowing','Can have several IRRs when signs change twice','Can rank wrongly when projects differ in scale or timing'],'Use with care','a'],
+ ['d','PI','PI > 1',[1,1,1],['Value per rupee: useful when funds are limited','Agrees with NPV for independent projects'],['Can rank wrongly when projects differ in scale'],'Use with care','a'],
+ ['d','Discounted payback','DPB < cutoff',[1,0,1],['Accounts for the time value of money','Shows how quickly the cost is recovered'],['Ignores cash flows after the cutoff','The cutoff is arbitrary'],'Quick check only','r'],
+ ['n','Payback','PB < cutoff',[1,0,0],['Simple to compute and explain','Favours projects that return cash quickly'],['Ignores the time value of money','Ignores cash flows after the cutoff','The cutoff is arbitrary'],'Quick check only','r']
+];
+const TESTS=['Cash flows','All cash flows','Time value'];
+const S5={n:5,label:'Merits and demerits',eyebrow:'Step 5 · Summary',title:'Merits and Demerits',solo:true,
+ sub:'Each method checked against the three NPV tests: does it use cash flows, all of them, and the time value of money?',
+ state:{},spec:()=>[],
+ tabs:[{id:'sum',name:'Five methods side by side',short:'',def:'Green ticks are the tests a method passes. Read across the cards: only the discounted methods that use every cash flow pass all three.',
+  contrast:'NPV is the benchmark. IRR and PI give the same accept or reject answer for a single ordinary project; take care when choosing between projects. Payback rules are quick checks, not decision rules.',ctl:[],
+  html:()=>`<div class="sumgrid">${SUM.map(([g,n,rule,ts,pro,con,v,vc])=>`<article class="mcard m${g}"><header><b>${n}</b><span class="mrule">${rule}</span></header>
+   <div class="tests">${ts.map((p,i)=>`<span class="${p?'ok':'no'}">${p?'✓':'✗'} ${TESTS[i]}</span>`).join('')}</div>
+   <p class="lab">Merits</p><ul class="pro">${pro.map(x=>`<li>${x}</li>`).join('')}</ul>
+   <p class="lab">Demerits</p><ul class="con">${con.map(x=>`<li>${x}</li>`).join('')}</ul>
+   <div class="verdict ${vc}">${v}</div></article>`).join('')}</div>`}]};
+
+/* ================= STEP 2: NPV ================= */
+const S1={n:2,label:'NPV',eyebrow:'Step 2 · The benchmark',title:'Net Present Value',
+ sub:'Deccan Foods is considering a new packaging line at its Medchal plant. It costs ₹200 lakh today and is expected to bring in ₹50, ₹100 and ₹150 lakh over the next three years. Is it worth doing?',
+ state:{R:10},
+ spec:(st)=>[['Cost today','₹200L','d'],['Cash inflows','₹50L, ₹100L, ₹150L','c'],['Required return',pc(st.R/100,1),'']],
+ tabs:[
+ {id:'rule',name:'The NPV rule',short:'Value of inflows minus cost',
+  def:'Bring every future cash inflow back to today at the required return, add them up, and subtract the cost. What is left is the value the project adds for shareholders.',
+  contrast:'Accept if NPV is positive; between projects, pick the highest NPV. NPV uses cash flows, uses all of them, and discounts them properly. Every other rule will be judged against these three tests.',
+  ctl:[{key:'R',label:'Required return',min:0,max:30,step:0.5,fmt:v=>v.toFixed(1)+'%',note:'The return shareholders could earn elsewhere at this risk.'}],
+  draw(s,st){const k=K(),R=st.R/100,base=182,h=v=>v*0.55,tx=110,X=t=>230+t*150;let pv=0;
+   Ln(s,30,base,750,base,k.l,1.5);T(s,34,base+18,'Today',{anchor:'start',bold:1,fill:k.ink});
+   for(let t=1;t<=3;t++){const cf=P[t],v=cf/Math.pow(1+R,t);pv+=v;Rc(s,X(t)-26,base-h(cf),52,h(cf),k.fa,{stroke:k.l});Rc(s,X(t)-20,base-h(v),40,h(v),k.a,{rx:2});
+     T(s,X(t),base-h(cf)-8,`${L0(cf)} → ${L(v)}`,{mono:1,size:11,fill:k.ink});T(s,X(t),base+18,'Year '+t,{size:12});T(s,X(t),base+36,'÷ '+(1+R).toFixed(3)+sup(t),{mono:1,size:11,fill:k.a})}
+   Rc(s,tx-50,base-h(pv),44,h(pv),k.a,{rx:2});T(s,tx-28,base-h(pv)-8,L(pv),{mono:1,bold:1,fill:k.a,size:12});
+   Rc(s,tx+6,base,44,h(200),k.d,{rx:2});T(s,tx+28,base+h(200)+14,'−₹200L',{mono:1,bold:1,fill:k.d,size:12});
+   const N=pv-200,col=N>=0?k.par:k.d;T(s,450,40,`NPV = ${L(pv)} − ₹200L = ${L(N)}`,{mono:1,bold:1,fill:col,size:15});T(s,450,60,N>=0?'Accept':'Reject',{bold:1,fill:col,size:13});
+   return {legend:[[k.fa,'Cash inflow',k.l],[k.a,'Its value today'],[k.d,'Cost today']],
+    work:`<div class="fm">NPV = −C₀ + C₁ ÷ (1+R) + C₂ ÷ (1+R)² + C₃ ÷ (1+R)³</div><div>= −₹200L + ₹50L ÷ ${(1+R).toFixed(3)} + ₹100L ÷ ${(1+R).toFixed(3)}² + ₹150L ÷ ${(1+R).toFixed(3)}³</div><div>= −₹200L + <span class="c">${L(pv)}</span></div><div class="big" style="color:${col}">NPV = ${L(N)}</div>`+note(N>=0?'Positive: the inflows are worth more today than the cost, so the project adds value.':'Negative: the inflows are worth less today than the cost, so the project destroys value.')}}},
+ {id:'curve',name:'NPV and the discount rate',short:'The NPV profile',
+  def:'The same project at every discount rate. The higher the required return, the less the future inflows are worth today, so NPV falls.',
+  contrast:'The line crosses zero at 19.44%. Below that rate the project adds value; above it, it does not. That crossing point has a name, the internal rate of return, which is where Step 4 starts.',
+  ctl:[{key:'R',label:'Required return',min:0,max:40,step:0.5,fmt:v=>v.toFixed(1)+'%',note:'Watch the point slide along the curve.'}],
+  draw(s,st){const k=K(),R=st.R/100,N=npv(P,R);
+   profile(s,k,[{c:P,col:k.a,name:'NPV'}],{rmin:0,rmax:0.44,ymin:-80,ymax:120,ytick:40,R,marks:[[R,N,N>=0?k.par:k.d,L(N),-12,'start'],[IRRP,0,k.f,'NPV = 0 at '+pc(IRRP),22,'start']]});
+   return {legend:[[k.a,'NPV at each discount rate'],[k.f,'Where NPV is zero']],
+    work:`<div class="fm">NPV at R = ${pc(R,1)}</div><div class="big" style="color:${N>=0?'var(--par)':'var(--disc)'}">${L(N)}</div>`+note(N>=0?`At ${pc(R,1)} the project is worth taking.`:`At ${pc(R,1)} the project should be rejected.`)}}}
+ ]};
+
+/* ================= STEP 3: payback ================= */
+const S2={n:3,label:'Payback',eyebrow:'Step 3 · How fast is the money back?',title:'Payback and Discounted Payback',
+ sub:'Managers like a quick answer: how fast do we get our money back? Easy to compute, but each version fails at least one of the three NPV tests.',
+ state:{cut:2,R:10},
+ spec:(st)=>[['Project A','−₹200, ₹50, ₹100, ₹150L','c'],['Project B','−₹200, ₹100, ₹100, ₹10L','f'],['Required return',pc(st.R/100,1),'']],
+ tabs:[
+ {id:'pay',name:'Payback period',short:'How fast is the cost recovered?',
+  def:'Add up the cash flows year by year and see when the running total turns positive. Accept the project if that happens before a cutoff set by management.',
+  contrast:'Payback ignores the time value of money and every cash flow after the cutoff. Project B pays back faster, but its last year is tiny and its NPV at 10% is −₹18.93L. A rule that prefers B over A is steering the firm wrong.',
+  ctl:[{key:'cut',label:'Cutoff set by management',min:1,max:3,step:0.5,fmt:v=>v+' years',note:'An arbitrary number: nothing in finance says what it should be.'}],
+  draw(s,st){const k=K(),cA=cumOf(P),cB=cumOf(PB),pA=payback(cA),pB=payback(cB);
+   fillChart(s,k,[{name:'Project A',col:k.a,flows:P.slice(1)},{name:'Project B',col:k.f,flows:PB.slice(1)}],{cut:st.cut});
+   const ok=p=>p!=null&&p<=st.cut+1e-9;
+   return {legend:[[k.a,'Cash flows filling the cost, darker = later year'],[k.fa,'Cost still to recover',k.l],[k.d,'Recovered by the cutoff']],
+    work:`<div class="fm">Payback = years before the running total turns positive</div><div>A: 2 + ₹50L ÷ ₹150L = <span class="c">${pA.toFixed(2)} years</span> · ${ok(pA)?'accept':'reject'}</div><div>B: 2 + ₹0L ÷ ₹10L = <span class="f">${pB.toFixed(2)} years</span> · ${ok(pB)?'accept':'reject'}</div>`+
+     `<div class="k">NPV at 10%, for comparison</div><div>A: ${L(npv(P,.1))} · B: ${L(npv(PB,.1))}</div>`}}},
+ {id:'dpay',name:'Discounted payback',short:'Payback with time value',
+  def:'The same running total, but each cash flow is first brought back to today at the required return. It fixes the time-value problem, but still ignores cash after the cutoff.',
+  contrast:'Project B never pays back once its cash flows are discounted, which is the warning payback missed. But by the time you have discounted every cash flow, you might as well compute the NPV.',
+  ctl:[{key:'R',label:'Required return',min:0,max:20,step:0.5,fmt:v=>v.toFixed(1)+'%',note:'Higher rates stretch the discounted payback.'},{key:'cut',label:'Cutoff set by management',min:1,max:3,step:0.5,fmt:v=>v+' years',note:''}],
+  draw(s,st){const k=K(),R=st.R/100,cA=cumOf(P,R),cB=cumOf(PB,R),pA=payback(cA),pB=payback(cB);
+   fillChart(s,k,[{name:'Project A',col:k.a,flows:P.slice(1).map((c,i)=>c/Math.pow(1+R,i+1))},{name:'Project B',col:k.f,flows:PB.slice(1).map((c,i)=>c/Math.pow(1+R,i+1))}],{cut:st.cut});
+   const f=p=>p==null?'never pays back':p.toFixed(2)+' years';
+   return {legend:[[k.a,'Discounted cash flows filling the cost'],[k.fa,'Cost still to recover',k.l],[k.d,'Recovered by the cutoff']],
+    work:`<div class="fm">Discounted payback at ${pc(R,1)}</div><div>A: <span class="c">${f(pA)}</span></div><div>B: <span class="f">${f(pB)}</span></div>`+note(`What is left over after the cost, or still short of it, is each project's NPV: A ${L(cA[3])}, B ${L(cB[3])}.`)}}}
+ ]};
+
+/* ================= STEP 4: IRR and PI ================= */
+const S3={n:4,label:'IRR and PI',eyebrow:'Step 4 · Rates and ratios',title:'IRR, Its Problems, and PI',
+ sub:'IRR and PI are close cousins of NPV: they use all the cash flows and discount them. For a single ordinary project they agree with NPV. The trouble starts with unusual cash flows and with choosing between projects.',
+ state:{R:10,pair:0},
+ spec:(st,id)=>id==='lend'?[['A: lending','−₹100L, then +₹130L','c'],['B: borrowing','+₹100L, then −₹130L','d'],['Required return',pc(st.R/100,0),'']]:id==='multi'?[['Cash flows','−₹200, ₹200, ₹800, −₹800L','c'],['Signs change','twice','']]:id==='scale'?[['Small','−₹1L, then ₹2L','c'],['Big','−₹1,000L, then ₹1,500L','f'],['Required return',pc(st.R/100,1),'']]:id==='timing'?[['Project A','−₹100, ₹100, ₹10, ₹10L','c'],['Project B','−₹100, ₹10, ₹10, ₹120L','d'],['Required return',pc(st.R/100,1),'']]:[['Cost today','₹200L','d'],['Cash inflows','₹50L, ₹100L, ₹150L','c'],['Required return',pc(st.R/100,1),'']],
+ tabs:[
+ {id:'irr',name:'Internal rate of return',short:'The rate where NPV = 0',
+  def:'IRR is the discount rate that makes NPV exactly zero: the project\'s own rate of return. Accept the project if its IRR is above the required return.',
+  contrast:'For a normal project, cost first and inflows after, IRR and NPV give the same accept or reject decision: IRR above R is the same as NPV above zero. IRR is easy to communicate, which is why managers like it.',
+  ctl:[{key:'R',label:'Required return',min:0,max:40,step:0.5,fmt:v=>v.toFixed(1)+'%',note:'Compare it with the IRR.'}],
+  draw(s,st){const k=K(),R=st.R/100,N=npv(P,R);
+   profile(s,k,[{c:P,col:k.a,name:'NPV'}],{rmin:0,rmax:0.44,ymin:-80,ymax:120,ytick:40,R,marks:[[0.16,npv(P,.16),k.m,'16%: ₹13.52L',-12,'end'],[0.2,npv(P,.2),k.m,'20%: −₹2.08L',22,'start'],[IRRP,0,k.f,'IRR '+pc(IRRP),-14,'start']]});
+   return {legend:[[k.a,'NPV at each rate'],[k.f,'IRR']],
+    work:`<div class="fm">0 = −₹200L + ₹50L ÷ (1+IRR) + ₹100L ÷ (1+IRR)² + ₹150L ÷ (1+IRR)³</div><div>16% gives NPV +₹13.52L and 20% gives −₹2.08L, so IRR lies between them. The last tab shows how to find it by hand.</div><div class="big">IRR = ${pc(IRRP)}</div>`+note(`${pc(IRRP)} ${IRRP>R?'>':'<'} ${pc(R,1)}, so ${IRRP>R?'accept':'reject'}. NPV agrees: ${L(N)}.`)}}},
+ {id:'lend',name:'Lending or borrowing?',short:'Same IRR, opposite answers',
+  def:'Project A: you pay ₹100 lakh today and get ₹130 lakh next year, like lending money. Project B: you receive ₹100 lakh today and pay ₹130 lakh next year, like borrowing. Both have an IRR of 30%.',
+  contrast:'IRR is 30% for both, so "accept if IRR > R" says take both. But a lender wants a high rate and a borrower wants a low one: for B the rule flips to accept if IRR < R. NPV needs no flipping: it is positive for A and negative for B whenever R is below 30%.',
+  ctl:[{key:'R',label:'Required return',min:0,max:60,step:1,fmt:v=>v.toFixed(0)+'%',note:'Cross 30% and both NPVs change sign.'}],
+  draw(s,st){const k=K(),R=st.R/100,LA=[-100,130],LB=[100,-130],nA=npv(LA,R),nB=npv(LB,R),CX=[230,400];
+   ['Today','Year 1'].forEach((t,i)=>T(s,CX[i],14,t,{bold:1,fill:k.ink,size:12}));T(s,620,14,`NPV at ${pc(R,0)}`,{bold:1,fill:k.ink,size:12});
+   [[LA,k.a,'A: lending',40,nA,'you pay','you get'],[LB,k.d,'B: borrowing',100,nB,'you get','you pay']].forEach(([c,col,nm,y,n,w0,w1])=>{
+    T(s,24,y+5,nm,{anchor:'start',bold:1,fill:col,size:13});
+    c.forEach((v,i)=>{const pos=v>0;Rc(s,CX[i]-50,y-14,100,26,pos?col:k.fa,{stroke:pos?col:k.l,rx:6});T(s,CX[i],y+4,(pos?'+':'')+L0(v),{mono:1,bold:1,size:12,fill:pos?k.surf:k.ink});T(s,CX[i],y+28,i?w1:w0,{size:11})});
+    T(s,CX[0]+70,y+4,'→',{size:16,fill:k.m});T(s,620,y+5,L(n),{mono:1,bold:1,size:14,fill:n>=0?k.par:k.d})});
+   Ln(s,24,140,736,140,k.l,1);
+   profile(s,k,[{c:LA,col:k.a,name:'A: lending'},{c:LB,col:k.d,name:'B: borrowing'}],{rmin:0,rmax:0.6,ymin:-40,ymax:40,ytick:20,xtick:0.1,R,top:158,base:286,marks:[[0.3,0,k.f,'IRR = 30% for both',24,'start']]});
+   const okA=nA>=0,okB=nB>=0;
+   return {legend:[[k.a,'A: lending, NPV falls as R rises'],[k.d,'B: borrowing, NPV rises as R rises'],[k.f,'Same IRR']],
+    work:`<div>IRR: A <span class="c">30%</span> · B <span style="color:var(--disc)">30%</span></div><div>NPV at ${pc(R,0)}: A <span style="color:var(${okA?'--par':'--disc'})">${L(nA)}</span> · B <span style="color:var(${okB?'--par':'--disc'})">${L(nB)}</span></div><div class="big">NPV: ${okA?'take A':'reject A'}, ${okB?'take B':'reject B'}</div>`+note(`IRR alone cannot tell you which one to take. You must first ask: am I lending (accept if IRR > R) or borrowing (accept if IRR < R)?`)}}},
+ {id:'multi',name:'Multiple IRRs',short:'When signs change twice',
+  def:'This project has a cost, two inflows and then a large outflow at the end, such as a clean-up cost. The cash-flow signs change twice, so NPV crosses zero twice.',
+  contrast:'Two IRRs, 0% and 100%, and neither tells you what to do. NPV still gives one clear answer at your required return.',ctl:[],
+  draw(s,st){const k=K();
+   profile(s,k,[{c:MU,col:k.a,name:'NPV'}],{rmin:-0.1,rmax:1.6,ymin:-100,ymax:80,ytick:40,xtick:0.2,marks:[[0,0,k.f,'IRR₁ = 0%',-14,'start'],[1,0,k.f,'IRR₂ = 100%',-14,'start'],[0.1,npv(MU,.1),k.par,'NPV at 10%: '+L(npv(MU,.1)),-12,'start']]});
+   return {legend:[[k.a,'NPV at each rate'],[k.f,'Both IRRs']],
+    work:`<div class="fm">NPV = 0 at r = 0% and at r = 100%</div><div>NPV at 10% = <span style="color:var(--par)">${L(npv(MU,.1))}</span>: accept</div>`+note('When the cash-flow signs change more than once, do not rely on IRR: use NPV.')+``}}},
+ {id:'scale',name:'The scale problem',short:'100% on ₹1 lakh or 50% on ₹1,000 lakh?',
+  def:'Two mutually exclusive projects: you can take only one. Small costs ₹1 lakh and returns ₹2 lakh next year. Big costs ₹1,000 lakh and returns ₹1,500 lakh.',
+  contrast:'IRR picks Small because 100% beats 50%. But Big adds far more value. Percentages hide size; when choosing between projects, compare NPVs.',
+  ctl:[{key:'R',label:'Required return',min:0,max:40,step:0.5,fmt:v=>v.toFixed(1)+'%',note:''}],
+  draw(s,st){const k=K(),R=st.R/100,nS=2/(1+R)-1,nB=1500/(1+R)-1000;
+   const base=250,h1=v=>v*170,h2=v=>v*170/400;
+   T(s,190,30,'IRR',{bold:1,fill:k.ink,size:14});T(s,560,30,`NPV at ${pc(R,1)}`,{bold:1,fill:k.ink,size:14});Ln(s,60,base,330,base,k.l,1.5);Ln(s,430,base,700,base,k.l,1.5);
+   [[130,1,'Small',k.a],[250,0.5,'Big',k.f]].forEach(([x,v,n,c])=>{Rc(s,x-34,base-h1(v),68,h1(v),c,{rx:2});T(s,x,base-h1(v)-8,pc(v,0),{mono:1,bold:1,fill:k.ink});T(s,x,base+18,n,{size:12})});
+   [[500,nS,'Small',k.a],[620,nB,'Big',k.f]].forEach(([x,v,n,c])=>{const hh=Math.max(2,h2(Math.max(0,v)));Rc(s,x-34,base-hh,68,hh,c,{rx:2});T(s,x,base-hh-8,L(v),{mono:1,bold:1,fill:k.ink});T(s,x,base+18,n,{size:12})});
+   T(s,190,base+40,'IRR prefers Small',{fill:k.a,bold:1,size:12});T(s,560,base+40,'NPV prefers Big',{fill:k.f,bold:1,size:12});
+   return {legend:[[k.a,'Small project'],[k.f,'Big project']],
+    work:`<div>Small: IRR 100%, NPV = ₹2L ÷ ${(1+R).toFixed(3)} − ₹1L = <span class="c">${L(nS)}</span></div><div>Big: IRR 50%, NPV = ₹1,500L ÷ ${(1+R).toFixed(3)} − ₹1,000L = <span class="f">${L(nB)}</span></div>`+note('Only one can be taken. Big adds more value at any required return below 50%.')}}},
+ {id:'timing',name:'The timing problem',short:'Early cash or late cash?',
+  def:'Two mutually exclusive projects, both costing ₹100 lakh. A returns most of its cash in year 1 (₹100L); B returns most of it in year 3 (₹120L). Which is better depends on how heavily we discount the late cash.',
+  contrast:'IRR always picks A (16.04% against 12.94%). NPV picks B below the crossover rate of 10.55%, because late cash is worth more when discounting is light. Find the crossover as the IRR of the difference, A − B.',
+  ctl:[{key:'R',label:'Required return',min:0,max:30,step:0.5,fmt:v=>v.toFixed(1)+'%',note:'Slide across 10.55% and watch the winner switch.'}],
+  draw(s,st){const k=K(),R=st.R/100,nA=npv(TA,R),nB=npv(TB,R),cr=irr([0,90,0,-110],0.01,1);
+   const CX=[200,330,460,590],hb=v=>Math.abs(v)*0.3;
+   ['Today','Year 1','Year 2','Year 3'].forEach((t,i)=>T(s,CX[i],14,t,{bold:1,fill:k.ink,size:12}));T(s,690,14,`NPV at ${pc(R,1)}`,{bold:1,fill:k.ink,size:12});
+   [[TA,k.a,'A: early cash',62,nA],[TB,k.d,'B: late cash',122,nB]].forEach(([c,col,nm,y,n])=>{
+    T(s,24,y-8,nm,{anchor:'start',bold:1,fill:col,size:13});Ln(s,150,y,640,y,k.l,1);
+    c.forEach((v,i)=>{if(v<0){Rc(s,CX[i]-30,y-20,60,20,k.fa,{stroke:k.l,rx:4});T(s,CX[i],y-6,L0(v),{mono:1,bold:1,size:11,fill:k.ink});return}
+     Rc(s,CX[i]-18,y-hb(v),36,hb(v),col,{rx:2,op:v>=100?1:.55});T(s,CX[i],y-hb(v)-5,L0(v),{mono:1,bold:1,size:11,fill:k.ink})});
+    T(s,690,y-6,L(n),{mono:1,bold:1,size:13,fill:n>=Math.max(nA,nB)?col:k.m})});
+   Ln(s,24,138,736,138,k.l,1);
+   profile(s,k,[{c:TA,col:k.a,name:'Project A'},{c:TB,col:k.d,name:'Project B'}],{rmin:0,rmax:0.3,ymin:-30,ymax:60,ytick:30,xtick:0.05,R,top:156,base:286,marks:[[cr,npv(TA,cr),k.ink,'crossover '+pc(cr),-12,'start'],[irr(TA),0,k.a,'IRR A '+pc(irr(TA)),18,'start'],[irr(TB),0,k.d,'IRR B '+pc(irr(TB)),18,'end']]});
+   const w=nA>nB?'A':'B';
+   return {legend:[[k.a,'Project A: early cash'],[k.d,'Project B: late cash']],
+    work:`<div>NPV at ${pc(R,1)}: A <span class="c">${L(nA)}</span> · B <span style="color:var(--disc)">${L(nB)}</span></div><div class="big">NPV picks ${w}</div><div>IRR picks A every time</div><div class="k">Crossover: IRR of A − B</div><div>A − B = 0, ₹90L, ₹0L, −₹110L → ${pc(cr)}</div>`}}},
+ {id:'pi',name:'Profitability index',short:'Value per rupee invested',
+  def:'PI divides the present value of the future cash flows by the initial cost: how much value each rupee invested brings back. Accept if PI is above 1.',
+  contrast:'PI gives the same accept or reject answer as NPV for independent projects, and it is useful when funds are limited. Like IRR, it can mislead between mutually exclusive projects: in the scale example Small has PI 1.82 and Big only 1.36.',
+  ctl:[{key:'R',label:'Required return',min:0,max:30,step:0.5,fmt:v=>v.toFixed(1)+'%',note:''}],
+  draw(s,st){const k=K(),R=st.R/100,pv=npv(P,R)+200,pi=pv/200,base=260,h=v=>v*0.75;
+   Rc(s,200,base-h(200),110,h(200),k.d,{rx:3});T(s,255,base-h(200)-8,'Cost ₹200L',{mono:1,bold:1,fill:k.d});T(s,255,base+18,'Invested today',{size:12});
+   Rc(s,420,base-h(pv),110,h(pv),k.a,{rx:3});T(s,475,base-h(pv)-8,'PV '+L(pv),{mono:1,bold:1,fill:k.a});T(s,475,base+18,'Value of the inflows',{size:12});
+   Ln(s,150,base,600,base,k.l,1.5);T(s,640,base-h(200),`PI = ${pi.toFixed(3)}`,{mono:1,bold:1,fill:pi>=1?k.par:k.d,size:18});T(s,640,base-h(200)+20,pi>=1?'above 1: accept':'below 1: reject',{size:12,fill:pi>=1?k.par:k.d,bold:1});
+   return {legend:[[k.d,'Cost'],[k.a,'Present value of inflows']],
+    work:`<div class="fm">PI = PV of future cash flows ÷ initial cost</div><div>= ${L(pv)} ÷ ₹200L</div><div class="big">PI = ${pi.toFixed(3)}</div>`+note(`Every ₹1 invested brings back ₹${pi.toFixed(2)} in today's money. NPV = ${L(pv-200)}.`)}}},
+ {id:'interp',name:'Finding IRR by interpolation',short:'16% + 4% × 13.52 ÷ 15.60',
+  def:'IRR by hand. Find NPV at a rate where it is positive (16%) and at a rate where it is negative (20%). Zero lies between them, so IRR lies between 16% and 20%. How far along? Compare the distance from each NPV to zero with the total distance.',
+  contrast:'Work from either side and you get the same answer: add from 16%, or subtract from 20%. It is an estimate because the true NPV line is slightly curved; the exact IRR is 19.44%. Keep the two trial rates close for a good estimate.',ctl:[],
+  draw(s,st){const k=K(),r1=.16,r2=.20,N1=npv(P,r1),N2=npv(P,r2),gap=N1-N2,est=r1+(r2-r1)*N1/gap,CX=[220,340,460,580],NX=690;
+   ['Today','Year 1','Year 2','Year 3'].forEach((t,i)=>T(s,CX[i],14,t,{bold:1,fill:k.ink,size:12}));T(s,NX,14,'NPV',{bold:1,fill:k.ink,size:12});
+   T(s,24,40,'Cash flows',{anchor:'start',bold:1,fill:k.ink,size:12});
+   P.forEach((v,i)=>{const pos=v>0;Rc(s,CX[i]-42,26,84,22,pos?k.aS:k.fa,{stroke:pos?k.a:k.l,rx:6});T(s,CX[i],41,L0(v),{mono:1,bold:1,size:12,fill:pos?k.a:k.ink})});
+   [[r1,N1,k.par,76],[r2,N2,k.d,108]].forEach(([r,N,col,y])=>{T(s,24,y,'At '+pc(r,0),{anchor:'start',bold:1,fill:col,size:12});
+    P.forEach((v,i)=>{T(s,CX[i],y,i?(v/Math.pow(1+r,i)).toFixed(2):'−200.00',{mono:1,size:12,fill:k.ink});if(i<3)T(s,(CX[i]+CX[i+1])/2,y,'+',{size:12})});
+    T(s,(CX[3]+NX)/2-6,y,'=',{size:12});T(s,NX,y,(N>=0?'+':'')+L(N),{mono:1,bold:1,size:13,fill:col})});
+   Ln(s,24,124,736,124,k.l,1);
+   const vmin=-5,vmax=16,x0=60,x1=700,X=v=>x0+(v-vmin)/(vmax-vmin)*(x1-x0),y=212;
+   T(s,24,146,'NPV on a number line',{anchor:'start',bold:1,fill:k.ink,size:12});
+   Ln(s,x0,y,x1,y,k.m,1.5);
+   for(let v=-4;v<=16;v+=4){Ln(s,X(v),y-4,X(v),y+4,k.m,1);if(v)T(s,X(v),y+18,v,{size:10})}
+   Ln(s,X(0),y-12,X(0),y+12,k.ink,2.5);T(s,X(0),y+20,'0',{bold:1,size:12,fill:k.ink});
+   T(s,x0,y-8,'negative',{anchor:'start',size:11,fill:k.d});T(s,x1,y-8,'positive',{anchor:'end',size:11,fill:k.par});
+   [[N2,k.d,'NPV at 20%'],[N1,k.par,'NPV at 16%']].forEach(([v,col,lab])=>{s.append(el('circle',{cx:X(v),cy:y,r:7,fill:col}));T(s,X(v),y-34,lab,{bold:1,size:12,fill:col});T(s,X(v),y-18,(v>=0?'+':'')+v.toFixed(2),{mono:1,bold:1,size:12,fill:col})});
+   const br=(a,b,yy,col,lab)=>{Ln(s,X(a),yy,X(b),yy,col,2);Ln(s,X(a),yy-6,X(a),yy+6,col,2);Ln(s,X(b),yy-6,X(b),yy+6,col,2);if(X(b)-X(a)<110){T(s,X(a)-10,yy+4,lab,{anchor:'end',mono:1,bold:1,size:12,fill:col});return}Rc(s,(X(a)+X(b))/2-44,yy-9,88,18,k.surf,{rx:3});T(s,(X(a)+X(b))/2,yy+4,lab,{mono:1,bold:1,size:12,fill:col})};
+   br(N2,0,252,k.d,Math.abs(N2).toFixed(2));br(0,N1,252,k.par,N1.toFixed(2));br(N2,N1,290,k.ink,'total '+gap.toFixed(2));
+   return {legend:[[k.par,'NPV at 16%: distance to zero'],[k.d,'NPV at 20%: distance to zero'],[k.ink,'Total distance']],
+    work:`<div>Total distance = ${N1.toFixed(2)} + ${Math.abs(N2).toFixed(2)} = <b>${gap.toFixed(2)}</b></div><div class="prop"><div class="ph">If a distance of ${gap.toFixed(2)} is 4%, how much is ${N1.toFixed(2)}?</div>
+<div class="pr"><span>Total distance <b>${gap.toFixed(2)}</b></span><i>↔</i><span><b>4%</b> (20% − 16%)</span></div>
+<div class="pr"><span>16% to zero <b style="color:var(--par)">${N1.toFixed(2)}</b></span><i>↔</i><span><b>?</b> = 4% × ${N1.toFixed(2)} ÷ ${gap.toFixed(2)} = <b class="c">${pc(est-r1)}</b></span></div></div>
+<div class="k">So, from 16%, add</div><div>IRR ≈ 16% + ${pc(est-r1)} = <span class="c">${pc(est)}</span></div><div class="k">Check from 20%, subtract</div><div>20% − 4% × <span style="color:var(--disc)">${Math.abs(N2).toFixed(2)}</span> ÷ ${gap.toFixed(2)} = ${pc(est)}</div><div class="big">IRR ≈ ${pc(est)}</div>`}}}
+ ]};
+
+const STEPS=[S0,S1,S2,S3,S5];
+
+/* ================= framework ================= */
+const stepper=document.getElementById('stepper'),host=document.getElementById('steps');
+STEPS.forEach((S,si)=>{
+  const b=document.createElement('button');b.setAttribute('role','tab');b.setAttribute('aria-selected',si===0);b.innerHTML=`<small>Step ${S.n}</small><span>${S.label}</span>`;
+  b.addEventListener('click',()=>{[...stepper.children].forEach(x=>x.setAttribute('aria-selected',x===b));STEPS.forEach(X=>X.sec.hidden=X!==S);S.render();window.scrollTo({top:0,behavior:'smooth'})});
+  stepper.append(b);
+  const sec=document.createElement('section');sec.className='step';sec.hidden=si>0;S.sec=sec;
+  sec.innerHTML=`<div class="wrap"><header><p class="eyebrow">${S.eyebrow}</p><h2 class="steph">${S.title}</h2><p class="sub">${S.sub}</p><div class="spec" aria-label="The project"></div></header>
+   <div class="layout"><div class="index" role="tablist" aria-label="Concepts"></div>
+   <section class="stage" role="tabpanel" aria-live="polite"><h2 class="nm"></h2><p class="def"></p>
+   <svg viewBox="0 0 760 330" role="img"></svg><div class="trio legend"></div>
+   <div class="readout"><div class="work"></div><div class="ctl"></div></div><div class="free" hidden></div>
+   <p class="contrast"></p><div class="nav"><button class="btn prev">Previous</button><button class="btn primary next">Next</button></div></section></div></div>`;
+  host.append(sec);
+  const q=c=>sec.querySelector(c),idx=q('.index');let cur=0;
+  if(S.solo){q('.layout').classList.add('solo');if(S.tabs.length===1)idx.hidden=true;else idx.classList.add('desk-hide')}
+  S.tabs.forEach((t,i)=>{const bt=document.createElement('button');bt.className='term';bt.setAttribute('role','tab');bt.innerHTML=`<b>${t.name}</b><span>${t.short}</span>`;bt.addEventListener('click',()=>show(i));idx.append(bt)});
+  q('.prev').addEventListener('click',()=>show(cur-1));q('.next').addEventListener('click',()=>{if(cur<S.tabs.length-1)show(cur+1);else if(STEPS[si+1])stepper.children[si+1].click()});
+  S.go=i=>show(i);
+  function show(i){cur=Math.max(0,Math.min(S.tabs.length-1,i));const t=S.tabs[cur];
+    [...idx.children].forEach((b,j)=>b.setAttribute('aria-selected',j===cur));
+    q('.nm').textContent=t.name;q('.def').textContent=t.def;q('.contrast').textContent=t.contrast;
+    q('.prev').disabled=cur===0;const last=cur===S.tabs.length-1;q('.next').disabled=last&&!STEPS[si+1];q('.next').textContent=last&&STEPS[si+1]?'Next: '+STEPS[si+1].label:'Next';q('.prev').style.visibility=S.tabs.length===1?'hidden':'';q('.next').style.visibility=last&&!STEPS[si+1]?'hidden':'';q('svg').setAttribute('aria-label',t.name+' chart');
+    buildCtl(t);S.render()}
+  function buildCtl(t){const box=q('.ctl');box.innerHTML='';box.hidden=!t.ctl.length;q('.readout').classList.toggle('noctl',!t.ctl.length);
+    t.ctl.forEach(c=>{
+      if(c.type==='seg'){const w=document.createElement('div');w.className='seg';
+        c.options.forEach(([v,l])=>{const b=document.createElement('button');b.type='button';b.textContent=l;b.classList.toggle('on',S.state[c.key]===v);b.addEventListener('click',()=>{S.state[c.key]=v;[...w.children].forEach(x=>x.classList.toggle('on',x===b));S.render()});w.append(b)});box.append(w);return}
+      const id=`s${S.n}-${t.id}-${c.key}`,w=document.createElement('div');w.className='ctl';
+      w.innerHTML=`<label for="${id}">${c.label} <output></output></label><input id="${id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}" value="${Math.min(c.max,Math.max(c.min,S.state[c.key]))}">${c.note?`<small>${c.note}</small>`:''}`;
+      const inp=w.querySelector('input'),out=w.querySelector('output');S.state[c.key]=+inp.value;out.textContent=c.fmt(+inp.value);
+      inp.addEventListener('input',()=>{S.state[c.key]=+inp.value;out.textContent=c.fmt(+inp.value);S.render()});box.append(w)})}
+  S.render=()=>{const t=S.tabs[cur],svg=q('svg');svg.innerHTML='';
+    const sp=S.spec(S.state,t.id);q('.spec').hidden=!sp.length;
+    q('.spec').innerHTML='<div class="spec-h">The project</div>'+sp.map(([l,v,c])=>`<div><span>${l}</span><b class="${c}">${v}</b></div>`).join('');
+    const free=!!t.html;svg.toggleAttribute('hidden',free);q('.legend').hidden=free;q('.readout').hidden=free;q('.free').hidden=!free;
+    if(free){q('.free').innerHTML=t.html();return}
+    const out=t.draw(svg,S.state);q('.work').innerHTML=out.work;
+    q('.legend').innerHTML=out.legend.map(([c,l,st])=>`<span><i style="background:${c};${st?'border:1px solid '+st:''}"></i>${l}</span>`).join('')};
+  show(0);
+});
+const rr=()=>STEPS.forEach(S=>S.render());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',rr);
+new MutationObserver(rr).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();
+</script>
+
+</html>

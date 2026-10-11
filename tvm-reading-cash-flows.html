@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TVM Activities</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,700;1,8..60,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: four activity cards down the page with a sticky activity bar. Words first, picture second, formula last. Same palette and type as the bond walkthrough. */
+:root{
+  --bg:#F4F4F1; --surface:#FFFFFF; --ink:#16223A; --muted:#5B6578; --line:#DADDD8; --faint:#E7E8E3;
+  --accent:#6B3FA0; --accent-soft:#EEE6F7; --face:#0F6E8C; --face-soft:#DCEEF3;
+  --gold:#B7791F; --gold-soft:#FBF0DC; --good:#2F6B3F; --good-soft:#E2F0E5; --bad:#B4530F; --bad-soft:#FBEADC;
+  --display:'Source Serif 4', Georgia, serif; --body:'IBM Plex Sans','Segoe UI',Arial,sans-serif; --mono:'IBM Plex Mono',Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12131A; --surface:#1C1E29; --ink:#ECEDF2; --muted:#A1A6B8; --line:#2F3242; --faint:#262938;
+  --accent:#B794E6; --accent-soft:#2E2340; --face:#5BB8D4; --face-soft:#16384A;
+  --gold:#E2B65A; --gold-soft:#3A2F17; --good:#86C998; --good-soft:#1C3824; --bad:#F0A266; --bad-soft:#43291A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12131A; --surface:#1C1E29; --ink:#ECEDF2; --muted:#A1A6B8; --line:#2F3242; --faint:#262938;
+  --accent:#B794E6; --accent-soft:#2E2340; --face:#5BB8D4; --face-soft:#16384A;
+  --gold:#E2B65A; --gold-soft:#3A2F17; --good:#86C998; --good-soft:#1C3824; --bad:#F0A266; --bad-soft:#43291A; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;padding-inline:20px;padding-block:0 60px}
+.wrap{max-width:1080px;margin:0 auto}
+.hero{padding-block:40px 18px;display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(34px,5.5vw,54px);line-height:1;margin:0;text-wrap:balance}
+.hero p{margin:0;color:var(--muted);font-size:18px;max-width:62ch}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);margin-inline:-20px;padding:10px 20px}
+.bar .wrap{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.bar a{flex:0 0 auto;text-decoration:none;color:var(--muted);font-size:14px;font-weight:500;padding:6px 12px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
+.bar a b{font-family:var(--mono);font-weight:500;margin-right:6px;color:var(--accent)}
+.bar a.on{background:var(--surface);border-color:var(--accent);color:var(--ink)}
+.act{margin-top:34px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:18px;scroll-margin-top:70px}
+.tag{display:inline-block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:4px 10px;border-radius:999px}
+.act h2{font-family:var(--display);font-size:clamp(26px,3.6vw,34px);margin:8px 0 4px;line-height:1.1;text-wrap:balance}
+.how{margin:0;color:var(--muted);font-size:17px;max-width:70ch}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:var(--body);font-size:12px;fill:var(--muted)}
+svg .mono{font-family:var(--mono)}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:600 15px var(--body);padding:10px 20px;border-radius:999px;border:1px solid var(--accent);background:var(--accent);color:var(--surface);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.35;cursor:default}
+.msg{margin:0;font-size:16px;min-height:1.5em}
+.msg.good{color:var(--good)} .msg.bad{color:var(--bad)}
+
+/* formula */
+.fx{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-style:italic;font-size:22px;color:var(--ink);line-height:1.15;flex-wrap:nowrap}
+.fx .up{font-style:normal}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle}
+.fr>span:first-child{border-bottom:1.5px solid currentColor;padding:0 4px 2px}
+.fr>span:last-child{padding:2px 4px 0}
+.fx .fr{font-size:.92em}
+.brk{position:relative;display:inline-flex;align-items:center;padding:4px 8px;border-left:2px solid currentColor;border-right:2px solid currentColor}
+.brk::before,.brk::after{content:'';position:absolute;top:0;bottom:0;width:6px;border-top:2px solid currentColor;border-bottom:2px solid currentColor}
+.brk::before{left:0}.brk::after{right:0}
+.par{display:inline-flex;align-items:center}
+.par::before{content:'(';font-size:1.5em;font-style:normal;font-weight:300}.par::after{content:')';font-size:1.5em;font-style:normal;font-weight:300}
+sup{font-size:.62em}
+.fwrap{overflow-x:auto;padding:6px 2px}
+
+/* activity 1 */
+.match{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px;align-items:start}
+.col{display:flex;flex-direction:column;gap:10px}
+.colh{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+.story{font:inherit;text-align:left;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.story .who{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+.story mark{background:transparent;color:inherit}
+.story.done mark{background:var(--gold-soft);color:var(--ink);border-radius:4px;padding:0 2px}
+.story.sel,.tlc.sel{border-color:var(--accent);background:var(--accent-soft)}
+.story.done,.tlc.done{border-color:var(--good);background:var(--good-soft);cursor:default}
+.story .kind{font-weight:600;color:var(--good)}
+.tls{display:grid;grid-template-columns:1fr;gap:8px}
+.tlc{font:inherit;border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:8px 8px 4px;cursor:pointer;color:var(--ink);text-align:left;position:relative}
+.tlc .lt{position:absolute;top:8px;left:10px;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.tlc.wrong{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.score{font-family:var(--mono);color:var(--accent)}
+.reveal{border-radius:14px;background:var(--accent-soft);padding:14px 16px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center}
+.reveal .k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--accent);width:100%}
+
+/* activity 2 */
+.tabs{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--bg)}
+.tabs button{font:500 14px var(--body);border:none;background:transparent;color:var(--ink);padding:7px 16px;border-radius:999px;cursor:pointer}
+.tabs button.on{background:var(--surface);color:var(--accent);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.read{font-size:21px;line-height:1.9;font-family:var(--display);max-width:60ch;margin:0}
+.ph{cursor:pointer;border-radius:6px;padding:2px 3px;background:var(--faint);transition:background .2s}
+.ph:hover{background:var(--accent-soft)}
+.ph.hit{background:var(--gold-soft);box-shadow:inset 0 -2px 0 var(--gold)}
+.ph.miss{background:var(--faint);opacity:.55}
+.det{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:20px;align-items:start}
+.check{display:flex;flex-direction:column;gap:8px}
+.row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;align-items:center;background:var(--bg);border-radius:10px;padding:10px 12px}
+.row span{font-size:13px;font-weight:600;color:var(--muted)}
+.row b{font-family:var(--mono);font-weight:500;color:var(--muted)}
+.row.ok{background:var(--good-soft)} .row.ok b{color:var(--ink)}
+
+/* activity 3 */
+.fsel{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:500 15px var(--body);padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.chip.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.chip.right{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.chip.wrong{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.pt{cursor:pointer;border-radius:6px;padding:1px 2px;outline:1.5px solid transparent;transition:background .15s,outline-color .15s}
+.pt:hover{outline-color:var(--accent)}
+.pt.on{background:var(--gold-soft);outline-color:var(--gold)}
+.fbig .fx{font-size:30px}
+.explain{background:var(--bg);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;min-height:120px}
+.explain .k{font-family:var(--display);font-style:italic;font-size:20px;font-weight:600;color:var(--gold)}
+.explain p{margin:0;font-size:17px;max-width:66ch}
+.explain .num{font-family:var(--mono);font-size:15px;color:var(--accent)}
+
+/* activity 4 */
+.steps{display:flex;gap:6px;flex-wrap:wrap}
+.steps span{font-family:var(--mono);font-size:13px;padding:4px 10px;border-radius:999px;background:var(--bg);color:var(--muted)}
+.steps span.on{background:var(--accent);color:var(--surface)}
+.steps span.done{background:var(--accent-soft);color:var(--accent)}
+.q{font-weight:600;font-size:18px;margin:0}
+.ans{border-radius:14px;padding:14px 16px;background:var(--gold-soft);font-size:17px}
+.ans b{font-family:var(--mono);font-weight:500}
+.nav{display:flex;justify-content:space-between;gap:10px}
+@media (max-width:760px){.act{padding:18px}.match,.det{grid-template-columns:1fr}.tls{grid-template-columns:1fr}.row{grid-template-columns:1fr}.read{font-size:19px}}
+.ledger{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.lbox{border-radius:10px;padding:10px 14px;background:var(--bg);min-width:140px}
+.lbox span{display:block;font:600 12px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.lbox b{font-family:var(--mono);font-weight:500;font-size:20px}
+.lop{font-family:var(--mono);font-size:26px;color:var(--muted)}
+.deriv{font-family:var(--mono);font-size:16px;line-height:1.9;overflow-x:auto;white-space:nowrap;margin-bottom:6px}
+.kP{color:var(--accent);font-weight:600}.kT{color:var(--bad);font-weight:600}
+</style>
+<style>
+body{margin:0}
+.homebar{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1120px;margin:0 auto;padding:14px 0 0;font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;font-size:14px}
+.homebar a{color:var(--accent,#6B3FA0);text-decoration:none;font-weight:600}
+.homebar a:hover{text-decoration:underline}
+.homebar span{color:var(--muted,#5B6578)}
+</style>
+<nav class="homebar" aria-label="Site"><a href="index.html">← All FIA 203 topics</a><span>FIA 203 Corporate Finance</span></nav>
+
+<style>
+/* Paging, row-aligned matching and replay controls. */
+.act[hidden]{display:none!important}
+.act{margin-top:24px}
+.bar a{cursor:pointer}
+.ahead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:12px}
+.again{font:600 14px var(--body);padding:8px 16px;border-radius:999px;border:1px solid var(--accent);background:var(--surface);color:var(--accent);cursor:pointer;white-space:nowrap}
+.again:hover{background:var(--accent-soft)}
+.round{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.pager{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:16px}
+.pager button{font:600 15px var(--body);padding:10px 18px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.pager button.next{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.pager button[hidden]{display:none}
+.mgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:10px 20px;align-items:stretch}
+.mgrid .story,.mgrid .tlc{height:100%}
+.tlc svg{display:block}
+@media (max-width:760px){.mgrid{grid-template-columns:1fr}.mgrid .colh.r{display:none}}
+</style>
+
+<div class="wrap hero">
+  <p class="eyebrow">Corporate Finance · Time value of money</p>
+  <h1>Reading Cash Flows</h1>
+  <p>Before any formula, learn to see the cash flows in a story. Four short activities. No calculations needed.</p>
+</div>
+<nav class="bar" aria-label="Activities"><div class="wrap" id="nav"></div></nav>
+
+<div class="wrap">
+
+<section class="act" id="a1" data-nav="Match the story">
+  <div class="ahead"><div><span class="tag">Activity 1</span><h2>Match the story to its cash flows</h2>
+  <p class="how">Tap a story, then tap the timeline that shows its cash flows. When you get it right, the clue words light up and the formula appears.</p></div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><button class="again" id="again1">↻ Play again with new stories</button><span class="round" id="round1"></span></div></div>
+  <div class="mgrid" id="mgrid"></div>
+  <p class="msg" id="m1">Start by tapping a story.</p>
+  <div id="rev1" style="display:flex;flex-direction:column;gap:10px"></div>
+</section>
+
+<section class="act" id="a2" data-nav="Clue detective" hidden>
+  <div class="ahead"><div><span class="tag">Activity 2</span><h2>Clue-word detective</h2>
+  <p class="how">Every cash-flow story answers four questions: how much, when does it start, how long, and is it constant or growing. Tap the words in the story that answer them. Words that don't matter will fade.</p></div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><button class="again" id="again2">↻ New story</button><span class="round" id="round2"></span></div></div>
+  <p class="read" id="dstory"></p>
+  <div class="det">
+    <div class="check" id="dcheck"></div>
+    <div><svg id="dtl" viewBox="0 0 560 200" role="img" aria-label="Timeline built from the clues"></svg></div>
+  </div>
+  <p class="msg" id="m2"></p>
+  <div id="rev2"></div>
+</section>
+
+<section class="act" id="a3" data-nav="Build the formula" hidden>
+  <div class="ahead"><div><span class="tag">Activity 3</span><h2>Build the annuity from two perpetuities</h2>
+  <p class="how">Where does the annuity formula on your sheet come from? Not from algebra. An annuity is simply a perpetuity that stops. Three steps, one guess at each.</p></div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><button class="again" id="again3">↻ New example</button></div></div>
+  <div class="tabs" id="btabs" role="group" aria-label="Which annuity"><button data-k="ann" class="on">Annuity</button><button data-k="gann">Growing annuity</button></div>
+  <p class="msg" id="bstory" style="color:var(--ink);font-size:17px"></p>
+  <div class="steps" id="bsteps"></div>
+  <p class="q" id="bq"></p>
+  <div class="fsel" id="bchips"></div>
+  <p class="msg" id="bhint"></p>
+  <svg id="btl" viewBox="0 0 760 230" role="img" aria-label="Payments forever, the tail and the annuity"></svg>
+  <div class="ledger" id="bled"></div>
+  <div class="ans" id="bans" hidden></div>
+  <div class="nav"><button class="btn ghost" id="bback">Back</button><button class="btn" id="bnext">Next step</button></div>
+</section>
+
+<section class="act" id="a4" data-nav="Instant loan" hidden>
+  <div class="ahead"><div><span class="tag">Activity 4</span><h2>The instant-loan app</h2>
+  <p class="how" id="pstory"></p></div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><button class="again" id="again4">↻ Try another loan</button><span class="round" id="round4"></span></div></div>
+  <div class="steps" id="psteps"></div>
+  <p class="q" id="pq"></p>
+  <div class="fsel" id="pchips"></div>
+  <p class="msg" id="phint"></p>
+  <svg id="pvis" viewBox="0 0 760 240" role="img" aria-label="Instant loan visual"></svg>
+  <div class="ans" id="pans" hidden></div>
+  <div class="nav"><button class="btn ghost" id="pback">Back</button><button class="btn" id="pnext">Next step</button></div>
+</section>
+
+<div class="pager" id="pager" style="margin-top:20px"><button id="pgprev">← Previous activity</button><button class="next" id="pgnext">Next activity →</button></div>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NS='http://www.w3.org/2000/svg';
+const el=(t,a,x)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(x!=null)e.textContent=x;return e};
+const T=(s,x,y,t,o={})=>s.append(el('text',{x,y,'text-anchor':o.a||'middle',class:o.mono?'mono':'',style:`fill:${o.f||css('--muted')};${o.b?'font-weight:600;':''}${o.sz?'font-size:'+o.sz+'px;':''}`},t));
+const Ln=(s,x1,y1,x2,y2,st,w=1)=>s.append(el('line',{x1,y1,x2,y2,stroke:st,'stroke-width':w}));
+const inr=v=>'₹'+Math.round(v).toLocaleString('en-IN');
+const L2=v=>v.toFixed(2).replace(/\.?0+$/,'');
+const fmtL=v=>v>=1e7?'₹'+L2(v/1e7)+'Cr':v>=1e5?'₹'+L2(v/1e5)+'L':v>=1000?inr(v):'₹'+v.toFixed(2);
+const pc=v=>L2(v*100)+'%';
+const sup=n=>String(n).split('').map(d=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[d]).join('');
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function anim(ms,step,done){if(reduce){step(1);done&&done();return}let t0=null;const f=ts=>{t0??=ts;const p=Math.min(1,(ts-t0)/ms);step(p);p<1?requestAnimationFrame(f):done&&done()};requestAnimationFrame(f)}
+const redraws=[];
+
+/* formulas, exactly as on the sheet */
+const P=(id,html)=>`<span class="pt" data-p="${id}" tabindex="0" role="button">${html}</span>`;
+const fr=(a,b)=>`<span class="fr"><span>${a}</span><span>${b}</span></span>`;
+const F={
+ ann:(p=x=>x[1])=>`<span class="fx"><span class="up">PV</span> = ${p(['C','C'])}${p(['brk',`<span class="brk">${fr(p(['share',`1 − ${p(['df',fr('1','(1 + <i>r</i>)<sup><i>t</i></sup>')])}`]),p(['r','<i>r</i>']))}</span>`])}</span>`,
+ gann:(p=x=>x[1])=>`<span class="fx"><span class="up">PV</span> = ${p(['C','C'])}${p(['brk',`<span class="brk">${fr(p(['share',`1 − ${p(['ratio',`<span class="par">${fr('1 + <i>g</i>','1 + <i>r</i>')}</span><sup><i>t</i></sup>`])}`]),p(['rg','<i>r</i> − <i>g</i>']))}</span>`])}</span>`,
+ perp:(p=x=>x[1])=>`<span class="fx"><span class="up">PV</span> = ${fr(p(['C','C']),p(['r','<i>r</i>']))}</span>`,
+ gperp:(p=x=>x[1])=>`<span class="fx"><span class="up">PV</span> = ${fr(p(['C','C']),p(['rg','<i>r</i> − <i>g</i>']))}</span>`,
+ single:(p=x=>x[1])=>`<span class="fx"><span class="up">PV</span> = ${fr(p(['FV','<span class="up">FV</span>']),p(['df','(1 + <i>r</i>)<sup><i>t</i></sup>']))}</span>`
+};
+const plain=k=>F[k]();
+const KIND={ann:['Annuity','The same amount, every year, for a fixed number of years.'],perp:['Perpetuity','The same amount every year, with no end.'],
+  gperp:['Growing perpetuity','A rising amount every year, with no end.'],gann:['Growing annuity','A rising amount every year, for a fixed number of years.'],single:['Single sum','One amount, at one date.']};
+
+/* timeline from a type and its numbers: p = {A, n, g} */
+function tlFor(type,p){const g=p.g||0,amt=k=>p.A*Math.pow(1+g,k-1),c=[{l:'0'}];
+  const pay=k=>({l:String(k),v:amt(k),t:fmtL(amt(k))});
+  if(type==='perp'||type==='gperp'){for(let k=1;k<=4;k++)c.push(pay(k));return {cols:c,forever:true,grow:type==='gperp'}}
+  if(type==='single'){const n=p.n;if(n<=6){for(let k=1;k<=n;k++)c.push(k===n?{l:String(k),v:p.A,t:fmtL(p.A)}:{l:String(k)})}else{c.push({l:'1'},{l:'2'},{gap:1},{l:String(n-1)},{l:String(n),v:p.A,t:fmtL(p.A)})}return {cols:c}}
+  const n=p.n;if(n<=6){for(let k=1;k<=n;k++)c.push(pay(k))}else{c.push(pay(1),pay(2),pay(3),{gap:1},pay(n-1),pay(n))}
+  return {cols:c,grow:type==='gann'}}
+
+function drawTL(s,{cols,forever=false,grow=false,W=460,H=170,today=null}){
+  s.innerHTML='';const L=28,R=forever?60:38,base=H-34,n=cols.length,X=i=>L+(W-L-R)*i/(n-1);
+  Ln(s,L-10,base,W-(forever?40:8),base,css('--ink'),1.5);
+  const vals=cols.filter(c=>c.v).map(c=>c.v),mx=Math.max(...vals,1);let k=0;
+  cols.forEach((c,i)=>{const x=X(i);
+    if(c.gap){T(s,x,base-24,'…',{sz:20});return}
+    Ln(s,x,base-4,x,base+4,css('--ink'),1.5);T(s,x,base+18,c.l,{sz:12,f:i===0?css('--ink'):css('--muted'),b:i===0});
+    if(c.v){const h=Math.min(base-24,grow?30+14*k:(36+52*c.v/mx));k++;const col=c.col||css('--accent'),op=c.ghost?.25:1;
+      s.append(el('line',{x1:x,y1:base,x2:x,y2:base-h,stroke:col,'stroke-width':3,opacity:op}));
+      s.append(el('polygon',{points:`${x-6},${base-h+8} ${x+6},${base-h+8} ${x},${base-h-2}`,fill:col,opacity:op}));
+      if(c.t)T(s,x,base-h-8,c.t,{mono:1,sz:11,f:c.ghost?css('--muted'):css('--ink'),b:!c.ghost})}});
+  if(forever){T(s,W-24,base-24,'…',{sz:20});T(s,W-24,base+18,'∞',{sz:16,f:css('--accent'),b:1})}
+  if(today)T(s,L,22,today,{a:'start',sz:12,f:css('--face'),b:1});
+}
+
+/* ---------- paging ---------- */
+const acts=[...document.querySelectorAll('.act')],nav=$('nav');let page=0;
+acts.forEach((s,i)=>{const a=document.createElement('a');a.href='#'+s.id;a.innerHTML=`<b>${i+1}</b>${s.dataset.nav}`;a.addEventListener('click',e=>{e.preventDefault();go(i)});nav.append(a)});
+function go(i,init){page=Math.max(0,Math.min(acts.length-1,i));acts.forEach((s,j)=>s.hidden=j!==page);
+  nav.querySelectorAll('a').forEach((a,j)=>a.classList.toggle('on',j===page));
+  $('pgprev').hidden=page===0;$('pgnext').hidden=page===acts.length-1;
+  $('pgnext').textContent=page<acts.length-1?`Next: ${acts[page+1].dataset.nav} →`:'';
+  $('pgprev').textContent=page>0?`← ${acts[page-1].dataset.nav}`:'';
+  if(!init){try{history.replaceState(null,'','#'+acts[page].id)}catch(e){}}
+  redraws.forEach(f=>f());if(!init)window.scrollTo({top:0,behavior:reduce?'auto':'smooth'})}
+$('pgprev').addEventListener('click',()=>go(page-1));$('pgnext').addEventListener('click',()=>go(page+1));
+
+/* ===== Activity 1: story bank ===== */
+const BANK={
+ ann:[()=>{const A=pick([300000,500000,800000,1000000]),n=pick([10,15,20,25]);return {who:'Lottery',p:{A,n},text:`You win a state lottery prize of ${inr(A)}, paid <mark>at the end of every year</mark> <mark>for the next ${n} years</mark>.`}},
+      ()=>{const A=pick([120000,180000,240000]),n=pick([5,8,10]);return {who:'Fixed lease',p:{A,n},text:`A tenant agrees to pay you a fixed ${inr(A)} <mark>at the end of each year</mark> <mark>for ${n} years</mark>, with <mark>no increase</mark>.`}},
+      ()=>{const A=pick([200000,300000,400000]),n=pick([12,15,20]);return {who:'Pension',p:{A,n},text:`After retiring, you will receive a pension of ${inr(A)} <mark>every year</mark> <mark>for ${n} years</mark>, the first one <mark>a year after you retire</mark>.`}}],
+ perp:[()=>{const A=pick([180000,240000,300000]),c=pick(['Hyderabad','Pune','Chennai','Kochi']);return {who:'Shop rent',p:{A},text:`Your family owns a shop in ${c}, rented out for ${inr(A)} <mark>a year</mark>, <mark>forever</mark>. The next rent arrives <mark>in one year</mark>.`}},
+       ()=>{const A=pick([80,85,90]);return {who:'Perpetual bond',p:{A},text:`A bank's perpetual bond pays a fixed coupon of ${inr(A)} <mark>every year</mark>, with <mark>no maturity date</mark>.`}},
+       ()=>{const A=pick([50000,75000,100000]);return {who:'Trust grant',p:{A},text:`A family trust will give ${inr(A)} to a village school <mark>every year, forever</mark>, starting <mark>next year</mark>.`}}],
+ gperp:[()=>{const A=pick([10,15,20,25]),g=pick([0.04,0.05,0.06]);return {who:'Dividend',p:{A,g},text:`A company will pay a dividend of ${inr(A)} per share <mark>next year</mark>. Dividends are expected to <mark>grow at ${pc(g)} a year</mark> <mark>forever</mark>.`}},
+        ()=>{const A=pick([200000,300000,400000]),g=pick([0.03,0.04,0.05]);return {who:'Land lease',p:{A,g},text:`Land leased to a warehouse company earns ${inr(A)} <mark>next year</mark>, and the rent <mark>rises ${pc(g)} a year</mark>, <mark>forever</mark>.`}}],
+ gann:[()=>{const A=pick([1200000,1500000,1800000]),g=pick([0.06,0.08,0.10]),n=pick([25,30,35]);return {who:'Salary',p:{A,g,n},text:`After your MBA you expect a salary of ${fmtL(A).replace('L',' lakh')} <mark>next year</mark>, <mark>rising ${pc(g)} a year</mark> <mark>until you retire in ${n} years</mark>.`}},
+       ()=>{const A=pick([150000,200000,250000]),g=pick([0.08,0.10]),n=pick([10,12]);return {who:'School fees',p:{A,g,n},text:`Your sister's school fee of ${inr(A)} is due <mark>at the end of this year</mark>, and it <mark>rises ${pc(g)} every year</mark> <mark>for ${n} years</mark>.`}},
+       ()=>{const A=pick([300000,360000]),g=pick([0.05,0.07]),n=pick([9,12]);return {who:'Rising lease',p:{A,g,n},text:`A tenant pays ${inr(A)} <mark>at the end of the first year</mark>, with rent <mark>going up ${pc(g)} each year</mark> <mark>over a ${n}-year lease</mark>.`}}],
+ single:[()=>{const A=pick([500000,1000000,1500000]),n=pick([3,4,5,6]);return {who:'Down payment',p:{A,n},text:`Your parents promise you ${inr(A)} <mark>once</mark>, for a home down payment, <mark>in ${n} years</mark>.`}},
+         ()=>{const A=pick([2000000,3500000,5000000]),n=pick([2,3,8]);return {who:'Land sale',p:{A,n},text:`When a land sale completes <mark>in ${n} years</mark>, you will receive ${inr(A)} <mark>in one lump sum</mark>.`}},
+         ()=>{const A=pick([200000,300000]),n=pick([4,5,10]);return {who:'Gift',p:{A,n},text:`Your uncle will gift you ${inr(A)} <mark>on your wedding</mark>, expected <mark>${n} years from now</mark>.`}}]
+};
+(()=>{let round=0,S=[],order=[],sel=null,done=new Set();const letters='ABCDE',grid=$('mgrid');
+ const deal=()=>{round++;$('round1').textContent='Round '+round;sel=null;done=new Set();$('rev1').innerHTML='';
+  S=shuffle(Object.keys(BANK)).map(type=>({type,...pick(BANK[type])()}));order=shuffle([0,1,2,3,4]);
+  if(order.every((v,i)=>v===i))order=[1,0,3,2,4];
+  grid.innerHTML='<div class="colh">Stories</div><div class="colh r">Timelines · <span class="score" id="score">0 of 5 matched</span></div>';
+  S.forEach((s,i)=>{const b=document.createElement('button');b.className='story';
+    b.innerHTML=`<span class="who">${s.who}</span><span>${s.text}</span><span class="kind" hidden></span>`;
+    b.addEventListener('click',()=>{if(done.has(i))return;sel=i;grid.querySelectorAll('.story').forEach(x=>x.classList.toggle('sel',x===b));$('m1').className='msg';$('m1').textContent='Now tap the timeline that matches this story.'});
+    const j=i,si=order[j],t=document.createElement('button');t.className='tlc';t.dataset.si=si;t.innerHTML=`<span class="lt">${letters[j]}</span><svg viewBox="0 0 460 150" aria-label="Timeline ${letters[j]}"></svg>`;
+    t.addEventListener('click',()=>{if(t.classList.contains('done'))return;if(sel===null){$('m1').className='msg';$('m1').textContent='Tap a story first.';return}
+      const st=grid.querySelectorAll('.story')[sel];
+      if(+t.dataset.si===sel){done.add(sel);t.classList.add('done');st.classList.remove('sel');st.classList.add('done');const k=st.querySelector('.kind');k.hidden=false;k.textContent=`✓ ${KIND[S[sel].type][0]}: ${KIND[S[sel].type][1]}`;
+        $('m1').className='msg good';$('m1').textContent=done.size===5?'All five matched. The clue words decide the formula. Press "Play again" for new stories.':'Correct. The highlighted words are the clues.';
+        $('score').textContent=`${done.size} of 5 matched`;
+        const r=document.createElement('div');r.className='reveal';r.innerHTML=`<span class="k">${S[sel].who} · ${KIND[S[sel].type][0]}</span><div class="fwrap">${plain(S[sel].type)}</div>`;$('rev1').append(r);sel=null}
+      else{t.classList.remove('wrong');void t.offsetWidth;t.classList.add('wrong');$('m1').className='msg bad';
+        const a=S[sel],b2=S[+t.dataset.si],fa=a.type.includes('perp'),fb=b2.type.includes('perp'),ga=a.type[0]==='g',gb=b2.type[0]==='g';
+        $('m1').textContent='Not this one. '+(a.type==='single'?'Does this story pay more than once?':fa!==fb?'Check: does the story stop, or go on forever?':ga!==gb?'Check: is the amount the same every year, or rising?':'Check how many payments there are.')}});
+    grid.append(b,t)});
+  $('m1').className='msg';$('m1').textContent='Start by tapping a story.';draw()};
+ const draw=()=>grid.querySelectorAll('.tlc').forEach(t=>{const s=S[+t.dataset.si];drawTL(t.querySelector('svg'),{...tlFor(s.type,s.p),H:150})});
+ $('again1').addEventListener('click',deal);deal();redraws.push(draw)})();
+
+/* ===== Activity 2: detective stories ===== */
+const DET=[
+ ()=>{const A=pick([500000,600000,800000]),g=pick([0.04,0.05,0.06]),n=pick([4,5,6]),c=pick(['Hitec City','Whitefield','Powai']);
+   return {type:'gann',p:{A,g,n},html:`A {x:startup rents an office in ${c}}. It pays {amt:${inr(A)}} {start:at the end of each year} {len:for ${n} years}, and {grow:the rent goes up by ${pc(g)} every year} {x:as agreed in the lease}.`,
+   ans:{amt:`${inr(A)} (first payment)`,start:'End of year 1',len:`${n} payments, then stops`,grow:`Growing, ${pc(g)} a year`}}},
+ ()=>{const A=pick([50000,100000,150000]);
+   return {type:'perp',p:{A},html:`{x:An IMT alumna} {x:sets up a scholarship} that pays {grow:the same} {amt:${inr(A)}} {len:every year, forever}. {x:Students across all programmes can apply.} The first scholarship is awarded {start:one year from today}.`,
+   ans:{amt:inr(A),start:'End of year 1',len:'Forever',grow:'Constant, the same each year'}}},
+ ()=>{const A=pick([150000,200000,250000]),n=pick([3,4,5]),nm=pick(['Priya','Arjun','Fatima','Rohan']);
+   return {type:'ann',p:{A,n},html:`{x:${nm} buys a used car} and agrees to repay the dealer {grow:a fixed} {amt:${inr(A)}} {start:at the end of every year} {len:for ${n} years}. {x:${nm} plans to drive it to work in Gachibowli.}`,
+   ans:{amt:inr(A),start:'End of year 1',len:`${n} payments, then stops`,grow:'Constant, fixed amount'}}},
+ ()=>{const A=pick([12,15,18,20]),g=pick([0.04,0.05,0.07]);
+   return {type:'gperp',p:{A,g},html:`{x:A listed FMCG company} is expected to pay a dividend of {amt:${inr(A)} per share} {start:next year}. {x:Analysts like its brands.} Dividends should {grow:grow at ${pc(g)} a year} {len:indefinitely}.`,
+   ans:{amt:`${inr(A)} (first dividend)`,start:'End of year 1',len:'Forever',grow:`Growing, ${pc(g)} a year`}}},
+ ()=>{const A=pick([120000,150000,180000]),g=pick([0.08,0.10]),n=pick([5,6]),c=pick(['Vizag','Vijayawada','Warangal']);
+   return {type:'gann',p:{A,g,n},html:`{x:Your younger brother joins a college in ${c}}. The fee of {amt:${inr(A)}} is paid {start:at the end of the first year}, and it {grow:rises by ${pc(g)} each year} {len:for the ${n} years of the course}. {x:The campus is near the beach.}`,
+   ans:{amt:`${inr(A)} (first fee)`,start:'End of year 1',len:`${n} payments, then stops`,grow:`Growing, ${pc(g)} a year`}}},
+ ()=>{const A=pick([240000,360000]),n=pick([4,5]);
+   return {type:'ann',p:{A,n},html:`{x:A farmer in Guntur} leases out a field. The tenant pays {grow:the same} {amt:${inr(A)}} {start:at every harvest, once a year from next year,} {len:for ${n} years}. {x:The field grows chillies.}`,
+   ans:{amt:inr(A),start:'End of year 1',len:`${n} payments, then stops`,grow:'Constant, the same each year'}}}
+];
+(()=>{const Q=[['amt','How much?'],['start','When is the first payment?'],['len','How long?'],['grow','Constant or growing?']];
+ let d=null,found={},round=0,deck=[],last=-1;
+ const gated=()=>{const base=tlFor(d.type,d.p),isG=d.type[0]==='g';let cols;
+  if(!found.len){cols=base.cols.slice(0,4).map(c=>({...c}));cols.push({l:'?'})}else cols=base.cols.map(c=>({...c}));
+  let k=0;cols.forEach(c=>{if(!c.v)return;if(!found.start){c.v=null;c.t='';return}
+    if(!found.amt)c.t=k===0?'C':(found.grow?(isG?'C(1+g)'+(k>1?sup(k):''):'C'):'?');else if(k>0&&!found.grow)c.t='?';k++});
+  return {cols,forever:found.len?!!base.forever:false,grow:!!(found.grow&&isG)}};
+ const render=()=>{$('dcheck').innerHTML=Q.map(([k,q])=>`<div class="row ${found[k]?'ok':''}"><span>${q}</span><b>${found[k]?d.ans[k]:'?'}</b></div>`).join('');
+  drawTL($('dtl'),{...gated(),W:560,H:200,today:'Today = year 0'});
+  if(Q.every(([k])=>found[k])){$('m2').className='msg good';$('m2').textContent=`All four clues found. This is a ${KIND[d.type][0].toLowerCase()}. Press "New story" for another.`;
+   $('rev2').innerHTML=`<div class="reveal"><span class="k">${KIND[d.type][0]}: the formula from your sheet</span><div class="fwrap">${plain(d.type)}</div></div>`}};
+ const load=()=>{if(!deck.length){deck=shuffle(DET.map((_,j)=>j));if(deck[0]===last)deck.push(deck.shift())}const i=deck.shift();last=i;d=DET[i]();found={};round++;$('round2').textContent='Story '+round;
+  $('dstory').innerHTML=d.html.replace(/\{(\w+):([^}]+)\}/g,(m,k,t)=>`<span class="ph" data-k="${k}" tabindex="0" role="button">${t}</span>`);
+  $('dstory').querySelectorAll('.ph').forEach(p=>{const hit=()=>{const k=p.dataset.k;if(k==='x'){p.classList.add('miss');$('m2').className='msg';$('m2').textContent='That detail does not change the cash flows.';return}
+    p.classList.add('hit');if(!found[k]){found[k]=1;$('m2').className='msg good';$('m2').textContent='Clue found: '+Q.find(q=>q[0]===k)[1]}render()};
+    p.addEventListener('click',hit);p.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();hit()}})});
+  $('m2').className='msg';$('m2').textContent='Tap the words that answer the four questions.';$('rev2').innerHTML='';render()};
+ $('again2').addEventListener('click',load);load();redraws.push(()=>d&&render())})();
+
+/* ===== Activity 3: build the annuity from two perpetuities (Ross-Westerfield) ===== */
+(()=>{
+ let kind='ann',E,si=0,answered=false,prog=1;
+ const steps=$('bsteps');['Step 1','Step 2','Step 3','The formula'].forEach(t=>{const e=document.createElement('span');e.textContent=t;steps.append(e)});
+ const gen=()=>{if(kind==='ann'){const C=pick([300000,500000,800000]),r=pick([0.08,0.1,0.12]),t=pick([10,15,20,25]),who=pick(['A state lottery pays','A pension pays','A fixed lease pays']);
+    const fv=C/r,df=1/Math.pow(1+r,t),tail=fv*df;return {C,r,g:0,t,fv,f:df,tail,ann:fv-tail,story:`${who} ${inr(C)} at the end of every year for ${t} years. Interest rate ${pc(r)}.`}}
+   const C=pick([1200000,1500000,1800000]),r=pick([0.1,0.12]),g=pick([0.05,0.06,0.08].filter(x=>r-x>=0.02)),t=pick([20,25,30]);
+   const fv=C/(r-g),q=Math.pow((1+g)/(1+r),t),tail=fv*q;return {C,r,g,t,fv,f:q,tail,ann:fv-tail,story:`Your salary is ${fmtL(C).replace('L',' lakh')} next year and grows ${pc(g)} a year for ${t} years, until you retire. Interest rate ${pc(r)}.`}};
+ const S=()=>{const {C,r,g,t,fv,f,tail,ann}=E,G=kind==='gann';
+  const FOREVER=G?'C ÷ (r − g)':'C ÷ r',ff=G?`(${(1+g).toFixed(2)} ÷ ${(1+r).toFixed(2)})${sup(t)}`:`1 ÷ ${(1+r).toFixed(2)}${sup(t)}`;
+  return [
+   {q:`Step 1. Pretend the payments never stop. What is "forever" worth today?`,chips:[],
+    ans:G?`If the salary kept growing ${pc(g)} a year forever, it would be a growing perpetuity: ${FOREVER} = ${fmtL(C)} ÷ ${(r-g).toFixed(2)} = <b>${fmtL(fv)}</b>.`
+         :`If ${inr(C)} came every year forever, it would be a perpetuity: ${FOREVER} = ${inr(C)} ÷ ${r.toFixed(2)} = <b>${fmtL(fv)}</b>.`,show:'fv'},
+   {q:`Step 2. The real payments stop after year ${t}. The missing part, from year ${t+1} onwards, is itself a ${G?'growing ':''}perpetuity: the tail. Is the tail worth more, the same or less than ${fmtL(fv)} today?`,
+    chips:[['More',0],['The same',0],['Less',1]],hint:`Think about when the tail starts. Money that arrives ${t} years later is worth less today.`,
+    ans:G?`<b>Less.</b> Look at the year ${t+1} payment on the timeline: <b>${fmtL(C*Math.pow(1+g,t))}</b> (${fmtL(C)} × ${(1+g).toFixed(2)}${sup(t)}). Standing in year ${t}, the tail is a growing perpetuity that starts with this payment, so it is worth ${fmtL(C*Math.pow(1+g,t))} ÷ ${(r-g).toFixed(2)} = <b>${fmtL(C*Math.pow(1+g,t)/(r-g))}</b> in year ${t}. Now bring it back ${t} years: ${fmtL(C*Math.pow(1+g,t)/(r-g))} ÷ ${(1+r).toFixed(2)}${sup(t)} = ${fmtL(C*Math.pow(1+g,t)/(r-g))} ÷ ${Math.pow(1+r,t).toFixed(2)} = <b>${fmtL(tail)}</b> today.`
+         :`<b>Less.</b> Standing in year ${t}, the tail is worth ${fmtL(fv)}, exactly like the forever stream. But it starts ${t} years later, so today it shrinks: ${fmtL(fv)} × ${ff} = ${fmtL(fv)} × ${f.toFixed(4)} = <b>${fmtL(tail)}</b>.`,show:'tail'},
+   {q:`Step 3. So what is the ${t}-year ${G?'growing ':''}annuity worth today?`,
+    chips:shuffle([[`${fmtL(fv)} + ${fmtL(tail)}`,0],[`${fmtL(fv)} − ${fmtL(tail)}`,1],[`Just ${fmtL(tail)}`,0]]),hint:'The annuity is what is left of "forever" once the tail is removed.',
+    ans:`Forever minus the tail: ${fmtL(fv)} − ${fmtL(tail)} = <b>${fmtL(ann)}</b>. That is the ${G?'growing ':''}annuity.`,show:'ann'},
+   {q:'The formula on your sheet is exactly these three steps.',chips:[],show:'formula',
+    ans:G?`<div class="deriv">PV = <span class="kP">C ÷ (r − g)</span> − <span class="kT">C ÷ (r − g) × ((1 + g) ÷ (1 + r))ᵗ</span><br>&nbsp;&nbsp;&nbsp; = C × [ (<span class="kP">1</span> − <span class="kT">((1 + g) ÷ (1 + r))ᵗ</span>) ÷ (r − g) ]</div><div class="fwrap">${F.gann()}</div>The <span class="kP">1</span> is the forever stream. The <span class="kT">((1 + g) ÷ (1 + r))ᵗ</span> is the tail you take away.`
+         :`<div class="deriv">PV = <span class="kP">C ÷ r</span> − <span class="kT">C ÷ r × 1 ÷ (1 + r)ᵗ</span><br>&nbsp;&nbsp;&nbsp; = C × [ (<span class="kP">1</span> − <span class="kT">1 ÷ (1 + r)ᵗ</span>) ÷ r ]</div><div class="fwrap">${F.ann()}</div>The <span class="kP">1</span> is the forever stream. The <span class="kT">1 ÷ (1 + r)ᵗ</span> is the tail you take away.`}
+  ]};
+ let ST;
+ const draw=()=>{if(!E)return;const s=$('btl');s.innerHTML='';const st=ST[si].show,{C,g,t}=E,G=kind==='gann';
+  const ink=css('--ink'),P=css('--accent'),Tc=css('--bad'),Gd=css('--good'),mu=css('--muted');
+  const labs=['0','1','2','3','gap',String(t),String(t+1),String(t+2),String(t+3),'gap2'],W=760,L=30,base=170,X=i=>L+(W-L-60)*i/(labs.length-1);
+  const phase=st==='fv'||(st==='tail'&&!answered&&false)?'fv':st;
+  Ln(s,L-10,base,W-30,base,ink,1.5);T(s,W-36,base+20,'∞',{sz:16,f:P,b:1});
+  const tailCol=st==='tail'?Tc:(st==='ann'||st==='formula')?mu:P;
+  let k=0;labs.forEach((l,i)=>{const x=X(i);if(l==='gap'){T(s,x,base-30,'…',{sz:20});return}if(l==='gap2'){T(s,x,base-30,'…',{sz:20,f:tailCol});return}
+    Ln(s,x,base-4,x,base+4,ink,1.5);T(s,x,base+20,l,{sz:12,f:i===0?ink:mu,b:i===0});if(i===0)return;
+    const yr=+l,inTail=yr>t,amt=C*Math.pow(1+g,yr-1),h=G?Math.min(110,46+k*9):70;k++;
+    let col=P,op=1;if(inTail){if(st==='tail')col=Tc;else if(st==='ann'||st==='formula'){col=mu;op=.18}}else if(st==='ann'||st==='formula')col=Gd;
+    s.append(el('line',{x1:x,y1:base,x2:x,y2:base-h,stroke:col,'stroke-width':3,opacity:op}));
+    s.append(el('polygon',{points:`${x-6},${base-h+8} ${x+6},${base-h+8} ${x},${base-h-2}`,fill:col,opacity:op}));
+    if(op>0.5)T(s,x,base-h-8,fmtL(amt),{mono:1,sz:11,f:ink,b:1})});
+  const br=(i0,i1,y,col,txt)=>{const x0=X(i0)-14,x1=X(i1)+14;s.append(el('path',{d:`M${x0},${y+8} v-8 H${x1} v8`,fill:'none',stroke:col,'stroke-width':2}));T(s,(x0+x1)/2,y-8,txt,{f:col,b:1,sz:13})};
+  if(st==='fv')br(1,9,26,P,G?`Forever: growing perpetuity, worth ${fmtL(E.fv)} today`:`Forever: perpetuity, worth ${fmtL(E.fv)} today`);
+  if(st==='tail'){br(1,5,26,P,`Payments you get`);br(6,9,26,Tc,answered?`The tail: worth ${fmtL(E.tail)} today`:`The tail: worth ? today`)}
+  if(st==='ann'||st==='formula')br(1,5,26,Gd,answered||st==='formula'?`What is left: the ${t}-year annuity, ${fmtL(E.ann)}`:'What is left: worth ? today');
+  // ledger
+  const box=(lab,v,col)=>`<div class="lbox" style="border-left:4px solid ${col}"><span>${lab}</span><b>${v}</b></div>`;
+  let h=box('Forever',fmtL(E.fv),P);
+  if(si>=1)h+=`<span class="lop">−</span>`+box('Tail',si>1||answered?fmtL(E.tail):'?',Tc);
+  if(si>=2)h+=`<span class="lop">=</span>`+box(G?'Growing annuity':'Annuity',si>2||answered?fmtL(E.ann):'?',Gd);
+  $('bled').innerHTML=h};
+ const show=()=>{const s=ST[si];[...steps.children].forEach((e,i)=>{e.className=i===si?'on':i<si?'done':''});
+  $('bq').textContent=s.q;$('bhint').className='msg';$('bhint').textContent='';const box=$('bchips');box.innerHTML='';
+  s.chips.forEach(([t,ok])=>{const b=document.createElement('button');b.className='chip';b.textContent=t;b.addEventListener('click',()=>{if(answered)return;
+    if(!ok){b.classList.add('wrong');$('bhint').className='msg bad';$('bhint').textContent='Not quite. '+s.hint;return}
+    b.classList.add('right');$('bhint').className='msg good';$('bhint').textContent='Correct.';reveal()});box.append(b)});
+  if(s.chips.length){const sk=document.createElement('button');sk.className='chip';sk.textContent='Just show me';sk.style.opacity='.7';sk.addEventListener('click',()=>{if(answered)return;box.querySelectorAll('.chip').forEach((c,j)=>{if(s.chips[j]&&s.chips[j][1])c.classList.add('right')});reveal()});box.append(sk)}
+  $('bans').hidden=!answered;$('bans').innerHTML=s.ans;$('bback').disabled=si===0;$('bnext').disabled=!answered||si===ST.length-1;draw()};
+ const reveal=()=>{answered=true;$('bans').hidden=false;$('bnext').disabled=si===ST.length-1;draw()};
+ const start=()=>{E=gen();ST=S();$('bstory').textContent=E.story;si=0;answered=true;show()};
+ $('bnext').addEventListener('click',()=>{si++;answered=!ST[si].chips.length;show()});
+ $('bback').addEventListener('click',()=>{si--;answered=true;show()});
+ $('again3').addEventListener('click',start);
+ $('btabs').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{kind=b.dataset.k;$('btabs').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));start()}));
+ start();redraws.push(draw)})();
+
+/* ===== Activity 4: instant-loan app, with fresh terms ===== */
+(()=>{
+ const sig2=v=>{const p=Math.pow(10,Math.floor(Math.log10(v))-1);return Math.round(v/p)*p};
+ const pct=v=>(v*100).toLocaleString('en-IN',{maximumFractionDigits:v*100<1000?2:0})+'%';
+ let L,ST,si=0,answered=false,prog=1,round=0;
+ const make=first=>{const P=first?10000:pick([5000,10000,20000]),k=first?0.25:pick([0.10,0.15,0.20,0.25]),d=first?15:pick([7,10,15,30]);
+  const per=365/d,apr=k*per,ear=Math.pow(1+k,per)-1,R=P*(1+k),cost=R-P,owe=P*Math.pow(1+k,per);
+  L={P,k,d,per,apr,ear,R,cost,owe};
+  $('pstory').innerHTML=`Short of cash before salary day, you use an instant-loan app. It credits <b>${inr(P)}</b> to your account today. In <b>${d} days</b> it auto-debits <b>${inr(R)}</b>. What does this loan really cost per year? Guess at each step before you reveal.`;
+  const ep=[apr,Math.sqrt(apr*ear),ear].map(v=>sig2(v*100));
+  ST=[
+   {q:`For ${d} days of borrowing, what did the loan cost you?`,chips:shuffle([[inr(R),0],[`${inr(cost)}, which is ${pc(k)} of ${inr(P)}`,1],[`${inr(cost/10)}, which is ${pc(k/10)}`,0]]),
+    ans:`You get ${inr(P)} and give back ${inr(R)}. The cost is <b>${inr(cost)}</b> for ${d} days, which is <b>${pc(k)}</b> of what you borrowed, for just ${d} days.`,vis:'deal'},
+   {q:`How many ${d}-day periods fit into one year?`,chips:shuffle([[`About ${Math.round(per/2)}`,0],[`About ${Math.round(per)}`,1],[`About ${Math.round(per*2)}`,0]]),
+    ans:`365 ÷ ${d} = <b>${per.toFixed(2)}</b> periods of ${d} days in a year. Watch the year fill up.`,vis:'strip'},
+   {q:'APR is the per-period rate scaled up to a year. What would you multiply?',chips:shuffle([[`${pc(k)} × ${d}`,0],[`${pc(k)} × 365 ÷ ${d}`,1],[`${pc(k)} ÷ 365`,0]]),
+    ans:`APR simply <b>adds</b> ${pc(k)} for every ${d}-day block: ${pc(k)} × 365 ÷ ${d} = ${pc(k)} × ${per.toFixed(2)} = <b>${pct(apr)}</b>. That is the rate the app would have to quote.`,vis:'apr'},
+   {q:'Suppose you keep rolling the loan over, borrowing again each time to repay, interest included. Guess the effective annual rate.',chips:shuffle(ep.map((v,i)=>[`About ${v.toLocaleString('en-IN')}%`,i===2?1:0])),
+    ans:`Now each ${pc(k)} is charged on a bigger amount: ${inr(P)} → ${inr(P*(1+k))} → ${inr(P*(1+k)**2)} → … After a year you owe about <b>${inr(owe)}</b>. EAR = ${(1+k).toFixed(2)}<sup>${per.toFixed(2)}</sup> − 1 ≈ <b>${pct(ear)}</b>.`,vis:'ear'},
+   {q:'The one-line takeaway',chips:[],ans:`<b>APR adds</b> the slices: ${pc(k)} + ${pc(k)} + … = ${pct(apr)}.<br><b>EAR multiplies</b> them: ${(1+k).toFixed(2)} × ${(1+k).toFixed(2)} × … − 1 ≈ ${pct(ear)}.<br>Always compare borrowing costs using EAR.`,vis:'both'}];
+  ST[0].hint=`Not quite. Compare what you received (${inr(P)}) with what was taken back (${inr(R)}).`;
+  ST[1].hint=`Not quite. A year has 365 days, and each loan lasts ${d} days.`;
+  ST[2].hint=`Not quite. Count how many ${pc(k)} slices fit into a year, then add them up.`;
+  ST[3].hint=`Not quite. Each rollover charges ${pc(k)} on a bigger amount than before, so the cost grows faster than simply adding.`;
+  si=0;answered=false;prog=1;round++;$('round4').textContent='Loan '+round;show()};
+ const steps=$('psteps');['Step 1','Step 2','Step 3','Step 4','Takeaway'].forEach(t=>{const e=document.createElement('span');e.textContent=t;steps.append(e)});
+ const vis=()=>{if(!ST)return;const s=$('pvis');s.innerHTML='';const v=ST[si].vis,ink=css('--ink'),a=css('--accent'),g=css('--gold'),f=css('--face'),b=css('--bad');const {P,k,d,per,R,owe}=L;
+  if(v==='deal'){const x1=120,x2=640,base=150;Ln(s,x1-40,base,x2+40,base,ink,1.5);
+    [[x1,'Today',base+24],[x2,'Day '+d,base-14]].forEach(([x,l,yy])=>{Ln(s,x,base-5,x,base+5,ink,1.5);T(s,x,yy,l,{f:ink,b:1,sz:13})});
+    s.append(el('line',{x1:x1,y1:base,x2:x1,y2:base-80,stroke:f,'stroke-width':4}));s.append(el('polygon',{points:`${x1-8},${base-70} ${x1+8},${base-70} ${x1},${base-84}`,fill:f}));T(s,x1,base-92,'+ '+inr(P)+' credited',{f:f,b:1,sz:14});
+    s.append(el('line',{x1:x2,y1:base,x2:x2,y2:base+60,stroke:b,'stroke-width':4}));s.append(el('polygon',{points:`${x2-8},${base+50} ${x2+8},${base+50} ${x2},${base+64}`,fill:b}));T(s,x2,base+84,'− '+inr(R)+' debited',{f:b,b:1,sz:14});
+    if(answered)T(s,(x1+x2)/2,base-30,`Cost: ${inr(R-P)} = ${pc(k)} for ${d} days`,{f:g,b:1,sz:16})}
+  if(v==='strip'||v==='apr'||v==='both'){const x0=40,W=680,y=70,h=44,bw=W*d/365,pre=v==='apr'&&!answered,nf=pre?per:((answered||v!=='strip')?per*prog:0),col=(v==='strip'||pre)?f:a;
+    s.append(el('rect',{x:x0,y,width:W,height:h,rx:6,fill:css('--faint'),stroke:css('--line')}));
+    const full=Math.floor(nf+1e-9);for(let i=0;i<full;i++)s.append(el('rect',{x:x0+i*bw+0.5,y:y+1,width:Math.max(1,bw-1.5),height:h-2,rx:Math.min(3,bw/3),fill:col,opacity:pre?.35:.85}));
+    if(nf>full)s.append(el('rect',{x:x0+full*bw+0.5,y:y+1,width:Math.max(0,(nf-full)*bw-1),height:h-2,rx:2,fill:col,opacity:pre?.2:.5}));
+    if(v!=='strip'&&!pre&&nf>0){const every=Math.ceil(30/bw);for(let i=0;i<full;i+=every)T(s,x0+i*bw+bw*every/2,y+h/2+4,pc(k),{sz:9,f:css('--surface'),b:1})}
+    T(s,x0,y-12,'1 Jan',{a:'start',sz:12});T(s,x0+W,y-12,'31 Dec',{a:'end',sz:12});T(s,x0+W/2,y-12,'One year = 365 days',{f:ink,b:1,sz:13});
+    T(s,x0+W/2,y+h+30,v==='strip'?`${Math.min(per,nf).toFixed(2)} blocks of ${d} days`:pre?`${per.toFixed(2)} blocks of ${d} days, ${pc(k)} each.  APR = ?`:`APR = ${pc(k)} × ${per.toFixed(2)} = ${pct(k*Math.min(per,nf))}`,{f:v==='strip'?f:pre?css('--muted'):a,b:1,sz:16,mono:1})}
+  if(v==='ear'||v==='both'){const x0=40,W=680,base=v==='both'?230:210,top=v==='both'?150:30,nb=Math.ceil(per),bw=W/(nb+1),hk=(base-top)/owe,shown=Math.floor((answered||v==='both'?prog:0)*per);
+    for(let i=0;i<=Math.min(nb,shown);i++){const dd=P*Math.pow(1+k,Math.min(i,per)),hh=Math.max(1.5,dd*hk);s.append(el('rect',{x:x0+i*bw+1,y:base-hh,width:Math.max(1,bw-2),height:hh,rx:Math.min(2,bw/3),fill:i===0?f:b,opacity:.4+.6*i/nb}))}
+    if(v==='ear'){T(s,x0,base+18,'Start',{a:'start',sz:12});T(s,x0+W,base+18,`After 1 year (${per.toFixed(1)} rollovers)`,{a:'end',sz:12});
+      const cur=(answered&&prog>=1)?owe:P*Math.pow(1+k,Math.min(shown,per));T(s,x0+12,top+16,'You owe: '+inr(cur),{a:'start',f:b,b:1,sz:18,mono:1});
+      T(s,x0+12,top+38,`Each bar is ${pc(k)} bigger than the one before`,{a:'start',sz:12})}}};
+ const show=()=>{const s=ST[si];[...steps.children].forEach((e,i)=>{e.className=i===si?'on':i<si?'done':''});
+  $('pq').textContent=s.q;const box=$('pchips');box.innerHTML='';$('phint').className='msg';$('phint').textContent='';
+  s.chips.forEach(([t,ok])=>{const b=document.createElement('button');b.className='chip';b.textContent=t;b.addEventListener('click',()=>{if(answered)return;
+    if(!ok){b.classList.add('wrong');$('phint').className='msg bad';$('phint').textContent=s.hint||'Not quite. Try again.';return}
+    b.classList.add('right');$('phint').className='msg good';$('phint').textContent='Correct.';reveal()});box.append(b)});
+  if(s.chips.length){const sk=document.createElement('button');sk.className='chip';sk.textContent='Just show me';sk.style.opacity='.7';sk.addEventListener('click',()=>{if(answered)return;box.querySelectorAll('.chip').forEach((c,j)=>{if(s.chips[j]&&s.chips[j][1])c.classList.add('right')});$('phint').className='msg';$('phint').textContent='';reveal()});box.append(sk)}
+  $('pans').hidden=!answered;$('pans').innerHTML=s.ans;$('pback').disabled=si===0;$('pnext').disabled=!answered||si===ST.length-1;vis()};
+ const reveal=()=>{answered=true;$('pans').hidden=false;$('pnext').disabled=si===ST.length-1;prog=0;anim(ST[si].vis==='ear'?3200:1800,p=>{prog=p;vis()})};
+ $('pnext').addEventListener('click',()=>{si++;answered=si===ST.length-1;prog=1;show();if(answered)reveal()});
+ $('pback').addEventListener('click',()=>{si--;answered=true;prog=1;show()});
+ $('again4').addEventListener('click',()=>make(false));
+ make(true);redraws.push(vis)})();
+
+/* start on the page named in the link, if any */
+const start=acts.findIndex(a=>'#'+a.id===location.hash);go(start>=0?start:0,true);
+const rr=()=>redraws.forEach(f=>f());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',rr);
+new MutationObserver(rr).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();
+</script>
+
+</html>
