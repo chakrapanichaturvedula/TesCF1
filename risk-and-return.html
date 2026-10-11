@@ -248,8 +248,8 @@ function yearBars(s,k,series,{lo,hi,x0=90,x1=640,y0=270,y1=30}){
  return {X,Y};
 }
 
-/* ================= STEP 1: measuring return and risk ================= */
-const S1={n:1,label:'Return and risk',eyebrow:'Step 1 · Two numbers describe an investment',title:'How Do We Measure Return and Risk?',specH:'The example',
+/* ================= STEP 1: measuring risk and return ================= */
+const S1={n:1,label:'Risk and return',eyebrow:'Step 1 · Two numbers describe an investment',title:'How Do We Measure Risk and Return?',specH:'The example',
  sub:'Every investment is judged on two things: how much it earns, and how much that earning swings. Finance measures return with the mean and risk with the standard deviation.',
  state:{p1:110,wild:1},
  spec:(st,id)=>id==='ret'?[['Bought at','₹100','d'],['Dividend','₹4','c'],['Price a year later','₹'+st.p1,'c']]:id==='avg'?[['Stock','Kaveri Textiles',''],['Years','5','']]:[['Stock A','steady','c'],['Stock B','swings a lot','d'],['Both have a mean of','10% a year','']],
@@ -340,7 +340,7 @@ const WX=['Sunny','Rainy','Sunny','Rainy','Sunny'];
 const cov2=(a,b)=>{const ma=mean(a),mb=mean(b);return a.reduce((x,v,i)=>x+(v-ma)*(b[i]-mb),0)/(a.length-1)};
 const sI=sdev(ICE),sR=sdev(RAIN),rIR=cov2(ICE,RAIN)/(sI*sR);
 const mix=w=>ICE.map((v,i)=>w*v+(1-w)*RAIN[i]);
-const S3={n:3,label:'Two risky assets',eyebrow:'Step 3 · A portfolio of two risky assets',title:'Return and Risk of Two Risky Assets',specH:'The example',
+const S3={n:3,label:'Two risky assets',eyebrow:'Step 3 · A portfolio of two risky assets',title:'Risk and Return of Two Risky Assets',specH:'The example',
  sub:'Two risky assets: an ice-cream maker that does well in sunny years and a raincoat maker that does well in rainy ones. Hold both and see what happens to the mean and the standard deviation.',
  state:{w:50,rho:-0.5},
  spec:(st,id)=>id==='rho'?[['Ice cream','mean 12%, SD '+sI.toFixed(1)+'%','d'],['Raincoats','mean 9%, SD '+sR.toFixed(1)+'%','f'],['Correlation',st.rho.toFixed(1),'']]:[['Ice cream','mean 12%, SD '+sI.toFixed(1)+'%','d'],['Raincoats','mean 9%, SD '+sR.toFixed(1)+'%','f'],['In ice cream',st.w+'%','']],
