@@ -137,9 +137,10 @@ body{margin:0}
 .homebar{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1120px;margin:0 auto;padding:14px 0 0;font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;font-size:14px}
 .homebar a{color:var(--accent,#6B3FA0);text-decoration:none;font-weight:600}
 .homebar a:hover{text-decoration:underline}
-.homebar span{color:var(--muted,#5B6578)}
+.homebar a.bp{border:1.5px solid var(--accent,#6B3FA0);border-radius:999px;padding:5px 14px;background:var(--accent-soft,#EEE6F7)}
+.homebar a.bp:hover{text-decoration:none;background:var(--accent,#6B3FA0);color:var(--surface,#fff)}
 </style>
-<nav class="homebar" aria-label="Site"><a href="index.html">← All FIA 203 topics</a><span>FIA 203 Corporate Finance</span></nav>
+<nav class="homebar" aria-label="Site"><a href="index.html">← All FIA 203 topics</a><a class="bp" href="big-picture.html">The Big Picture: how it all connects</a></nav>
 
 <style>
 /* Paging, row-aligned matching and replay controls. */

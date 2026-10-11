@@ -43,23 +43,26 @@ a.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .card.soon h3{color:var(--muted)}
 .foot{border-top:1px solid var(--line);padding-top:18px;font-size:13px;color:var(--muted)}
 @media (max-width:720px){.module{grid-template-columns:1fr;gap:10px}}
+.bigpic{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-top:18px;padding:14px 18px;border-radius:14px;background:var(--accent-soft);border:1.5px solid var(--accent);color:var(--ink);text-decoration:none;max-width:720px}
+.bigpic:hover{background:var(--accent);color:var(--surface)}
+.bigpic .bp-k{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--accent)}
+.bigpic:hover .bp-k,.bigpic:hover .bp-s{color:var(--surface)}
+.bigpic b{font-family:var(--display);font-size:22px}
+.bigpic .bp-s{font-size:14px;color:var(--muted);flex-basis:100%}
+.topnav{display:flex;justify-content:flex-end;max-width:1000px;margin:0 auto 8px}
+.topnav a{font-size:14px;font-weight:600;color:var(--accent);text-decoration:none;border:1.5px solid var(--accent);border-radius:999px;padding:5px 14px;background:var(--accent-soft)}
 </style>
 </head>
 <body>
+<nav class="topnav" aria-label="Site"><a href="big-picture.html">The Big Picture</a></nav>
 <div class="wrap">
   <header>
     <p class="eyebrow">IMT Hyderabad · PGDM · Term II</p>
     <h1>FIA 203 Corporate Finance</h1>
     <p class="lede">Interactive walkthroughs and activities for each topic in the course. Open any page, move the sliders, and see the numbers change. No login needed.</p>
+    <a class="bigpic" href="big-picture.html"><span class="bp-k">Start with</span><b>The Big Picture</b><span class="bp-s">How every topic in the course connects, from the balance sheet to WACC →</span></a>
     <div class="meta"><span><b>Text</b> Ross, Westerfield, Jaffe and Kakani, Corporate Finance</span></div>
   </header>
-
-  <section class="module" aria-labelledby="m0">
-    <div class="mhead"><span class="num">Start here</span><h2 id="m0">The Big Picture</h2><p>How every topic in the course connects.</p></div>
-    <div class="cards">
-      <a class="card" href="big-picture.html"><span class="kind w">Overview</span><h3>The Big Picture</h3><p>From the balance sheet to WACC: one map of the whole course.</p></a>
-    </div>
-  </section>
 
   <section class="module" aria-labelledby="m1">
     <div class="mhead"><span class="num">Module 1</span><h2 id="m1">Time Value of Money</h2><p>PV, FV, annuities, perpetuities, growth, APR and EAR.</p></div>
