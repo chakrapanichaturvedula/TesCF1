@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>FIA 203 · Admin</title>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/vendor/supabase-2.117.3.js"></script>
+<style>
+  :root{--bg:#f5f5f0;--ink:#16203a;--mute:#5b6478;--line:#dcdcd2;--card:#fff;--acc:#6b3fa0;--on:#1d7a4d;--off:#b3342b}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+  main{max-width:1000px;margin:0 auto;padding:24px 16px 80px}
+  h1{font-size:1.5rem;margin:0 0 4px} h2{font-size:1.1rem;margin:32px 0 8px}
+  .mute{color:var(--mute);font-size:.9rem}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0}
+  input,select,textarea,button{font:inherit}
+  input,select,textarea{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;color:var(--ink)}
+  button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;color:var(--ink)}
+  button.primary{background:var(--acc);color:#fff;border-color:var(--acc)}
+  button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .grid{display:grid;gap:8px}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{font-size:.8rem;color:var(--mute);text-transform:uppercase;letter-spacing:.05em}
+  tr.module td{background:#efeaf6;font-weight:600}
+  td.title small{display:block;color:var(--mute);font-weight:400}
+  .tog{min-width:64px;padding:5px 8px;font-size:.85rem}
+  .tog.on{background:var(--on);color:#fff;border-color:var(--on)}
+  .tog.off{background:var(--off);color:#fff;border-color:var(--off)}
+  .tog.inh{color:var(--mute)}
+  .msg{padding:8px 12px;border-radius:8px;margin:8px 0;font-size:.95rem}
+  .msg.ok{background:#e4f3ea;color:#14573a} .msg.err{background:#fbe6e4;color:#8a241c}
+  .scroll{overflow-x:auto}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <h1>FIA 203 admin</h1>
+  <div class="mute" id="who">Instructor in charge only.</div>
+  <div id="msg" role="status"></div>
+
+  <section id="login" class="card" hidden>
+    <h2 style="margin-top:0">Sign in</h2>
+    <form id="loginForm" class="grid" style="max-width:340px">
+      <input id="em" type="email" placeholder="Email" autocomplete="username" required>
+      <input id="pw" type="password" placeholder="Password" autocomplete="current-password" required>
+      <button class="primary">Sign in</button>
+    </form>
+  </section>
+
+  <div id="app" hidden>
+    <div class="row" style="justify-content:space-between">
+      <span class="mute" id="offLabel"></span>
+      <button id="out">Sign out</button>
+    </div>
+
+    <h2>What students can see</h2>
+    <p class="mute">Each box shows whether the topic is open. <b>All</b> sets every section at once. A section letter can override it for that section only: click to cycle follow-All, open, closed. A topic is hidden until you open it. Opening a topic does not open its module; open both.</p>
+    <div class="card scroll"><table id="tbl"></table></div>
+
+    <h2>Add a topic</h2>
+    <form id="addForm" class="card grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+      <input id="aTitle" placeholder="Title" required>
+      <input id="aSlug" placeholder="Slug, e.g. options-intro" required pattern="[a-z0-9\-]+">
+      <select id="aKind"><option value="page">Page</option><option value="module">Module</option></select>
+      <select id="aParent"></select>
+      <input id="aFile" placeholder="File, e.g. options-intro.html">
+      <input id="aSteps" type="number" min="1" placeholder="Number of steps (optional)">
+      <input id="aSort" type="number" placeholder="Order number">
+      <button class="primary">Add</button>
+    </form>
+    <p class="mute">Adding a topic only lists it. You still upload its page file to GitHub, and it stays hidden until you open it above.</p>
+
+    <h2>Student roster</h2>
+    <div class="card grid">
+      <p class="mute" style="margin:0">Paste CSV with header <code>section,student_code,full_name,email</code> (email optional). Existing IDs are updated, nothing is deleted.</p>
+      <input type="file" id="csvFile" accept=".csv,text/csv">
+      <textarea id="csv" rows="5" placeholder="section,student_code,full_name,email&#10;A,PGP2601,Asha Rao,"></textarea>
+      <div class="row"><button id="upl" class="primary">Upload roster</button><span class="mute" id="rosterCount"></span></div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  var C = window.CF_CONFIG;
+  var db = supabase.createClient(C.supabaseUrl, C.supabaseKey, {
+    auth: { storageKey: 'cf-fia203-auth', persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+  });
+  var $ = function (id) { return document.getElementById(id); };
+  var S = { off: null, sections: [], items: [], vis: [] };
+
+  function say(t, ok) {
+    var d = $('msg'); d.innerHTML = '';
+    if (!t) return;
+    var m = document.createElement('div'); m.className = 'msg ' + (ok ? 'ok' : 'err'); m.textContent = t; d.appendChild(m);
+    if (ok) setTimeout(function () { if (m.parentNode) m.parentNode.removeChild(m); }, 4000);
+  }
+
+  async function start() {
+    var r = await db.auth.getSession();
+    var s = r.data && r.data.session;
+    if (!s || (s.user && s.user.is_anonymous)) { $('login').hidden = false; $('app').hidden = true; return; }
+    var me = await db.from('staff').select('email,role').eq('email', String(s.user.email || '').toLowerCase()).limit(1);
+    if (me.error || !me.data || !me.data.length) { say('This account is not on the staff list.'); $('login').hidden = false; return; }
+    if (me.data[0].role !== 'in_charge') { say('Only the instructor in charge can use this page.'); $('app').hidden = true; return; }
+    $('who').textContent = 'Signed in as ' + me.data[0].email;
+    $('login').hidden = true; $('app').hidden = false;
+    await load();
+  }
+
+  async function load() {
+    var o = await db.from('offerings').select('*').eq('slug', C.offering).single();
+    if (o.error) { say('Could not load the course: ' + o.error.message); return; }
+    S.off = o.data;
+    $('offLabel').textContent = o.data.title + ' · ' + o.data.term;
+    var q = await Promise.all([
+      db.from('sections').select('id,name').eq('offering_id', o.data.id).order('name'),
+      db.from('content_items').select('*').eq('course_code', o.data.course_code).order('sort'),
+      db.from('content_visibility').select('item_id,section_id,visible').eq('offering_id', o.data.id),
+      db.from('students').select('id', { count: 'exact', head: true }).eq('offering_id', o.data.id)
+    ]);
+    for (var i = 0; i < 4; i++) if (q[i].error) { say('Load failed: ' + q[i].error.message); return; }
+    S.sections = q[0].data; S.items = q[1].data; S.vis = q[2].data;
+    $('rosterCount').textContent = q[3].count + ' students on the roster';
+    render();
+  }
+
+  function state(itemId, secId) {
+    for (var i = 0; i < S.vis.length; i++) {
+      var v = S.vis[i];
+      if (v.item_id === itemId && (v.section_id || null) === secId) return v.visible ? 'on' : 'off';
+    }
+    return 'inh';
+  }
+  var LABEL = { on: 'Open', off: 'Closed', inh: 'follow All' };
+
+  function render() {
+    var mods = S.items.filter(function (x) { return x.kind === 'module'; });
+    var order = [];
+    S.items.filter(function (x) { return !x.parent_id && x.kind === 'page'; }).forEach(function (p) { order.push(p); });
+    mods.forEach(function (m) {
+      order.push(m);
+      S.items.filter(function (x) { return x.parent_id === m.id; }).forEach(function (p) { order.push(p); });
+    });
+    
+    var t = $('tbl'); t.innerHTML = '';
+    var h = t.createTHead().insertRow();
+    ['Topic', 'All'].concat(S.sections.map(function (s) { return s.name; })).forEach(function (x) {
+      var th = document.createElement('th'); th.textContent = x; h.appendChild(th);
+    });
+    var tb = t.createTBody();
+    order.forEach(function (it) {
+      var tr = tb.insertRow(); if (it.kind === 'module') tr.className = 'module';
+      var td = tr.insertCell(); td.className = 'title';
+      td.textContent = (it.kind === 'page' && it.parent_id ? '   ' : '') + it.title;
+      var sm = document.createElement('small'); sm.textContent = it.slug + (it.total_steps ? ' · ' + it.total_steps + ' steps' : ''); td.appendChild(sm);
+      [null].concat(S.sections.map(function (s) { return s.id; })).forEach(function (sid) {
+        var c = tr.insertCell(); var b = document.createElement('button');
+        var st = state(it.id, sid);
+        b.className = 'tog ' + st; b.textContent = sid === null ? (st === 'inh' ? 'Closed' : LABEL[st]) : LABEL[st];
+        b.title = 'Click to change';
+        b.onclick = function () { cycle(it, sid, st, b); };
+        c.appendChild(b);
+      });
+    });
+    var p = $('aParent'); p.innerHTML = '<option value="">No module</option>';
+    mods.forEach(function (m) { var o = document.createElement('option'); o.value = m.id; o.textContent = m.title; p.appendChild(o); });
+  }
+
+  async function cycle(it, sid, st, btn) {
+    var next;
+    if (sid === null) next = (st === 'on') ? false : true;           // All: open <-> closed
+    else next = st === 'inh' ? true : st === 'on' ? false : null;    // section: follow -> open -> closed -> follow
+    var secName = null;
+    if (sid) secName = S.sections.filter(function (s) { return s.id === sid; })[0].name;
+    btn.disabled = true;
+    var r = await db.rpc('set_visibility', { p_offering_slug: C.offering, p_item_slug: it.slug, p_visible: next, p_section: secName, p_release_at: null });
+    if (r.error) { say('Could not save: ' + r.error.message); btn.disabled = false; return; }
+    var v = await db.from('content_visibility').select('item_id,section_id,visible').eq('offering_id', S.off.id);
+    if (!v.error) S.vis = v.data;
+    say('Saved: ' + it.title + (secName ? ' · Section ' + secName : ' · All'), true);
+    render();
+  }
+
+  $('loginForm').onsubmit = async function (e) {
+    e.preventDefault();
+    var r = await db.auth.signInWithPassword({ email: $('em').value.trim(), password: $('pw').value });
+    if (r.error) { say('Sign-in failed: ' + r.error.message); return; }
+    say(''); $('pw').value = ''; start();
+  };
+  $('out').onclick = async function () { await db.auth.signOut(); location.reload(); };
+
+  $('addForm').onsubmit = async function (e) {
+    e.preventDefault();
+    var row = {
+      course_code: S.off.course_code, slug: $('aSlug').value.trim(), title: $('aTitle').value.trim(),
+      kind: $('aKind').value, parent_id: $('aParent').value || null,
+      file: $('aFile').value.trim() || null,
+      total_steps: $('aSteps').value ? parseInt($('aSteps').value, 10) : null,
+      sort: $('aSort').value ? parseInt($('aSort').value, 10) : (S.items.length + 1) * 10
+    };
+    if (row.kind === 'module') { row.file = null; row.parent_id = null; row.total_steps = null; }
+    var r = await db.from('content_items').insert(row);
+    if (r.error) { say('Could not add: ' + r.error.message); return; }
+    $('addForm').reset(); say('Added. It is hidden until you open it.', true); load();
+  };
+
+  function parseCsv(text) {
+    var rows = [], row = [], cur = '', q = false;
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (q) { if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === ',') { row.push(cur); cur = ''; }
+      else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cur); cur = ''; if (row.join('').trim()) rows.push(row); row = []; }
+      else cur += ch;
+    }
+    row.push(cur); if (row.join('').trim()) rows.push(row);
+    return rows;
+  }
+  $('csvFile').onchange = function () {
+    var f = this.files[0]; if (!f) return;
+    var rd = new FileReader(); rd.onload = function () { $('csv').value = rd.result; }; rd.readAsText(f);
+  };
+  $('upl').onclick = async function () {
+    var rows = parseCsv($('csv').value);
+    if (rows.length < 2) { say('Nothing to upload. Include the header row and at least one student.'); return; }
+    var head = rows[0].map(function (x) { return x.trim().toLowerCase(); });
+    var ix = { s: head.indexOf('section'), c: head.indexOf('student_code'), n: head.indexOf('full_name'), e: head.indexOf('email') };
+    if (ix.s < 0 || ix.c < 0 || ix.n < 0) { say('Header must contain section, student_code and full_name.'); return; }
+    var secMap = {}; S.sections.forEach(function (s) { secMap[s.name.toUpperCase()] = s.id; });
+    var out = [], bad = [];
+    rows.slice(1).forEach(function (r, i) {
+      var sec = secMap[(r[ix.s] || '').trim().toUpperCase()], code = (r[ix.c] || '').trim().toUpperCase(), nm = (r[ix.n] || '').trim();
+      if (!sec || !code || !nm) { bad.push(i + 2); return; }
+      out.push({ offering_id: S.off.id, section_id: sec, student_code: code, full_name: nm, email: ix.e >= 0 ? ((r[ix.e] || '').trim() || null) : null });
+    });
+    if (bad.length) { say('Fix these CSV lines first (unknown section or blank cell): ' + bad.slice(0, 15).join(', ')); return; }
+    var seen = {}, dup = [];
+    out.forEach(function (r) { if (seen[r.student_code]) dup.push(r.student_code); seen[r.student_code] = 1; });
+    if (dup.length) { say('Repeated IDs in the file: ' + dup.slice(0, 10).join(', ')); return; }
+    for (var i = 0; i < out.length; i += 200) {
+      var r2 = await db.from('students').upsert(out.slice(i, i + 200), { onConflict: 'offering_id,student_code' });
+      if (r2.error) { say('Upload stopped: ' + r2.error.message); return; }
+    }
+    say(out.length + ' students saved.', true); load();
+  };
+
+  start();
+})();
+</script>
+</body>
+</html>
