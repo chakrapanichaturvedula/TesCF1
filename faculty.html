@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>FIA 203 · Section analytics</title>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/vendor/supabase-2.117.3.js"></script>
+<style>
+  :root{--bg:#f5f5f0;--ink:#16203a;--mute:#5b6478;--line:#dcdcd2;--card:#fff;--acc:#6b3fa0;--ok:#1d7a4d;--warn:#b3342b;--mid:#8a6a00}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+  main{max-width:1100px;margin:0 auto;padding:24px 16px 80px}
+  h1{font-size:1.5rem;margin:0 0 4px} h2{font-size:1.1rem;margin:28px 0 8px}
+  .mute{color:var(--mute);font-size:.9rem}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0}
+  input,select,button{font:inherit}
+  input,select{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;color:var(--ink)}
+  button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;color:var(--ink)}
+  button.primary{background:var(--acc);color:#fff;border-color:var(--acc)}
+  button.tab[aria-pressed="true"]{background:var(--acc);color:#fff;border-color:var(--acc)}
+  button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .grid{display:grid;gap:8px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .stat b{display:block;font-size:1.6rem;line-height:1.2}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{font-size:.78rem;color:var(--mute);text-transform:uppercase;letter-spacing:.05em;cursor:pointer}
+  td.num,th.num{text-align:right}
+  tr.click{cursor:pointer} tr.click:hover{background:#f1edf7}
+  .bar{display:inline-block;width:70px;height:8px;border-radius:4px;background:#e6e3dc;vertical-align:middle;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--ok)}
+  .st-completed{color:var(--ok);font-weight:600} .st-started{color:var(--mid);font-weight:600} .st-not{color:var(--warn)}
+  .msg{padding:8px 12px;border-radius:8px;margin:8px 0}
+  .msg.err{background:#fbe6e4;color:#8a241c} .msg.ok{background:#e4f3ea;color:#14573a}
+  .scroll{overflow-x:auto}
+  dialog{border:1px solid var(--line);border-radius:12px;max-width:640px;width:calc(100% - 32px);padding:16px}
+  dialog::backdrop{background:rgba(0,0,0,.35)}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <div class="row" style="justify-content:space-between">
+    <div><h1>FIA 203 section analytics</h1><div class="mute" id="who"></div></div>
+    <div class="row" id="topBtns" hidden>
+      <button id="pwBtn">Change password</button>
+      <button id="out">Sign out</button>
+    </div>
+  </div>
+  <div id="msg" role="status"></div>
+
+  <section id="login" class="card" hidden>
+    <form id="loginForm" class="grid" style="max-width:340px">
+      <input id="em" type="email" placeholder="Institute email" autocomplete="username" required>
+      <input id="pw" type="password" placeholder="Password" autocomplete="current-password" required>
+      <button class="primary">Sign in</button>
+    </form>
+  </section>
+
+  <div id="app" hidden>
+    <div class="row" id="tabs" style="margin:12px 0"></div>
+    <div class="stats" id="stats"></div>
+
+    <h2>Topics: how many have opened and finished</h2>
+    <div class="card scroll"><table id="cov"></table></div>
+
+    <h2>Students</h2>
+    <div class="row" style="margin-bottom:8px">
+      <input id="q" type="search" placeholder="Search name or ID" aria-label="Search students">
+      <label class="mute"><input type="checkbox" id="inact"> Only students not seen in 7 days</label>
+      <button id="csvBtn">Download CSV</button>
+    </div>
+    <div class="card scroll"><table id="stu"></table></div>
+    <p class="mute">Time counts only while the page is open and the student is active. It is a measure of engagement, not of marks. Click a row for that student's topics.</p>
+  </div>
+
+  <dialog id="dlg"><div id="dlgBody"></div><div class="row" style="margin-top:12px"><button id="dlgClose">Close</button></div></dialog>
+  <dialog id="pwDlg">
+    <form id="pwForm" class="grid">
+      <b>Change password</b>
+      <input id="np" type="password" minlength="8" placeholder="New password (8+ characters)" autocomplete="new-password" required>
+      <div class="row"><button class="primary">Save</button><button type="button" id="pwCancel">Cancel</button></div>
+    </form>
+  </dialog>
+</main>
+
+<script>
+(function () {
+  var C = window.CF_CONFIG;
+  var db = supabase.createClient(C.supabaseUrl, C.supabaseKey, {
+    auth: { storageKey: 'cf-fia203-auth', persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+  });
+  var $ = function (id) { return document.getElementById(id); };
+  var S = { off: null, sections: [], sec: 'ALL', stu: [], cov: [], sortKey: 'full_name', sortDir: 1 };
+
+  function say(t, ok) {
+    var d = $('msg'); d.innerHTML = ''; if (!t) return;
+    var m = document.createElement('div'); m.className = 'msg ' + (ok ? 'ok' : 'err'); m.textContent = t; d.appendChild(m);
+    if (ok) setTimeout(function () { if (m.parentNode) m.parentNode.removeChild(m); }, 4000);
+  }
+  function el(tag, txt, cls) { var e = document.createElement(tag); if (txt != null) e.textContent = txt; if (cls) e.className = cls; return e; }
+
+  async function start() {
+    var r = await db.auth.getSession(); var s = r.data && r.data.session;
+    if (!s || (s.user && s.user.is_anonymous)) { $('login').hidden = false; $('app').hidden = true; $('topBtns').hidden = true; return; }
+    var me = await db.from('staff').select('email,role').eq('email', String(s.user.email || '').toLowerCase()).limit(1);
+    if (me.error || !me.data || !me.data.length) { say('This account is not on the staff list.'); $('login').hidden = false; return; }
+    $('who').textContent = me.data[0].email + (me.data[0].role === 'in_charge' ? ' · instructor in charge · all sections' : ' · your sections only');
+    $('login').hidden = true; $('topBtns').hidden = false; $('app').hidden = false;
+    await load();
+  }
+
+  async function load() {
+    var o = await db.from('offerings').select('id,title,term').eq('slug', C.offering).single();
+    if (o.error) { say('Could not load the course: ' + o.error.message); return; }
+    S.off = o.data;
+    var q = await Promise.all([
+      db.from('sections').select('id,name').eq('offering_id', o.data.id).order('name'),
+      db.from('v_student_overview').select('*').eq('offering_id', o.data.id),
+      db.from('v_page_coverage').select('*').eq('offering_id', o.data.id).order('sort')
+    ]);
+    for (var i = 0; i < 3; i++) if (q[i].error) { say('Load failed: ' + q[i].error.message); return; }
+    S.sections = q[0].data; S.stu = q[1].data; S.cov = q[2].data;
+    var names = S.sections.map(function (s) { return s.name; });
+    if (S.sec !== 'ALL' && names.indexOf(S.sec) < 0) S.sec = 'ALL';
+    render();
+  }
+
+  function inSec(r) { return S.sec === 'ALL' || r.section === S.sec; }
+  function fmtDate(d) { if (!d) return 'never'; var x = new Date(d); return x.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' ' + x.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); }
+  function days(d) { return d ? (Date.now() - new Date(d).getTime()) / 86400000 : Infinity; }
+
+  function render() {
+    var tabs = $('tabs'); tabs.innerHTML = '';
+    ['ALL'].concat(S.sections.map(function (s) { return s.name; })).forEach(function (n) {
+      var b = el('button', n === 'ALL' ? (S.sections.length > 1 ? 'All my sections' : 'Overview') : 'Section ' + n, 'tab');
+      b.setAttribute('aria-pressed', String(S.sec === n));
+      b.onclick = function () { S.sec = n; render(); };
+      if (n === 'ALL' && S.sections.length <= 1) b.hidden = true;
+      tabs.appendChild(b);
+    });
+    var st = S.stu.filter(inSec), n = st.length;
+    var active7 = st.filter(function (r) { return days(r.last_active_at) <= 7; }).length;
+    var started = st.filter(function (r) { return r.pages_started > 0; }).length;
+    var mins = st.reduce(function (a, r) { return a + Number(r.active_minutes || 0); }, 0);
+    var stats = $('stats'); stats.innerHTML = '';
+    [[n, 'students on the roster'], [started, 'have opened any topic'], [active7, 'active in last 7 days'], [n ? Math.round(mins / n) : 0, 'average minutes per student']].forEach(function (x) {
+      var d = el('div', null, 'stat'); d.appendChild(el('b', x[0])); d.appendChild(el('span', x[1], 'mute')); stats.appendChild(d);
+    });
+    renderCov(); renderStu();
+  }
+
+  function renderCov() {
+    var t = $('cov'); t.innerHTML = '';
+    var rows = S.cov.filter(inSec).filter(function (r) { return r.released; });
+    if (!rows.length) { t.appendChild(el('caption', 'No topic has been opened to these sections yet.', 'mute')); return; }
+    var agg = {};
+    rows.forEach(function (r) {
+      var a = agg[r.slug] || (agg[r.slug] = { title: r.title, sort: r.sort, students: 0, started: 0, completed: 0, mins: 0, w: 0 });
+      a.students += Number(r.students); a.started += Number(r.started); a.completed += Number(r.completed);
+      if (r.avg_active_minutes != null) { a.mins += Number(r.avg_active_minutes) * Number(r.started); a.w += Number(r.started); }
+    });
+    var h = t.createTHead().insertRow();
+    ['Topic', 'Opened', 'Finished', 'Not opened', 'Avg minutes'].forEach(function (x, i) { h.appendChild(el('th', x, i ? 'num' : '')); });
+    var tb = t.createTBody();
+    Object.keys(agg).map(function (k) { return agg[k]; }).sort(function (a, b) { return a.sort - b.sort; }).forEach(function (a) {
+      var tr = tb.insertRow(); tr.insertCell().textContent = a.title;
+      var pct = a.students ? Math.round(100 * a.started / a.students) : 0;
+      var c1 = tr.insertCell(); c1.className = 'num'; c1.textContent = a.started + ' of ' + a.students + ' ';
+      var bar = el('span', null, 'bar'); var i = el('i'); i.style.width = pct + '%'; bar.appendChild(i); c1.appendChild(bar);
+      var c2 = tr.insertCell(); c2.className = 'num'; c2.textContent = a.completed;
+      var c3 = tr.insertCell(); c3.className = 'num'; c3.textContent = a.students - a.started;
+      var c4 = tr.insertCell(); c4.className = 'num'; c4.textContent = a.w ? (a.mins / a.w).toFixed(1) : '-';
+    });
+  }
+
+  var COLS = [['full_name', 'Name'], ['student_code', 'ID'], ['section', 'Sec'], ['pages_started', 'Opened', 1], ['pages_completed', 'Finished', 1], ['pages_released', 'Open now', 1], ['active_minutes', 'Minutes', 1], ['attempts', 'Activities', 1], ['last_active_at', 'Last seen']];
+
+  function filtered() {
+    var q = $('q').value.trim().toLowerCase(), only = $('inact').checked;
+    return S.stu.filter(inSec).filter(function (r) {
+      if (q && (r.full_name + ' ' + r.student_code).toLowerCase().indexOf(q) < 0) return false;
+      if (only && days(r.last_active_at) <= 7) return false;
+      return true;
+    }).sort(function (a, b) {
+      var x = a[S.sortKey], y = b[S.sortKey];
+      if (x == null) x = ''; if (y == null) y = '';
+      if (typeof x === 'string' && isNaN(Number(x))) return S.sortDir * String(x).localeCompare(String(y));
+      return S.sortDir * (Number(x) - Number(y));
+    });
+  }
+
+  function renderStu() {
+    var t = $('stu'); t.innerHTML = '';
+    var h = t.createTHead().insertRow();
+    COLS.forEach(function (c) {
+      var th = el('th', c[1] + (S.sortKey === c[0] ? (S.sortDir > 0 ? ' ▲' : ' ▼') : ''), c[2] ? 'num' : '');
+      th.onclick = function () { if (S.sortKey === c[0]) S.sortDir = -S.sortDir; else { S.sortKey = c[0]; S.sortDir = 1; } renderStu(); };
+      h.appendChild(th);
+    });
+    var tb = t.createTBody();
+    filtered().forEach(function (r) {
+      var tr = tb.insertRow(); tr.className = 'click'; tr.tabIndex = 0;
+      COLS.forEach(function (c) {
+        var td = tr.insertCell(); if (c[2]) td.className = 'num';
+        var v = r[c[0]]; td.textContent = c[0] === 'last_active_at' ? fmtDate(v) : (v == null ? '' : v);
+        if (c[0] === 'last_active_at' && days(v) > 7) td.style.color = 'var(--warn)';
+      });
+      tr.onclick = function () { detail(r); };
+      tr.onkeydown = function (e) { if (e.key === 'Enter') detail(r); };
+    });
+    if (!tb.rows.length) { var tr0 = tb.insertRow(); var c0 = tr0.insertCell(); c0.colSpan = COLS.length; c0.className = 'mute'; c0.textContent = 'No students match.'; }
+  }
+
+  async function detail(r) {
+    var q = await db.from('v_student_page').select('*').eq('student_id', r.student_id).order('sort');
+    var b = $('dlgBody'); b.innerHTML = '';
+    b.appendChild(el('h2', r.full_name + ' · ' + r.student_code + ' · Section ' + r.section));
+    if (q.error) { b.appendChild(el('div', q.error.message, 'msg err')); }
+    else if (!q.data.length) b.appendChild(el('p', 'No topic is open to this section yet.', 'mute'));
+    else {
+      var t = el('table'); var hr = t.createTHead().insertRow();
+      ['Topic', 'Status', 'Minutes', 'Last seen'].forEach(function (x) { hr.appendChild(el('th', x)); });
+      var tb = t.createTBody();
+      q.data.forEach(function (p) {
+        var tr = tb.insertRow(); tr.insertCell().textContent = p.title;
+        var c = tr.insertCell(); c.textContent = p.status; c.className = p.status === 'completed' ? 'st-completed' : p.status === 'started' ? 'st-started' : 'st-not';
+        tr.insertCell().textContent = (p.active_seconds / 60).toFixed(1);
+        tr.insertCell().textContent = fmtDate(p.last_seen_at);
+      });
+      var w = el('div', null, 'scroll'); w.appendChild(t); b.appendChild(w);
+    }
+    $('dlg').showModal();
+  }
+
+  function csvCell(v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+  $('csvBtn').onclick = function () {
+    var rows = filtered();
+    var head = ['name', 'student_id', 'section', 'topics_opened', 'topics_finished', 'topics_open_now', 'active_minutes', 'activities', 'last_seen'];
+    var keys = ['full_name', 'student_code', 'section', 'pages_started', 'pages_completed', 'pages_released', 'active_minutes', 'attempts', 'last_active_at'];
+    var out = [head.join(',')].concat(rows.map(function (r) { return keys.map(function (k) { return csvCell(r[k]); }).join(','); }));
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([out.join('\n')], { type: 'text/csv' }));
+    a.download = 'fia203-' + (S.sec === 'ALL' ? 'sections' : 'section-' + S.sec) + '.csv'; a.click();
+  };
+
+  $('q').oninput = renderStu; $('inact').onchange = renderStu;
+  $('dlgClose').onclick = function () { $('dlg').close(); };
+  $('loginForm').onsubmit = async function (e) {
+    e.preventDefault();
+    var r = await db.auth.signInWithPassword({ email: $('em').value.trim(), password: $('pw').value });
+    if (r.error) { say('Sign-in failed: ' + r.error.message); return; }
+    say(''); $('pw').value = ''; start();
+  };
+  $('out').onclick = async function () { await db.auth.signOut(); location.reload(); };
+  $('pwBtn').onclick = function () { $('pwDlg').showModal(); };
+  $('pwCancel').onclick = function () { $('pwDlg').close(); };
+  $('pwForm').onsubmit = async function (e) {
+    e.preventDefault();
+    var r = await db.auth.updateUser({ password: $('np').value });
+    $('pwDlg').close(); $('np').value = '';
+    if (r.error) say('Could not change password: ' + r.error.message); else say('Password changed.', true);
+  };
+  start();
+})();
+</script>
+</body>
+</html>
