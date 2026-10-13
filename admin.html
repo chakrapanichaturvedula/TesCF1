@@ -236,7 +236,7 @@
     var secMap = {}; S.sections.forEach(function (s) { secMap[s.name.toUpperCase()] = s.id; });
     var out = [], bad = [];
     rows.slice(1).forEach(function (r, i) {
-      var sec = secMap[(r[ix.s] || '').trim().toUpperCase()], code = (r[ix.c] || '').trim().toUpperCase(), nm = (r[ix.n] || '').trim();
+      var sec = secMap[(r[ix.s] || '').trim().toUpperCase()], code = (r[ix.c] || '').trim().toUpperCase(), nm = (r[ix.n] || '').replace(/\s+/g, ' ').trim();
       if (!sec || !code || !nm) { bad.push(i + 2); return; }
       out.push({ offering_id: S.off.id, section_id: sec, student_code: code, full_name: nm, email: ix.e >= 0 ? ((r[ix.e] || '').trim() || null) : null });
     });
