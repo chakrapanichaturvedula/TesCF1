@@ -97,8 +97,10 @@
   function say(t, ok) {
     var d = $('msg'); d.innerHTML = '';
     if (!t) return;
-    var m = document.createElement('div'); m.className = 'msg ' + (ok ? 'ok' : 'err'); m.setAttribute('style', 'position:sticky;top:8px;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.15)'); m.textContent = t; d.appendChild(m);
-    if (ok) setTimeout(function () { if (m.parentNode) m.parentNode.removeChild(m); }, 4000);
+    var rc = $('rosterCount'); if (rc && rc.textContent === 'Working...') rc.textContent = ok ? '' : 'Not uploaded: ' + t.slice(0, 80);
+    var m = document.createElement('div'); m.className = 'msg ' + (ok ? 'ok' : 'err'); m.setAttribute('style', 'position:fixed;top:12px;left:50%;transform:translateX(-50%);width:min(640px,calc(100% - 32px));z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25)'); m.textContent = t; d.appendChild(m);
+    if (ok) setTimeout(function () { if (m.parentNode) m.parentNode.removeChild(m); }, 6000);
+    else m.onclick = function () { if (m.parentNode) m.parentNode.removeChild(m); };
   }
 
   async function start() {
@@ -229,6 +231,10 @@
     var rd = new FileReader(); rd.onload = function () { $('csv').value = rd.result; }; rd.readAsText(f);
   };
   $('upl').onclick = async function () {
+    $('rosterCount').textContent = 'Working...';
+    try { await doUpload(); } catch (e) { say('Upload failed: ' + (e && e.message ? e.message : e)); }
+  };
+  async function doUpload() {
     var raw = $('csv').value.replace(/^\uFEFF/, '');
     var first = raw.split(/\r?\n/)[0] || '';
     var delim = (first.split(';').length > first.split(',').length) ? ';' : (first.split('\t').length > first.split(',').length ? '\t' : ',');
@@ -254,8 +260,8 @@
       var r2 = await db.from('students').upsert(out.slice(i, i + 200), { onConflict: 'offering_id,student_code' });
       if (r2.error) { say('Upload stopped: ' + r2.error.message); return; }
     }
-    say(out.length + ' students saved.', true); load();
-  };
+    say(out.length + ' students saved.', true); await load();
+  }
 
   start();
 })();
