@@ -97,7 +97,7 @@
   function say(t, ok) {
     var d = $('msg'); d.innerHTML = '';
     if (!t) return;
-    var m = document.createElement('div'); m.className = 'msg ' + (ok ? 'ok' : 'err'); m.textContent = t; d.appendChild(m);
+    var m = document.createElement('div'); m.className = 'msg ' + (ok ? 'ok' : 'err'); m.setAttribute('style', 'position:sticky;top:8px;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.15)'); m.textContent = t; d.appendChild(m);
     if (ok) setTimeout(function () { if (m.parentNode) m.parentNode.removeChild(m); }, 4000);
   }
 
@@ -210,6 +210,7 @@
     $('addForm').reset(); say('Added. It is hidden until you open it.', true); load();
   };
 
+  function csvCell(v) { v = v == null ? '' : String(v).trim(); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
   function parseCsv(text) {
     var rows = [], row = [], cur = '', q = false;
     for (var i = 0; i < text.length; i++) {
@@ -228,11 +229,16 @@
     var rd = new FileReader(); rd.onload = function () { $('csv').value = rd.result; }; rd.readAsText(f);
   };
   $('upl').onclick = async function () {
-    var rows = parseCsv($('csv').value);
+    var raw = $('csv').value.replace(/^\uFEFF/, '');
+    var first = raw.split(/\r?\n/)[0] || '';
+    var delim = (first.split(';').length > first.split(',').length) ? ';' : (first.split('\t').length > first.split(',').length ? '\t' : ',');
+    if (delim !== ',') raw = raw.split(/\r?\n/).map(function (l) { return l.split(delim).map(csvCell).join(','); }).join('\n');
+    var rows = parseCsv(raw);
     if (rows.length < 2) { say('Nothing to upload. Include the header row and at least one student.'); return; }
-    var head = rows[0].map(function (x) { return x.trim().toLowerCase(); });
-    var ix = { s: head.indexOf('section'), c: head.indexOf('student_code'), n: head.indexOf('full_name'), e: head.indexOf('email') };
-    if (ix.s < 0 || ix.c < 0 || ix.n < 0) { say('Header must contain section, student_code and full_name.'); return; }
+    var head = rows[0].map(function (x) { return x.replace(/^\uFEFF/, '').trim().toLowerCase().replace(/[^a-z]+/g, '_').replace(/^_|_$/g, ''); });
+    function find(names) { for (var k = 0; k < names.length; k++) { var i = head.indexOf(names[k]); if (i >= 0) return i; } return -1; }
+    var ix = { s: find(['section', 'sec']), c: find(['student_code', 'student_id', 'id', 'roll_no', 'roll_number', 'roll']), n: find(['full_name', 'name', 'student_name']), e: find(['email', 'email_id']) };
+    if (ix.s < 0 || ix.c < 0 || ix.n < 0) { say('The first line must name the columns section, student_code and full_name. I read: ' + head.join(' | ')); return; }
     var secMap = {}; S.sections.forEach(function (s) { secMap[s.name.toUpperCase()] = s.id; });
     var out = [], bad = [];
     rows.slice(1).forEach(function (r, i) {
@@ -240,7 +246,7 @@
       if (!sec || !code || !nm) { bad.push(i + 2); return; }
       out.push({ offering_id: S.off.id, section_id: sec, student_code: code, full_name: nm, email: ix.e >= 0 ? ((r[ix.e] || '').trim() || null) : null });
     });
-    if (bad.length) { say('Fix these CSV lines first (unknown section or blank cell): ' + bad.slice(0, 15).join(', ')); return; }
+    if (bad.length) { say('Fix these CSV lines first (section not A to E, or a blank cell): ' + bad.slice(0, 15).join(', ') + '. First problem line reads: ' + rows[bad[0] - 1].join(' | ') + '. Known sections: ' + S.sections.map(function (x) { return x.name; }).join(', ')); return; }
     var seen = {}, dup = [];
     out.forEach(function (r) { if (seen[r.student_code]) dup.push(r.student_code); seen[r.student_code] = 1; });
     if (dup.length) { say('Repeated IDs in the file: ' + dup.slice(0, 10).join(', ')); return; }
