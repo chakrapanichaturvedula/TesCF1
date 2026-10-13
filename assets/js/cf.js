@@ -17,7 +17,7 @@
   var CFG = window.CF_CONFIG || {};
   var SCRIPT = document.currentScript;
   var PAGE = (SCRIPT && SCRIPT.getAttribute('data-page')) ||
-    (location.pathname.split('/').pop() || '').replace(/\.html?$/i, '');
+    (location.pathname.split('/').pop() || 'index').replace(/\.html?$/i, '');
 
   var FLUSH_MS = 30000;     // send progress this often
   var IDLE_MS = 60000;      // stop counting time after this long without input
@@ -310,6 +310,23 @@
 
     if (state.booted) return;
     state.booted = true;
+    if (PAGE === 'index') {
+      // The topic list: show closed topics as "Coming soon"; nothing is tracked here.
+      var open = {};
+      (content.data || []).forEach(function (c) { if (c.kind === 'page') open[c.file || (c.slug + '.html')] = c.released; });
+      var cards = document.querySelectorAll('a.card[href]');
+      for (var i = 0; i < cards.length; i++) {
+        var a = cards[i], f = (a.getAttribute('href') || '').split('/').pop();
+        if (open[f] === false) {
+          var d = document.createElement('div');
+          d.className = 'card soon'; d.innerHTML = a.innerHTML;
+          var para = d.querySelector('p'); if (para) para.textContent = 'Coming soon.';
+          a.parentNode.replaceChild(d, a);
+        }
+      }
+      reveal(); showChip();
+      return;
+    }
     if (!item) {
       // This page is not in the course map: show it, but do not track it.
       reveal(); showChip();
